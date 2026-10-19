@@ -1,0 +1,9 @@
+{
+  "packedKitChat": true,
+  "packedDesignComponents": true,
+  "designComponentsReleasePrerequisite": "needs next design-components release (unreleased): existing Collapsible-based chat exports",
+  "streamdownInstalled": false,
+  "productionBuild": true,
+  "chromiumRender": true,
+  "pageErrors": []
+}

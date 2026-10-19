@@ -1,0 +1,84 @@
+{
+  "name": "@hollis-labs/design-app-runtime",
+  "version": "0.5.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "App runtime — api client, hooks, router, storage. No opinion about appearance.",
+  "keywords": [
+    "react",
+    "api-client",
+    "sse",
+    "polling",
+    "router",
+    "design-system"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/design-kit/packages/design-app-runtime"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/design-app-runtime#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist",
+    "src/styles",
+    "CHANGELOG.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./shell-reset.css": "./src/styles/shell-reset.css"
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/src/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && vite build",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "boundary-test": "node scripts/boundary-test.mjs"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0",
+    "react": "^19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@testing-library/react": "^16.3.2",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "4.7.0",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^17.4.0",
+    "jsdom": "^25.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.0",
+    "vite": "5.4.21",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^2.1.9"
+  }
+}

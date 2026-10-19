@@ -1,0 +1,5 @@
+token-store-file ts/design-kit/.npmrc npm registry setting only; the file holds no credential (owner-approved 2026-10-19)
+token-store-file ts/design-kit/packages/kit-dashboard/.npmrc npm registry setting only; the file holds no credential (owner-approved 2026-10-19)
+home-path-macos ts/design-kit/packages/kit-dashboard/demo/views/gallery.tsx placeholder example path in a demo fixture; not a real user path
+secret-assignment ts/design-kit/packages/kit-account/src/__tests__/access.test.tsx test fixture string for a masked token field; not a credential
+secret-assignment ts/design-kit/packages/kit-settings/src/__tests__/wizard.test.tsx test fixture string for a masked token field; not a credential

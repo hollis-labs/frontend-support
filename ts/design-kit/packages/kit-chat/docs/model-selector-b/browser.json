@@ -1,0 +1,31 @@
+{
+  "themes": [
+    "nanite-default",
+    "dir-a",
+    "dir-b",
+    "dir-d",
+    "dir-e",
+    "dir-f",
+    "sysop-p4-white",
+    "sysop-green-phosphor",
+    "sysop-amber-phosphor",
+    "sysop-hi-contrast"
+  ],
+  "screenshots": 20,
+  "keyboardOpen": true,
+  "inputFocus": true,
+  "titleDescriptionInsidePopup": {
+    "title": "Choose a model",
+    "description": "Filter the host catalog and select a model."
+  },
+  "filtering": true,
+  "emptyState": true,
+  "keyboardHostSelection": true,
+  "selectionFocusReturn": true,
+  "touchOpenSelect": true,
+  "disabledInert": true,
+  "escapeFocusReturn": true,
+  "convenienceDialog": true,
+  "externalRequests": [],
+  "pageErrors": []
+}

@@ -1,0 +1,35 @@
+/*
+ * REGISTER THIS PACKAGE WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ *   @import "tailwindcss";
+ *   @import "@hollis-labs/design-tokens/design-tokens.css";
+ *   @import "@hollis-labs/design-components/source.css";
+ *   @import "@hollis-labs/kit-chat/source.css";        <-- this file
+ *
+ * WITHOUT IT THE COMPONENTS RENDER, AND THEY RENDER MOSTLY UNSTYLED, AND NOTHING
+ * ERRORS. Tailwind v4 emits a utility only for a class string it has SEEN and does
+ * not scan `node_modules`; this package's class strings ship inside `dist`. The
+ * defect is in what the build did not produce rather than in what the code says, so
+ * there is no error to read and nothing to grep for.
+ *
+ * `design-components/source.css` is a SEPARATE import and both are needed — this
+ * package composes its primitives, so its class strings are in a different `dist`.
+ * Unlike `kit-dashboard`, kit-chat ships no theme for that import to hide inside.
+ *
+ * Shipped as a stylesheet rather than documented as a glob because `@source` paths
+ * resolve relative to the CSS file that DECLARES them, so the path is written once,
+ * here, against a layout this package controls — not by every consumer against a
+ * layout that changes with hoisting, with the package manager, and in a monorepo.
+ *
+ * IF YOU IMPORT `@hollis-labs/kit-chat/markdown`, YOU NEED ONE MORE LINE, and it is
+ * `streamdown`'s rather than ours:
+ *
+ *   @source "../node_modules/streamdown/dist/*.js";
+ *
+ * That is documented in the `/markdown` section of the README, as a requirement of
+ * importing that subpath. It is deliberately NOT declared here: a consumer who never
+ * imports `/markdown` should never meet it, and `@source` against a package that is
+ * an optional peer would point at a directory that may not exist.
+ */
+
+@source "../../dist/**/*.js";

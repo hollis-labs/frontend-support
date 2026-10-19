@@ -1,0 +1,15 @@
+{
+  "registryVersion": "0.3.0",
+  "exports": [
+    "Button",
+    "DropdownMenu",
+    "DropdownMenuContent",
+    "DropdownMenuGroup",
+    "DropdownMenuItem",
+    "DropdownMenuLabel",
+    "DropdownMenuSeparator",
+    "DropdownMenuTrigger",
+    "cn"
+  ],
+  "allPresent": true
+}

@@ -1,0 +1,12 @@
+{
+  "//": "`types: [node]` is for the TEST files only. src/ imports nothing from node: and this package has zero runtime dependencies; the tests use node:test, which is the entire test toolchain — no vitest, no lockfile move. See README.",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "types": ["node"]
+  },
+  "include": ["src", "test"]
+}

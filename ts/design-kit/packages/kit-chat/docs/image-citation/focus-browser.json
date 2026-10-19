@@ -1,0 +1,209 @@
+{
+  "sourceCommit": "59dd40e8858ab5fb15f772ff68765e514ae8dfde",
+  "screenshots": 21,
+  "imageDimensions": {
+    "naturalWidth": 640,
+    "width": 640,
+    "alt": "Host illustration example",
+    "mediaType": "image/svg+xml"
+  },
+  "samples": [
+    {
+      "theme": "nanite-default",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(24, 25, 27)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "nanite-default",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(22, 24, 26)",
+        "foreground": "rgb(232, 234, 237)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-a",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(24, 24, 27)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-a",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(24, 24, 27)",
+        "foreground": "rgb(244, 244, 245)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-b",
+      "mode": "light",
+      "body": {
+        "background": "rgb(251, 248, 242)",
+        "foreground": "rgb(31, 26, 20)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-b",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(28, 24, 19)",
+        "foreground": "rgb(240, 234, 224)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-d",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(26, 14, 46)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-d",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(24, 18, 48)",
+        "foreground": "rgb(240, 232, 255)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-e",
+      "mode": "light",
+      "body": {
+        "background": "rgb(251, 249, 242)",
+        "foreground": "rgb(10, 26, 36)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-e",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(8, 17, 32)",
+        "foreground": "rgb(200, 224, 240)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-f",
+      "mode": "light",
+      "body": {
+        "background": "rgb(248, 248, 248)",
+        "foreground": "rgb(10, 10, 10)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "dir-f",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(22, 22, 22)",
+        "foreground": "rgb(240, 240, 240)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(24, 24, 27)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(24, 24, 27)",
+        "foreground": "rgb(244, 244, 245)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(18, 59, 34)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(18, 26, 20)",
+        "foreground": "rgb(0, 255, 102)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(73, 48, 0)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(28, 22, 14)",
+        "foreground": "rgb(255, 176, 0)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "light",
+      "body": {
+        "background": "rgb(255, 255, 255)",
+        "foreground": "rgb(0, 0, 0)",
+        "ariaHidden": "false"
+      }
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "dark",
+      "body": {
+        "background": "rgb(18, 18, 18)",
+        "foreground": "rgb(255, 255, 255)",
+        "ariaHidden": "false"
+      }
+    }
+  ],
+  "keyboard": {
+    "tabIntoPopup": true,
+    "reverseTabToTrigger": true,
+    "previousEnterWraparound": true,
+    "nextSpaceWraparound": true,
+    "hostTabContinuation": true,
+    "cssHiddenHostSkipped": true,
+    "zeroAreaHostSkipped": true,
+    "hiddenInertHostSkipped": true,
+    "failedFocusFallsThrough": true,
+    "escapeReturnsFocus": true
+  },
+  "interactiveAriaHidden": false,
+  "hoverTransfer": true,
+  "mobileOverflow": false,
+  "reducedMotionTransition": "none",
+  "browserErrors": []
+}

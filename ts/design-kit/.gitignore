@@ -1,0 +1,5 @@
+node_modules
+dist
+.nanite/
+*.tsbuildinfo
+.DS_Store

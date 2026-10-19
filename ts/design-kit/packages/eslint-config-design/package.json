@@ -1,0 +1,67 @@
+{
+  "name": "@hollis-labs/eslint-config-design",
+  "version": "0.5.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "The gate — ESLint flat config enforcing that a component names a token, never a value.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/design-kit/packages/eslint-config-design"
+  },
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./rules/*": "./src/rules/*.js",
+    "./ratchet": "./src/ratchet.js"
+  },
+  "files": [
+    "src",
+    "scripts",
+    "docs",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "eslint",
+    "eslintconfig",
+    "design-system",
+    "tokens",
+    "tailwind"
+  ],
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:run": "node --test \"test/**/*.test.js\"",
+    "scale-report": "node scripts/scale-usage-report.mjs",
+    "ratchet": "node scripts/ratchet.mjs",
+    "ratchet:update": "node scripts/ratchet.mjs --update",
+    "biome-check": "node scripts/biome-check.mjs",
+    "biome-check:update": "node scripts/biome-check.mjs --update"
+  },
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0",
+    "@hollis-labs/design-tokens": "^0.5.0",
+    "eslint": "^9.0.0",
+    "typescript-eslint": "^8.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    },
+    "typescript-eslint": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "typescript-eslint": "^8.58.0"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/eslint-config-design#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
+  }
+}

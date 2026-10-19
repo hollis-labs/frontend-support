@@ -1,0 +1,204 @@
+{
+  "sourceCommit": "b1db0f1",
+  "screenshots": 23,
+  "samples": [
+    {
+      "theme": "nanite-default",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "nanite-default",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-a",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-a",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-b",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-b",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-d",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-d",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-e",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-e",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-f",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "dir-f",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "light",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "dark",
+      "queueAction": {
+        "opacity": "1",
+        "display": "flex",
+        "width": 32
+      }
+    }
+  ],
+  "keyboardDisclosure": true,
+  "queueChevron": {
+    "closed": "-90deg",
+    "open": "0deg"
+  },
+  "queueKeyboardAction": true,
+  "scrolling": {
+    "scrollTop": 633,
+    "maxHeight": "160px",
+    "overflow": "auto",
+    "tabIndex": 0
+  },
+  "confirmationHostAccepted": true,
+  "confirmationHostRejected": true,
+  "resolvedActionsHidden": true,
+  "mobileOverflow": false,
+  "reducedMotionTransition": "none",
+  "browserErrors": []
+}

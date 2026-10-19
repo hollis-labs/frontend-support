@@ -1,0 +1,13 @@
+@import "../../kit-dashboard/src/styles/theme.css";
+@import "../src/styles/source.css";
+@source "../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx,html}";
+@source "../../design-components/src/**/*.{ts,tsx}";
+@source "../../kit-dashboard/src/components/widgets/timestamp-sample-chart.tsx";
+
+/* This standalone fixture has no fixed app shell; use document scrolling. */
+html, body, #root {
+  height: auto;
+  min-height: 100%;
+  overflow: visible;
+}

@@ -1,0 +1,68 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+const { chromium } = await import(process.env.PLAYWRIGHT_MODULE || 'playwright');
+const base = process.env.BASE_URL || 'http://127.0.0.1:4191';
+const output = process.env.PROOF_OUTPUT;
+if (!output) throw Error('Set PROOF_OUTPUT to a scratch artifact directory');
+await fs.mkdir(`${output}/screenshots`, { recursive: true });
+const browser = await chromium.launch({ headless: true });
+try {
+  const context = await browser.newContext({ viewport: { width: 1360, height: 900 }, hasTouch: true });
+  const requests = [], errors = [];
+  context.on('request', request => { if (!request.url().startsWith(base) && !request.url().startsWith('data:')) requests.push(request.url()); });
+  await context.route('https://destination.example.test/**', route => route.fulfill({ contentType: 'text/html', body: '<!doctype html><title>Host destination</title><p>Activated host link</p>' }));
+  const page = await context.newPage();
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto(base);
+  const triggers = page.getByRole('button', { name: 'Open in', exact: true });
+  assert.equal(await triggers.count(), 2);
+  assert.equal(await triggers.nth(1).isDisabled(), true);
+  const trigger = triggers.first();
+  await trigger.focus(); await page.keyboard.press('Enter');
+  const menu = page.getByRole('menu'); await menu.waitFor();
+  const focused = async name => { await page.waitForFunction(name => document.activeElement?.textContent === name, name); };
+  const invalid = menu.getByRole('menuitem', { name: 'Unsupported destination Unavailable destination' });
+  assert.equal(await invalid.getAttribute('aria-disabled'), 'true');
+  assert.equal(await invalid.getAttribute('href'), null);
+  assert.equal(await invalid.evaluate(el => el.tagName === 'A'), false);
+  await focused('Host document');
+  await page.keyboard.press('ArrowDown');
+  await focused('Unsupported destinationUnavailable destination');
+  await page.keyboard.press('Enter');assert.equal(await menu.isVisible(),true);assert.deepEqual(requests,[]);
+  await page.keyboard.press('ArrowDown');
+  await focused('Host workspace');
+  await page.keyboard.press('ArrowUp');
+  await focused('Unsupported destinationUnavailable destination');
+  await page.keyboard.press('ArrowUp');
+  await focused('Host document');
+  await invalid.tap({ force: true }); assert.equal(await menu.isVisible(), true);
+  assert.deepEqual(requests, []);
+  const themes = ['nanite-default','dir-a','dir-b','dir-d','dir-e','dir-f','sysop-p4-white','sysop-green-phosphor','sysop-amber-phosphor','sysop-hi-contrast'];
+  const palette = [];
+  for (const theme of themes) for (const mode of ['light','dark']) {
+    await page.evaluate(({theme,mode}) => { document.documentElement.dataset.theme=theme;document.documentElement.dataset.mode=mode; },{theme,mode});
+    await page.waitForTimeout(400); // Let theme transitions settle before measuring/capturing.
+    palette.push(await menu.evaluate((el) => ({ theme:document.documentElement.dataset.theme,mode:document.documentElement.dataset.mode,color:getComputedStyle(el).color,background:getComputedStyle(el).backgroundColor })));
+    await page.screenshot({path:`${output}/screenshots/${theme}-${mode}.png`,animations:'disabled'});
+  }
+  await page.keyboard.press('Escape');await menu.waitFor({state:'hidden'});
+  assert.equal(await trigger.evaluate(el=>el===document.activeElement),true);
+  await page.keyboard.press('Tab');assert.equal(await page.getByRole('button',{name:'Next host control'}).evaluate(el=>el===document.activeElement),true);
+  await page.setViewportSize({width:390,height:844});await trigger.tap();await menu.waitFor();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  await page.screenshot({path:`${output}/screenshots/mobile.png`,animations:'disabled'});
+  const link=menu.getByRole('menuitem',{name:'Host document',exact:true});
+  const href='https://destination.example.test/document?content=host%20encoded#section';
+  assert.equal(await link.getAttribute('href'),href);
+  assert.equal(await link.getAttribute('target'),'_blank');assert.equal(await link.getAttribute('rel'),'noopener noreferrer');
+  assert.deepEqual(requests,[]);
+  const newPage=context.waitForEvent('page');await link.tap();const destination=await newPage;await destination.waitForLoadState();
+  assert.equal(destination.url(),href);
+  const isolation=await destination.evaluate(()=>({opener:window.opener===null,referrer:document.referrer}));
+  assert.deepEqual(isolation,{opener:true,referrer:''});
+  assert.equal(page.url(),base+'/');
+  assert.deepEqual(requests,['https://destination.example.test/document?content=host%20encoded']);
+  assert.deepEqual(errors,[]);
+  const result={screenshots:21,themes,palette,emptyDisabled:true,rejectedNonLinkInert:true,keyboardOpen:true,keyboardDisabledDiscoverableInert:true,escapeFocusReturn:true,tabOrder:true,touchActivation:true,mobileNoOverflow:true,hrefPreserved:href,onlyActivatedRequest:requests,isolation,pageErrors:errors};
+  await fs.writeFile(`${output}/browser.json`,JSON.stringify(result,null,2));console.log(JSON.stringify(result));
+} finally { await browser.close(); }
