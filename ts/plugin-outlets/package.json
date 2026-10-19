@@ -17,11 +17,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/plugin-outlets.git"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/plugin-outlets"
   },
-  "homepage": "https://github.com/hollis-labs/plugin-outlets#readme",
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/plugin-outlets#readme",
   "bugs": {
-    "url": "https://github.com/hollis-labs/plugin-outlets/issues"
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   },
   "type": "module",
   "sideEffects": false,

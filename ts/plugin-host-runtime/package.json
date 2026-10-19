@@ -17,11 +17,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/plugin-host-runtime.git"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/plugin-host-runtime"
   },
-  "homepage": "https://github.com/hollis-labs/plugin-host-runtime#readme",
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/plugin-host-runtime#readme",
   "bugs": {
-    "url": "https://github.com/hollis-labs/plugin-host-runtime/issues"
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   },
   "type": "module",
   "sideEffects": false,

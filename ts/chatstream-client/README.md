@@ -5,7 +5,7 @@ reconnects with `Last-Event-ID` when the connection drops, de-duplicates by `seq
 reports gaps, and notices a stalled connection by whether bytes arrive, not by what
 they say. It yields the events of [go-chatstream](https://github.com/hollis-labs/go-chatstream)
 and nothing else: folding them into a message is
-[`@hollis-labs/chatstream-reducer`](https://github.com/hollis-labs/chatstream-reducer)'s job.
+[`@hollis-labs/chatstream-reducer`](../chatstream-reducer/)'s job.
 
 Framework-free core. React 19 is an optional peer of `./react`, a small hook over the
 same client.

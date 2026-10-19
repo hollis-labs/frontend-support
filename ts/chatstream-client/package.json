@@ -17,11 +17,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/chatstream-client.git"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/chatstream-client"
   },
-  "homepage": "https://github.com/hollis-labs/chatstream-client#readme",
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/chatstream-client#readme",
   "bugs": {
-    "url": "https://github.com/hollis-labs/chatstream-client/issues"
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   },
   "type": "module",
   "sideEffects": false,

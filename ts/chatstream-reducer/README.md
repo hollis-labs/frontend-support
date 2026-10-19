@@ -2,7 +2,7 @@
 
 A pure reducer from chat-stream events to one normalized assistant message. Give it the
 events of [go-chatstream](https://github.com/hollis-labs/go-chatstream) (from
-[`@hollis-labs/chatstream-client`](https://github.com/hollis-labs/chatstream-client), a saved
+[`@hollis-labs/chatstream-client`](../chatstream-client/), a saved
 log, or a test) and get back the message: its parts, tool calls joined with their results,
 usage, steps, approvals, gaps and status. No I/O, no timers, no framework, no dependencies.
 

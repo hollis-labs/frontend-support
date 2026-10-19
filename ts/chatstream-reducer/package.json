@@ -17,11 +17,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/chatstream-reducer.git"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/chatstream-reducer"
   },
-  "homepage": "https://github.com/hollis-labs/chatstream-reducer#readme",
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/chatstream-reducer#readme",
   "bugs": {
-    "url": "https://github.com/hollis-labs/chatstream-reducer/issues"
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   },
   "type": "module",
   "sideEffects": false,

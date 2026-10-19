@@ -14,11 +14,12 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/sysop-ui.git"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/sysop-ui"
   },
-  "homepage": "https://github.com/hollis-labs/sysop-ui#readme",
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/sysop-ui#readme",
   "bugs": {
-    "url": "https://github.com/hollis-labs/sysop-ui/issues"
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   },
   "publishConfig": {
     "access": "public",
