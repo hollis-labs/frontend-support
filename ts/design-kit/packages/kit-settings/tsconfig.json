@@ -1,0 +1,25 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node"],
+    "resolveJsonModule": true,
+    "baseUrl": ".",
+    /*
+     * SIBLINGS RESOLVE TO SOURCE HERE, AND TO THE PACKAGE NAME IN tsconfig.build.json.
+     *
+     * Same split kit-dashboard uses, for the same two reasons. `npm ci` does not build
+     * `design-components` (it uses `prepack`, not `prepare`, deliberately), so
+     * typechecking a fresh clone has to read sibling SOURCE or it reports TS2307 on
+     * every CI run. But a `paths` mapping is resolved BEFORE declaration emit and the
+     * RESOLVED path is written into the output — which shipped three declarations in
+     * kit-dashboard 0.1.0-pre pointing at `../../../design-components/src/index.ts`,
+     * a path no consumer has. Typecheck wants source; emit wants the package name.
+     */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@hollis-labs/design-components": ["../design-components/src/index.ts"],
+      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"]
+    }
+  },
+  "include": ["src", "demo", "vite.config.ts", "vitest.config.ts"]
+}

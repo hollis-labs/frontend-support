@@ -1,0 +1,140 @@
+{
+  "contract_version": 1,
+  "app": { "id": "nanite", "label": "Nanite" },
+  "revision": "nanite-example-1",
+  "settings": [
+    {
+      "id": "app.preferences", "label": "Preferences", "section": "settings",
+      "scope": { "kind": "app", "id": "nanite" },
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object", "additionalProperties": false,
+        "required": ["developer_mode", "tool_stream_behavior", "tool_drawer_retention", "embedding_mode"],
+        "properties": {
+          "developer_mode": { "type": "boolean", "title": "Developer mode" },
+          "tool_stream_behavior": {
+            "type": "string", "title": "Tool stream behavior",
+            "enum": ["streaming", "persist", "hidden"]
+          },
+          "tool_drawer_retention": {
+            "type": "integer", "title": "Tool drawer retention (minutes; -1 keeps)",
+            "enum": [-1, 5, 15, 30, 60]
+          },
+          "embedding_mode": {
+            "type": "string", "title": "Embedding mode",
+            "enum": ["", "disabled", "explicit"]
+          }
+        }
+      },
+      "fields": {
+        "developer_mode": { "editable": true, "secret": false, "restart_required": false },
+        "tool_stream_behavior": { "editable": true, "secret": false, "restart_required": false },
+        "tool_drawer_retention": { "editable": true, "secret": false, "restart_required": false },
+        "embedding_mode": { "editable": true, "secret": false, "restart_required": false }
+      },
+      "resolution": { "precedence": ["override", "default"], "write_layer": "override" },
+      "capabilities": {
+        "can_read": true, "can_validate": true, "can_update": true, "can_reset": false
+      },
+      "endpoints": {
+        "read": { "method": "GET", "path": "/admin/settings/app.preferences" },
+        "validate": { "method": "POST", "path": "/admin/settings/app.preferences/validate" },
+        "update": { "method": "POST", "path": "/admin/settings/app.preferences/update" }
+      }
+    },
+    {
+      "id": "app.deployment", "label": "Deployment configuration", "section": "settings",
+      "scope": { "kind": "app", "id": "nanite" },
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object", "additionalProperties": false,
+        "required": ["listen_address"],
+        "properties": {
+          "listen_address": {
+            "type": "string", "title": "Listen address", "readOnly": true,
+            "description": "Illustrative deployment-owned setting; no browser override."
+          }
+        }
+      },
+      "fields": {
+        "listen_address": {
+          "editable": false, "secret": false,
+          "read_only_reason": "Managed by deployment configuration",
+          "restart_required": true, "apply_target": "nanite"
+        }
+      },
+      "resolution": { "precedence": ["env", "file", "default"] },
+      "capabilities": {
+        "can_read": true, "can_validate": false, "can_update": false, "can_reset": false
+      },
+      "endpoints": {
+        "read": { "method": "GET", "path": "/admin/settings/app.deployment" }
+      }
+    },
+    {
+      "id": "plugin.example-notifier", "label": "Example notifier (hypothetical plugin)",
+      "section": "settings", "scope": { "kind": "plugin", "id": "example-notifier" },
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object", "additionalProperties": false,
+        "required": ["api_token"],
+        "properties": {
+          "api_token": {
+            "type": "string", "title": "API token", "writeOnly": true, "minLength": 1
+          }
+        }
+      },
+      "fields": {
+        "api_token": { "editable": true, "secret": true, "restart_required": false }
+      },
+      "resolution": { "precedence": ["override"], "write_layer": "override" },
+      "capabilities": {
+        "can_read": true, "can_validate": true, "can_update": true, "can_reset": false
+      },
+      "endpoints": {
+        "read": { "method": "GET", "path": "/admin/settings/plugin.example-notifier" },
+        "validate": { "method": "POST", "path": "/admin/settings/plugin.example-notifier/validate" },
+        "update": { "method": "POST", "path": "/admin/settings/plugin.example-notifier/update" }
+      }
+    }
+  ],
+  "health": [
+    {
+      "id": "processes", "label": "Process health", "section": "status",
+      "endpoint": { "method": "GET", "path": "/admin/health/processes" },
+      "poll_interval_ms": 15000, "stale_after_ms": 45000
+    }
+  ],
+  "stats": [
+    {
+      "id": "tracked_processes", "label": "Tracked processes", "section": "status",
+      "unit": "count", "kind": "gauge",
+      "endpoint": { "method": "GET", "path": "/admin/stats/tracked_processes" },
+      "poll_interval_ms": 15000, "stale_after_ms": 45000
+    }
+  ],
+  "series": [
+    {
+      "id": "execution_duration", "label": "Execution duration", "section": "diagnostics",
+      "unit": "milliseconds", "kind": "gauge",
+      "endpoint": { "method": "GET", "path": "/admin/series/execution_duration" },
+      "poll_interval_ms": 30000, "stale_after_ms": 90000,
+      "max_points": 240, "max_window_seconds": 86400
+    }
+  ],
+  "diagnostics": [
+    {
+      "id": "embedding", "label": "Embedding runtime state", "section": "diagnostics",
+      "endpoint": { "method": "GET", "path": "/admin/diagnostics/embedding" },
+      "poll_interval_ms": 30000, "stale_after_ms": 90000,
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object", "additionalProperties": false,
+        "required": ["embedding_status"],
+        "properties": {
+          "embedding_status": { "type": "string", "maxLength": 256 }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "result": {
+    "edgeStroke": "rgb(145, 151, 158)",
+    "token": "#91979e",
+    "controls": "rgb(22, 24, 26)",
+    "background": "rgb(12, 13, 14)",
+    "traveller": "hl-workflow-travel"
+  },
+  "reduced": {
+    "display": "none",
+    "animation": "none"
+  },
+  "themes": [
+    "nanite-default",
+    "dir-a",
+    "dir-b",
+    "dir-d",
+    "dir-e",
+    "dir-f",
+    "sysop-p4-white",
+    "sysop-green-phosphor",
+    "sysop-amber-phosphor",
+    "sysop-hi-contrast"
+  ],
+  "screenshots": 20,
+  "zoomChanged": true,
+  "readOnly": true,
+  "connectionCreated": true,
+  "pageErrors": []
+}

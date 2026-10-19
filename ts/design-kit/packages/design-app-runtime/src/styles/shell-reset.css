@@ -1,0 +1,59 @@
+/*
+ * The document-shell lock. Opt-in — import it deliberately:
+ *
+ *   import '@hollis-labs/design-app-runtime/shell-reset.css'
+ *
+ * WHY THIS IS IN A TRANSPORT PACKAGE, since that needs justifying.
+ *
+ * This is the one part of sysop-ui's `@layer base` that is neither appearance nor
+ * idiom. It names no token, no color, no scale — it is a layout invariant about how
+ * a single-page app mounts. The rest of that layer is not this: the `body`
+ * background/font rules and the `*` border/outline colors name `--color-*` tokens
+ * and belong to the token layer; the scrollbar suppression and the `outline: none`
+ * focus-ring rules are taste, and belong to a kit.
+ *
+ * TWO CODEBASES WROTE THIS INDEPENDENTLY, down to incidental details — the legacy
+ * `-ms-overflow-style` sibling, the redundant `width: 0; height: 0`. sysop-ui has it
+ * inside `@layer base`; Nanite has it as plain top-level CSS in `index.css:268`.
+ * Neither imports the other. By this epic's own standard, convergence without
+ * coordination is what makes something everyone's rather than one kit's.
+ *
+ * It cannot live in a kit, because every kit needs it before its shell works — put
+ * it in kit-dashboard and kit-chat re-derives it, which is precisely the failure
+ * mode this package exists to stop.
+ *
+ * WHY OPT-IN RATHER THAN A SIDE-EFFECT IMPORT. `overflow: hidden` on `body` is a
+ * product decision — it means the document never scrolls, which is right for an app
+ * shell and wrong for a document-shaped page. A transport package that silently
+ * changed page scroll on install would be asserting appearance from the plumbing
+ * layer, which is the thing the epic forbids. So this file does nothing until an app
+ * imports it.
+ *
+ * THE REAL FIX IS A COMPONENT, AND IT IS NOT THIS. The failure everyone actually
+ * hits is the flex chain INSIDE the app — `<main className="min-h-0 flex-1
+ * overflow-hidden">` is a block container, so a child's `flex-1` has nothing to size
+ * against and the page silently stops scrolling. Cerberus shipped that bug for
+ * months. That wants an `AppShell` component owning the whole chain, which belongs
+ * to design-components — see [[sysop_ui_app_shell_layout_primitive]], which
+ * specifies it. This file is the document-level precondition that component assumes,
+ * not a substitute for it.
+ */
+
+/*
+ * Assumes the SPA mounts into `#root` — the Hollis Labs app convention, and the
+ * same selector both implementations chose.
+ */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body,
+#root {
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+}

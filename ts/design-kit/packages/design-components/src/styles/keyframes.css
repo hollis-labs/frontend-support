@@ -1,0 +1,27 @@
+/**
+ * The keyframes this package's components reference by name.
+ *
+ * OPT-IN, like design-app-runtime's shell-reset.css:
+ *   import '@hollis-labs/design-components/keyframes.css'
+ *
+ * WHY THIS FILE EXISTS. `ProgressBar`'s indeterminate variant referenced
+ * `sysop-progress-indeterminate`, declared only in kit-dashboard's `theme.css`
+ * (line 427). A base component depending on a kit stylesheet is the same class of
+ * coupling as the `data-row-interactive` attribute — and a worse failure, because
+ * the animation name silently does nothing: the bar renders as a static
+ * one-third-width stub at the left of the track, with no error anywhere. It is
+ * also invisible to every lint rule here, which read class names rather than
+ * inline style values.
+ *
+ * Renamed off the `sysop-` prefix: this package is not sysop.
+ */
+
+/* A one-third-width fill sweeping across the track. */
+@keyframes hl-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}

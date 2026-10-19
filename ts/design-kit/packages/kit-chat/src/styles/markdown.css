@@ -1,0 +1,34 @@
+/*
+ * REGISTER `@hollis-labs/kit-chat/markdown` WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ * You need this ONLY if you import `@hollis-labs/kit-chat/markdown`. A consumer using
+ * `ChatStream` with its own rendering never imports this file and never installs
+ * `streamdown` — that separation is the entire reason the markdown renderer is an
+ * optional peer behind a subpath, and it is verified by a build that imports only
+ * `ChatStream` and requires nothing streamdown-shaped.
+ *
+ *   @import "@hollis-labs/kit-chat/markdown.css";
+ *   @import "streamdown/styles.css";              <- streamdown's own keyframes
+ *
+ * WHAT THE LINE BELOW IS FOR. Tailwind emits a utility only for a class string it has
+ * seen and does not scan `node_modules`; streamdown's class strings live in its `dist`.
+ * Without this, markdown renders substantially unstyled and nothing errors — the same
+ * silent failure as our own packages, one dependency deeper.
+ *
+ * WHY WE SHIP IT RATHER THAN QUOTE STREAMDOWN'S INSTRUCTION. Its README asks the
+ * consumer to write `@source "../node_modules/streamdown/dist/*.js"` and to *"adjust
+ * the number of `../` segments based on where your CSS file lives"*. That is a glob
+ * whose correctness depends on the consumer's directory depth, and a wrong one fails
+ * exactly as silently as a missing one. `@source` resolves relative to the file that
+ * declares it, so declaring it HERE fixes the path against a layout this package
+ * controls instead of one it cannot see.
+ *
+ * THE ASSUMPTION, STATED. The path below assumes `streamdown` sits in the same
+ * `node_modules` root as `@hollis-labs`, which is what npm, yarn and pnpm all produce
+ * for a package a consumer installed directly. If your layout differs — a nested
+ * install, a vendored copy — this resolves to nothing, silently, and you should write
+ * streamdown's own `@source` line in your stylesheet instead. Verified against a real
+ * npm install; not verified against every layout, and it cannot be.
+ */
+
+@source "../../../../streamdown/dist/*.js";

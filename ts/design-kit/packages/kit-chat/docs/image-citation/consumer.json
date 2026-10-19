@@ -1,0 +1,16 @@
+{
+  "sourceCommit": "f24c4c74dd52b5bcdd2c3dba5c70206864f6eda8",
+  "packedConsumer": true,
+  "kitChatTarballSHA256": "36492b458a22add0b40f158c223fcbf2ef9962e53a2ab46360280c5f385f3016",
+  "workspaceLinks": false,
+  "streamdownInstalled": false,
+  "mainEntryChatStreamOnly": true,
+  "fourDocumentedStylesheets": true,
+  "productionBuild": true,
+  "chatStreamBrowserRender": true,
+  "styling": {
+    "overflowY": "auto",
+    "padding": "24px 16px"
+  },
+  "browserErrors": []
+}

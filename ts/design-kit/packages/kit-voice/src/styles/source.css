@@ -1,0 +1,19 @@
+/*
+ * REGISTER THIS PACKAGE WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ *   @import "tailwindcss";
+ *   @import "@hollis-labs/design-tokens/design-tokens.css";
+ *   @import "@hollis-labs/design-components/source.css";
+ *   @import "@hollis-labs/kit-voice/source.css";        <-- this file
+ *
+ * Without it the components render mostly unstyled and nothing errors: Tailwind v4
+ * emits a utility only for a class string it has seen and does not scan
+ * `node_modules`, and this package's class strings ship inside `dist`. Both imports
+ * are needed — this package composes design-components' primitives, whose class
+ * strings live in a different `dist`.
+ *
+ * `@source` resolves relative to the file that declares it, which is why this ships
+ * as a stylesheet rather than as a glob each consumer writes.
+ */
+
+@source "../../dist/**/*.js";

@@ -1,0 +1,28 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": [
+      "ES2023",
+      "DOM"
+    ],
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@hollis-labs/kit-settings": [
+        "../kit-settings/src/index.ts"
+      ],
+      "@hollis-labs/design-components": [
+        "../design-components/src/index.ts"
+      ],
+      "@hollis-labs/design-tokens": [
+        "../design-tokens/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "vitest.config.ts",
+    "test/registry-compat.test.ts"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@hollis-labs/design-components": [
+        "../design-components/src/index.ts"
+      ],
+      "@hollis-labs/design-tokens": [
+        "../design-tokens/src/index.ts"
+      ],
+      "@hollis-labs/kit-dashboard/charts": [
+        "../kit-dashboard/src/charts.ts"
+      ],
+      "@hollis-labs/kit-settings": [
+        "../kit-settings/src/index.ts"
+      ],
+      "@hollis-labs/kit-observe": [
+        "../kit-observe/src/index.ts"
+      ],
+      "@hollis-labs/kit-observe/charts": [
+        "../kit-observe/src/charts.ts"
+      ],
+      "@hollis-labs/kit-dashboard/ui": [
+        "../kit-dashboard/src/ui.ts"
+      ],
+      "@hollis-labs/kit-dashboard/layout": [
+        "../kit-dashboard/src/layout.ts"
+      ],
+      "@hollis-labs/kit-admin": [
+        "./src/index.ts"
+      ],
+      "@hollis-labs/kit-admin/charts": [
+        "./src/charts.tsx"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "demo",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
+}

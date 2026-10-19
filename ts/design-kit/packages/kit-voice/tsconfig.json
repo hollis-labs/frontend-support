@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["vite/client", "node"],
+    "baseUrl": ".",
+    /*
+     * SIBLINGS RESOLVE TO SOURCE HERE AND TO THE PACKAGE NAME IN tsconfig.build.json,
+     * for the reason kit-chat documents: `npm ci` does not build design-components
+     * (`prepack`, not `prepare`), so typecheck must read sibling source, while a
+     * `paths` mapping would otherwise leak a relative path into the emitted .d.ts.
+     */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@hollis-labs/design-components": ["../design-components/src/index.ts"],
+      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"]
+    }
+  },
+  "include": ["src", "demo", "vite.config.ts", "vitest.config.ts"]
+}
