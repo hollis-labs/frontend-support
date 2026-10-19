@@ -1,0 +1,2 @@
+token-store-file ts/sysop-ui/.npmrc npm registry setting only; the file holds no credential (owner-approved 2026-10-19)
+private-path ts/sysop-ui/demo/views/gallery.tsx placeholder example path in a demo fixture; not a real user path
