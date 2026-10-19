@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Repository layout guard (frontend-support). Exits non-zero when:
+#   - a loose file sits at the root, a submodule or LFS filter exists, a file is over 10 MiB,
+#     or a directory name is not lower case [a-z0-9._-];
+#   - a package directory <group>/<name>/ has no package.json (a Go-free repository: no go.mod);
+#   - anything but a group directory (ts) holds imported packages at the root;
+#   - a scan-public allowlist line has no reason, or a reason that quotes an address or value.
+#
+# Usage: scripts/check-layout
+set -euo pipefail
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=_common.sh
+. "$(cd "$(dirname "$0")" && pwd)/_common.sh"
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=check-common.sh
+. "$SCRIPT_DIR/check-common.sh"
+
+fail=0
+bad() {
+  echo "FAIL: $*" >&2
+  fail=1
+}
+
+check_common
+
+count=0
+for d in $(project_dirs); do
+  [ "$d" = "$GROUP" ] || bad "$d/: top-level directory; packages live under $GROUP/<name>/"
+done
+for p in $(repo_files | awk -F/ -v g="$GROUP" '$1 == g && NF > 2 { print $1 "/" $2 }' | sort -u); do
+  count=$((count + 1))
+  [ -f "$REPO_ROOT/$p/package.json" ] || bad "$p: no package.json"
+  [ ! -e "$REPO_ROOT/$p/go.mod" ] || bad "$p/go.mod: Go modules belong in libs, tools or plugins"
+done
+repo_files | awk -F/ -v g="$GROUP" '$1 == g && NF == 2 { print }' | while IFS= read -r f; do echo "FAIL: $f: loose file in $GROUP/" >&2; done
+[ "$fail" -eq 0 ] || exit 1
+echo "ok: layout ($count packages under $GROUP/)"
