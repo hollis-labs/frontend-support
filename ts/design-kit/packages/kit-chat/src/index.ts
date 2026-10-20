@@ -22,6 +22,11 @@ export type { ChatComposerProps } from './components/chat-composer'
 export { ChatStream } from './components/chat-stream'
 export type { ChatStreamProps } from './components/chat-stream'
 
+export { ResizableChatPanel } from './components/resizable-chat-panel'
+export type { ResizableChatPanelProps } from './components/resizable-chat-panel'
+export { ForwardMessageDialog } from './components/forward-message-dialog'
+export type { ForwardMessageDialogProps, ForwardRecipient } from './components/forward-message-dialog'
+
 export {
   ArtifactCard,
   DocumentCard,

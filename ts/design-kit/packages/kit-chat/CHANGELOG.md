@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- CW-20261020-0041: Add `ResizableChatPanel` with pointer/keyboard resizing and
+  viewport bounds, and `ForwardMessageDialog` with searchable recipient aliases,
+  a source preview, note, fixed header/footer and retry-safe explicit submission.
+- CW-20261020-0041: Give `ChatMarkdown` secondary body text and distinct token-based
+  headings, emphasis, lists, quotes, links and code surfaces.
+
 - `ChatStream` rows are memoized on item identity and `renderItem`; unchanged rows no
   longer re-render when a sibling changes or the parent re-renders. Keep unchanged
   `items` entries referentially stable and pass a stable `renderItem`.
