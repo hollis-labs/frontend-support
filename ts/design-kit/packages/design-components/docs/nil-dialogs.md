@@ -92,3 +92,23 @@ intent; fixtures use seed 4421 and reference time 2026-10-04T14:30:00Z.
 
 Synthetic composition/pointer tests establish forwarding and state admission.
 Hardware IME and physical touch acceptance are not claimed.
+
+## Choosing the scaffold
+
+Use `FormDialog` for an editable form, `DetailDialog` for a bounded record view,
+and `InspectionDialog` for navigation plus a larger body. These own a bounded
+viewport, fixed header/footer and one body scroll region with contained
+overscroll. New features should supply fields/content to them instead of
+rebuilding the chrome with `DialogContent` and overflow utilities.
+
+`DialogContent` is the lower-level escape hatch. Its default viewport scroll is
+for unbounded content; `scrollMode="body"` is for bounded compositions that
+provide their own body scroller. Do not put a second page scroller around a
+bounded scaffold. Validate wheel scrolling at both ends, keyboard movement in
+nested lists, short viewports and enlarged text in a real browser; jsdom cannot
+establish scroll geometry.
+
+Use `InputCombobox` for an editable, single-recipient field with an anchored
+results dropdown. Existing `Combobox` remains the button-triggered picker.
+Both delegate keyboard interaction to existing primitives. Neither replaces
+`SearchPalette` for a full command-palette workflow.

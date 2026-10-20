@@ -153,3 +153,7 @@ for the additional setup required by the optional `/markdown` subpath.
 The accompanying design gate change makes the existing undefined-token rule
 validate `chat` and `dash` names even though those families declare no tokens.
 An invented `chat-*` name is now a gate error rather than a silent no-op.
+
+- Forwarding reuses FormDialog with an editable To/dropdown field and compact
+  ruled layout. Markdown styles now survive Streamdown class merging and keep
+  code proportional to body text with semantic color accents.

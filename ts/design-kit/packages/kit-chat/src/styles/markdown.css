@@ -32,3 +32,72 @@
  */
 
 @source "../../../../streamdown/dist/*.js";
+
+/* Renderer-owned styles: Streamdown's internal class merge does not know our
+ * typography tokens. Keep type and color together here, beyond that merge.
+ * Em sizes follow the host's body scale, including dashboard reference sizing. */
+.chat-markdown {
+  font-family: var(--font-sans);
+  font-size: var(--dash-body-size, var(--text-control));
+  line-height: 1.65;
+  color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
+}
+.chat-markdown :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--color-info);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  margin-block: 1.2em .45em;
+}
+.chat-markdown h1 { font-size: 1.25em; }
+.chat-markdown h2 { font-size: 1.15em; }
+.chat-markdown :is(h3, h4, h5, h6) { font-size: 1.05em; }
+.chat-markdown :is(p, ul, ol) { margin-block: .7em; }
+.chat-markdown :is(ul, ol) { padding-left: 1.5em; }
+.chat-markdown ul { list-style: disc; }
+.chat-markdown ol { list-style: decimal; }
+.chat-markdown li { margin-block: .2em; }
+.chat-markdown li::marker { color: var(--color-info); }
+.chat-markdown strong { color: var(--color-fg-secondary); font-weight: var(--font-weight-semibold); }
+.chat-markdown em { color: var(--color-fg-secondary); }
+.chat-markdown a { color: var(--color-info); text-decoration: underline; text-underline-offset: .2em; }
+.chat-markdown blockquote {
+  margin-block: 1em;
+  border-left: 2px solid var(--color-info);
+  background: var(--color-surface);
+  padding: .1em 1em;
+  color: var(--color-fg-muted);
+}
+.chat-markdown code {
+  font-family: var(--font-mono);
+  font-size: .92em;
+  line-height: inherit;
+  color: var(--color-warning);
+}
+.chat-markdown [data-streamdown="inline-code"] {
+  padding: .1em .3em;
+  border-radius: 0;
+  background: var(--color-surface);
+}
+.chat-markdown [data-streamdown="code-block"] {
+  margin-block: 1em;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-surface);
+  color: var(--color-fg-secondary);
+  font-size: 1em;
+}
+.chat-markdown [data-streamdown="code-block-header"] { font-size: .85em; color: var(--color-fg-muted); }
+.chat-markdown pre { margin: 0; padding: .85em 1em; overflow-x: auto; font-size: 1em; line-height: 1.6; }
+.chat-markdown pre code { color: var(--color-fg-secondary); }
+.chat-markdown table { font-size: 1em; }
+.chat-markdown th { background: var(--color-surface); color: var(--color-info); }
+.chat-markdown td { color: var(--color-fg-muted); }
+.chat-markdown :is(th, td) { padding: .4em .7em; border: 1px solid var(--color-border); }
+.chat-markdown hr { margin-block: 1.3em; border-color: var(--color-border); }
+.chat-markdown > :first-child { margin-top: 0; }
+.chat-markdown > :last-child { margin-bottom: 0; }
+.chat-markdown [data-streamdown="code-block-body"] { font-size: inherit; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.chat-markdown [data-streamdown="code-block"] { padding: 0; gap: 0; }
+.chat-markdown [data-streamdown="code-block-header"] { padding: .5em 1em; border-bottom: 1px solid var(--color-border); }
+.chat-markdown :is(th, td) { font-size: inherit; }

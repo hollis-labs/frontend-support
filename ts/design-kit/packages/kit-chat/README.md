@@ -781,3 +781,18 @@ kit never sends messages or truncates the payload.
 spacing, quotes, links and code surfaces from the token contract. Import both
 `@hollis-labs/kit-chat/source.css` and `@hollis-labs/kit-chat/markdown.css` so the
 consumer emits the kit and renderer utilities.
+
+### Forwarding composition and Markdown defaults
+
+`ForwardMessageDialog` composes `FormDialog` and `InputCombobox` from
+`design-components`: fixed chrome, an editable To field, an anchored results
+list, a short source excerpt and a note. The host still owns recipient discovery,
+validation and delivery. Selecting a recipient never submits the message.
+
+`markdown.css` owns `.chat-markdown` type, palette and code proportions. Keep
+these renderer styles in CSS: Streamdown's internal utility merger does not know
+our custom `text-*` typography tokens and may remove them beside color tokens.
+Body type follows the host dashboard body token when present; inline/fenced code
+uses a relative scale. Verify computed styles on the rendered Streamdown DOM,
+not just classes passed into it. The stylesheet uses semantic palette tokens for
+headings, links, list markers, quotes and inline code, including light mode.

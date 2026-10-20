@@ -61,6 +61,7 @@ function DialogContent({
   children,
   showCloseButton = true,
   widthClassName,
+  scrollMode = "viewport",
   showFullscreenToggle, fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus,
   ...props
 }: DialogPrimitive.Popup.Props & DialogOptions & {
@@ -72,6 +73,8 @@ function DialogContent({
    * otherwise win at the `sm` breakpoint.
    */
   widthClassName?: string
+  /** Bounded scaffolds own body scrolling; raw long content may scroll the viewport. */
+  scrollMode?: "body" | "viewport"
 }) {
   const { popupRef, fullscreen, toggle, finalFocus: admittedFinalFocus } = useDialogOptions({ fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus }, props.ref)
   return (
@@ -79,9 +82,9 @@ function DialogContent({
       <DialogOverlay />
       <DialogPrimitive.Viewport
         data-slot="dialog-viewport"
-        className={cn("fixed inset-0 z-[60] overflow-y-auto", fullscreen ? "p-0" : "p-4")}
+        className={cn("fixed inset-0 z-[60] overscroll-contain", scrollMode === "body" ? "overflow-hidden" : "overflow-y-auto", fullscreen ? "p-0" : "p-4")}
       >
-        <div className="flex min-h-full items-center justify-center">
+        <div className={cn("flex items-center justify-center", scrollMode === "body" ? "h-full min-h-0" : "min-h-full")}>
           <DialogPrimitive.Popup
             data-slot="dialog-content"
             className={cn(
