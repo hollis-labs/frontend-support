@@ -52,7 +52,19 @@ export function ChatMarkdown({ children, streaming = false, className, ...rest }
   return (
     <Streamdown
       mode={streaming ? 'streaming' : 'static'}
-      className={cn('text-control text-fg', className)}
+      className={cn(
+        'font-sans text-control leading-relaxed text-fg-secondary [overflow-wrap:anywhere]',
+        '[&_h1]:mb-3 [&_h1]:mt-6 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:text-fg',
+        '[&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-fg',
+        '[&_h3]:mb-2 [&_h3]:mt-4 [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-fg',
+        '[&_h4]:font-semibold [&_h4]:text-fg [&_strong]:font-semibold [&_strong]:text-fg',
+        '[&_p]:my-3 [&_ul]:my-3 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:my-3 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:my-1 [&_li]:pl-1 [&_li::marker]:text-fg-muted',
+        '[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-primary/40 [&_blockquote]:bg-surface [&_blockquote]:px-4 [&_blockquote]:py-1 [&_blockquote]:text-fg-muted',
+        '[&_a]:text-link [&_a]:underline [&_a]:underline-offset-2',
+        '[&_code]:font-mono [&_code]:text-caption [&_code]:text-fg-secondary [&_pre]:my-4 [&_pre]:overflow-x-auto [&_pre]:rounded-panel [&_pre]:border [&_pre]:border-border [&_pre]:bg-surface [&_pre]:p-3',
+        '[&_table]:text-control [&_th]:bg-surface [&_th]:text-fg [&_td]:text-fg-secondary [&_hr]:my-5 [&_hr]:border-divider [&>:first-child]:mt-0 [&>:last-child]:mb-0',
+        className,
+      )}
       {...rest}
     >
       {children}

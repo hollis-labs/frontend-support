@@ -761,3 +761,23 @@ Only Button/Tooltip/cn exports available in 0.3.0 are used by this slice; the
 integrated kit-chat package requires **design-components ^0.4.0** for its
 Collapsible/HoverCard exports. See [demo/artifact.tsx](demo/artifact.tsx) and
 [verification](docs/artifact-c/verification.md).
+
+## Resizable panels and forwarding
+
+`ResizableChatPanel` is a controlled right-edge panel. Supply `width` and
+`onWidthChange`; the app owns placement, visibility and saved preferences. Pointer
+drag, Left/Right arrows (Shift for larger steps), Home/End, and double-click reset
+share the same viewport-clamped width. It never writes browser storage.
+
+`ForwardMessageDialog` takes a source string/label and recipients with stable IDs,
+labels, descriptions and search keywords. Its shared Command palette supports
+keyboard selection and identity aliases. Header/footer remain fixed while the body
+scrolls. It shows a short preview, accepts an optional note, and calls `onSend(id,
+note)` only after Send. Failures preserve the draft and selection. The host owns
+recipient resolution, full-message formatting, size validation and delivery; the
+kit never sends messages or truncates the payload.
+
+`ChatMarkdown` uses secondary body text, distinct heading sizes, emphasis, list
+spacing, quotes, links and code surfaces from the token contract. Import both
+`@hollis-labs/kit-chat/source.css` and `@hollis-labs/kit-chat/markdown.css` so the
+consumer emits the kit and renderer utilities.
