@@ -27,6 +27,7 @@ export function InspectionDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        scrollMode="body"
         {...popupProps}
         widthClassName={widthClassName ?? 'max-w-4xl'}
         className={cn('flex h-dvh max-h-[calc(100dvh-var(--spacing)*8)] min-w-0 flex-col gap-0 overflow-hidden p-0', className)}
@@ -40,7 +41,7 @@ export function InspectionDialog({
             {navigation}
           </nav>
         ) : null}
-        <section {...bodyProps} data-slot="inspection-body" className={cn('min-h-0 min-w-0 flex-1 overflow-auto [overflow-wrap:anywhere]', bodyProps?.className)}>
+        <section {...bodyProps} data-slot="inspection-body" className={cn('min-h-0 min-w-0 flex-1 overflow-auto overscroll-contain [overflow-wrap:anywhere]', bodyProps?.className)}>
           {children}
         </section>
         {footer != null ? <footer data-slot="inspection-footer" className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-3 py-2 [overflow-wrap:anywhere]">{footer}</footer> : null}

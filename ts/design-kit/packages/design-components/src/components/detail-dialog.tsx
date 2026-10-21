@@ -38,8 +38,9 @@ export function DetailDialog({
   return (
     <Dialog open={open} onOpenChange={(next: boolean) => !next && onClose()}>
       <DialogContent
+        scrollMode="body"
         {...dialogOptions}
-        className="flex h-[450px] max-h-[calc(100vh-2rem)] flex-col gap-0 overflow-hidden p-0"
+        className="flex h-[450px] max-h-[calc(100dvh-var(--spacing)*8)] flex-col gap-0 overflow-hidden p-0"
         widthClassName={widthClassName ?? 'w-[600px] max-w-[calc(100vw-2rem)]'}
       >
         <div className={`flex h-20 shrink-0 flex-col justify-center gap-1.5 px-4 ${dialogOptions.showFullscreenToggle ? "pr-20" : "pr-10"}`}>
@@ -56,7 +57,7 @@ export function DetailDialog({
           ) : null}
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">{children}</div>
 
         {footer ? (
           <div className="flex h-14 shrink-0 items-center justify-end gap-2 border-t border-border px-4">

@@ -181,3 +181,6 @@ export { useLongPress } from './hooks/use-long-press'
 export type { LongPressGesture, UseLongPressOptions, UseLongPressResult } from './hooks/use-long-press'
 export { RadialMenu } from './components/radial-menu'
 export type { RadialMenuItem, RadialMenuProps } from './components/radial-menu'
+
+export { InputCombobox } from './components/input-combobox'
+export type { InputComboboxItem, InputComboboxProps } from './components/input-combobox'

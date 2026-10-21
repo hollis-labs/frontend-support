@@ -254,3 +254,7 @@ class strings name (`data-horizontal`, `data-vertical`, `no-scrollbar`) inside
 `source.css`. They used to arrive via `shadcn/tailwind.css` from a sibling package's
 theme, which is why nothing failed inside this repo and everything would have failed
 outside it.
+
+- Bounded Form/Detail/Inspection dialogs now contain body scroll and keep their
+  outer viewport stationary. FormDialog adds a styling seam and blocks dismissal
+  while submitting. Added an editable InputCombobox built on Base UI.
