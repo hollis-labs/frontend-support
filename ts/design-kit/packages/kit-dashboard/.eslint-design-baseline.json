@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "recorded": "2026-10-23T05:03:55.812Z",
+  "counts": {
+    "design/no-color-literal": 0,
+    "design/no-raw-palette-utility": 0,
+    "design/no-arbitrary-scale": 0,
+    "design/no-undefined-token": 70,
+    "design/no-idiom-shadowing-contract": 0,
+    "design/require-disable-reason": 0
+  },
+  "note": "initial baseline 2026-10-23 (CW-20261023-0017): dash-status-* tokens not enrolled"
+}

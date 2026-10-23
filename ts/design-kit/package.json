@@ -21,6 +21,7 @@
     "build": "npm run build --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:design": "npm run lint:design --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:run": "npm run test:run --workspaces --if-present",
     "demo": "npm run demo -w @hollis-labs/kit-dashboard",

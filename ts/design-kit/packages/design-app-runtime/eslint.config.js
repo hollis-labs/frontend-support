@@ -3,6 +3,7 @@ import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import { designConfig } from '@hollis-labs/eslint-config-design'
 
 /**
  * No `eslint-plugin-react-refresh` here, unlike kit-dashboard: this package ships
@@ -30,4 +31,5 @@ export default defineConfig([
     extends: [js.configs.recommended, tseslint.configs.recommended, reactHooks.configs.flat.recommended],
     languageOptions: { ecmaVersion: 2020, globals: globals.browser },
   },
+  ...(await designConfig({ severity: 'error' })),
 ])
