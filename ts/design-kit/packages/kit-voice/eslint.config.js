@@ -4,6 +4,7 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import { designConfig } from '@hollis-labs/eslint-config-design'
 
 /**
  * THE DESIGN RULES APPLY HERE AND ARE ENFORCED AT ZERO by the repo gates
@@ -28,4 +29,5 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  ...(await designConfig({ severity: 'error' })),
 ])

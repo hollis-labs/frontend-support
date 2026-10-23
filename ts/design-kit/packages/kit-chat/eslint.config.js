@@ -4,12 +4,13 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
+import { designConfig } from '@hollis-labs/eslint-config-design'
 
 /**
- * THE DESIGN RULES APPLY HERE AND ARE ENFORCED AT ZERO, by the repo gate
- * (.github/scripts/design-rules-gate.mjs) rather than repeated in this file.
- * `kit-chat` is on the gate's BLOCKING list from its first commit — not reported,
- * not baselined, and there is no exemption file to add anything to.
+ * THE DESIGN RULES APPLY HERE AND ARE ENFORCED AT ZERO, at severity `error`, by
+ * `designConfig` at the bottom of this file. (The old repo gate,
+ * design-rules-gate.mjs, was not carried over.) `kit-chat` has been at zero from
+ * its first commit — not baselined, and there is no exemption file to add anything to.
  *
  * NO `src/components/ui/**` EXEMPTION HERE, deliberately, unlike design-components
  * and kit-dashboard. That exemption exists for vendored shadcn primitives that
@@ -33,4 +34,5 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  ...(await designConfig({ severity: 'error' })),
 ])
