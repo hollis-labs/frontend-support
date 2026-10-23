@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { acceptsInput, classifyPriorResponse } from '../lib/response'
+import { acceptsInput, classifyPriorResponse } from '../response'
 
 /**
  * These assert BEHAVIOUR — status string in, classification out. Nothing here counts

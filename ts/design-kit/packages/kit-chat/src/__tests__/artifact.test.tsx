@@ -11,7 +11,7 @@ import {
   ArtifactClose,
   ArtifactContent,
 } from "../components/artifact";
-import { ArtifactCard } from "../cards/artifact-card";
+import { ArtifactCard } from "@hollis-labs/kit-cards";
 afterEach(cleanup);
 describe("expanded Artifact shell", () => {
   it("coexists with compact ArtifactCard and renders host content verbatim", () => {

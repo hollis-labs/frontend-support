@@ -1,0 +1,5 @@
+{
+  "kind": "status",
+  "version": "1",
+  "data": { "tone": "warning", "message": "Sample sync is running behind; results may be a few minutes old." }
+}

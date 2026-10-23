@@ -1,0 +1,10 @@
+{
+  "kind": "error",
+  "version": "1",
+  "data": {
+    "title": "The sample import failed",
+    "description": "3 of 40 rows could not be read.",
+    "code": "E-1042",
+    "detail": "row 7: unexpected end of input\nrow 19: unexpected end of input\nrow 33: invalid date"
+  }
+}

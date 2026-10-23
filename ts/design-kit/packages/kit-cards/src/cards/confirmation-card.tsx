@@ -1,15 +1,12 @@
-import { useState, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import { Button, Pill, type IconComponent } from '@hollis-labs/design-components'
-import { ConfirmationCardContext } from '../lib/confirmation-context'
+import { ConfirmationCardContext } from '../confirmation-context'
 import type { Tone } from '@hollis-labs/design-tokens'
 import { Envelope, EnvelopeBody, EnvelopeFooter, EnvelopeHeader } from './envelope'
-import {
-  acceptsInput,
-  classifyPriorResponse,
-  type CardResponder,
-  type PriorResponseState,
-} from '../lib/response'
+import { AnswerableNotices, ResolvedFooter } from '../answerable'
+import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
+import type { CardResponder, PriorResponseState } from '../response'
 
 /**
  * A decision, presented as a card: here is what will happen, do you want it.
@@ -50,7 +47,7 @@ export interface ConfirmationAction {
   readonly primary?: boolean
 }
 
-export interface ConfirmationCardProps {
+export interface ConfirmationCardProps extends AnswerableStateProps {
   readonly title: ReactNode
   readonly description?: ReactNode
   /** Rendered between the description and the actions — a diff, a list, details. */
@@ -58,11 +55,6 @@ export interface ConfirmationCardProps {
   /** At least one. An empty action row is a card nobody can answer. */
   readonly actions: readonly ConfirmationAction[]
   readonly onRespond: CardResponder
-  /**
-   * Whatever the wire last recorded for this envelope, verbatim. `null`/absent means
-   * nothing yet. Deliberately a raw string — see `lib/response.ts`.
-   */
-  readonly priorStatus?: string | null
   /** The action the person chose last time, so a resolved card can say which. */
   readonly priorActionId?: string | null
   /** Offer a decline control alongside the actions. Default `true`. */
@@ -76,6 +68,8 @@ export interface ConfirmationCardProps {
 const RESOLVED_PRESENTATION = {
   submitted: { icon: CheckCircle, tone: 'success', text: 'Submitted' },
   canceled: { icon: XCircle, tone: 'neutral', text: 'Dismissed' },
+  expired: { icon: AlertTriangle, tone: 'neutral', text: 'Expired' },
+  superseded: { icon: AlertTriangle, tone: 'neutral', text: 'Superseded' },
   failed: { icon: AlertTriangle, tone: 'danger', text: 'Failed' },
   pending: { icon: AlertTriangle, tone: 'info', text: 'Working…' },
   unrecognized: { icon: AlertTriangle, tone: 'warning', text: 'Unknown state' },
@@ -92,6 +86,12 @@ export function ConfirmationCard({
   actions,
   onRespond,
   priorStatus,
+  busy: hostBusy,
+  stale,
+  onReload,
+  elevation,
+  receipt,
+  supersededBy,
   priorActionId,
   cancelable = true,
   cancelLabel = 'Dismiss',
@@ -99,40 +99,16 @@ export function ConfirmationCard({
   label = 'Confirm',
   className,
 }: ConfirmationCardProps) {
-  const state = classifyPriorResponse(priorStatus)
-  const live = acceptsInput(state)
-  /*
-   * IN-FLIGHT IS LOCAL AND PRIOR STATE IS A PROP, which is not an inconsistency.
-   * "I just clicked" is this component's own business and nobody else can know it;
-   * "this was decided" is a durable fact the host owns and must survive unmounting.
-   * Collapsing the two would either lose the click or invent local truth about the
-   * wire.
-   */
-  const [busy, setBusy] = useState(false)
-  const disabled = !live || busy
+  const { state, live, disabled, transitioned, run } = useAnswerable({ priorStatus, busy: hostBusy, stale, elevation })
 
-  async function choose(action: ConfirmationAction) {
-    if (disabled) return
-    setBusy(true)
-    try {
-      await onRespond({
+  const choose = (action: ConfirmationAction) =>
+    run(() =>
+      onRespond({
         status: 'submitted',
         decisions: [{ itemId: action.id, action: action.id }],
-      })
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function decline() {
-    if (disabled) return
-    setBusy(true)
-    try {
-      await onRespond({ status: 'canceled' })
-    } finally {
-      setBusy(false)
-    }
-  }
+      }),
+    )
+  const decline = () => run(() => onRespond({ status: 'canceled' }))
 
   const resolved = resolvedPresentation(state)
   const chosen = priorActionId == null ? null : actions.find((a) => a.id === priorActionId)
@@ -154,24 +130,14 @@ export function ConfirmationCard({
         />
         <EnvelopeBody title={title} description={description}>
           {children}
+          {stale || elevation ? (
+            <div className="mt-3 flex flex-col gap-2">
+              <AnswerableNotices stale={stale} onReload={onReload} elevation={elevation} />
+            </div>
+          ) : null}
         </EnvelopeBody>
 
-        {state.kind === 'unrecognized' ? (
-          <EnvelopeBody className="pt-0">
-            <p className="text-xs text-warning">
-              {/*
-                * SAY THE VALUE. An operator who sees "unknown state" learns nothing;
-                * one who sees the status string can grep for it. This is the same
-                * reason the miss codes are not collapsed into "couldn't render".
-                */}
-              This build does not recognise the recorded status{' '}
-              <code className="font-mono">{state.status}</code>, so the card stays locked
-              rather than risk a second submission.
-            </p>
-          </EnvelopeBody>
-        ) : null}
-
-        {live ? (
+        {live && !elevation ? (
           <EnvelopeFooter className="flex-wrap justify-end">
             {actions.length === 0 ? (
               <span className="mr-auto text-xs text-warning">
@@ -179,7 +145,7 @@ export function ConfirmationCard({
               </span>
             ) : null}
             {cancelable ? (
-              <Button variant="ghost" size="sm" disabled={disabled} onClick={decline}>
+              <Button variant="ghost" size="sm" className="max-sm:min-h-11" disabled={disabled} onClick={decline}>
                 {cancelLabel}
               </Button>
             ) : null}
@@ -187,6 +153,7 @@ export function ConfirmationCard({
               <Button
                 key={action.id}
                 size="sm"
+                className="max-sm:min-h-11"
                 variant={
                   action.tone === 'danger' ? 'destructive' : action.primary ? 'default' : 'outline'
                 }
@@ -197,7 +164,9 @@ export function ConfirmationCard({
               </Button>
             ))}
           </EnvelopeFooter>
-        ) : null}
+        ) : live ? null : (
+          <ResolvedFooter state={state} receipt={receipt} supersededBy={supersededBy} chosen={chosen?.label} focusOnMount={transitioned} statusInHeader />
+        )}
       </Envelope>
     </ConfirmationCardContext.Provider>
   )

@@ -7,7 +7,7 @@ import {
   classifyPriorResponse,
   type CardDecision,
   type CardResponder,
-} from '../lib/response'
+} from '../response'
 
 /**
  * A checkable list, with an optional action per row.

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- 0.6.0 (minor, owner publishes): the card set (Envelope chassis, Info/Metric/Progress/
+  Timeline/Diff/Artifact/Document/Confirmation/Table/List/Prompt, CardMiss/CardBoundary)
+  and the response seam (`CardOutcome`, `CardResponder`, `classifyPriorResponse`,
+  `acceptsInput`) moved to `@hollis-labs/kit-cards`. kit-chat re-exports every one of
+  those names, unchanged, so existing imports keep working; there is ONE Envelope
+  chassis. Chat-only chrome stays here. `@hollis-labs/kit-cards/source.css` is imported
+  by this package's `source.css`; import it directly in new code.
+- `classifyPriorResponse` now classifies `expired` and `superseded` as terminal states
+  (they were `unrecognized`, which also locked the card). Controls stay locked.
+
 - CW-20261020-0041: Add `ResizableChatPanel` with pointer/keyboard resizing and
   viewport bounds, and `ForwardMessageDialog` with searchable recipient aliases,
   a source preview, note, fixed header/footer and retry-safe explicit submission.

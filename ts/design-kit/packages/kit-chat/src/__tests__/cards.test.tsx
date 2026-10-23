@@ -1,12 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import type { MissCode } from '@hollis-labs/design-bindings'
-import { CardBoundary } from '../cards/card-boundary'
-import { CardMiss } from '../cards/card-miss'
-import { ConfirmationCard } from '../cards/confirmation-card'
-import { ListCard } from '../cards/list-card'
-import { ProgressCard } from '../cards/progress-card'
-import { TableCard } from '../cards/table-card'
+import { CardBoundary, CardMiss, ConfirmationCard, ListCard, ProgressCard, TableCard } from '@hollis-labs/kit-cards'
 import { ChatStream } from '../components/chat-stream'
 import type { ChatItem } from '../lib/types'
 

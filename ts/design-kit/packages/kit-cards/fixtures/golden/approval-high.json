@@ -1,0 +1,19 @@
+{
+  "kind": "approval",
+  "version": "1",
+  "data": {
+    "id": "apr-91c0",
+    "title": "Delete the sample-archive collection",
+    "description": "Removes 214 records. This cannot be undone.",
+    "risk": "high",
+    "requester": "cleanup-agent",
+    "expiresAt": "2030-01-01 12:00 UTC",
+    "digest": "9be3a7c1",
+    "confirmPhrase": "delete sample-archive",
+    "actions": [
+      { "id": "approve", "label": "Delete collection", "tone": "danger", "primary": true },
+      { "id": "deny", "label": "Keep it" }
+    ],
+    "effects": [{ "id": "e1", "label": "Delete collection sample-archive", "detail": "214 records" }]
+  }
+}

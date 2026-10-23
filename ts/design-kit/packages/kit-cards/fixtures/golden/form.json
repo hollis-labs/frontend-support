@@ -1,0 +1,24 @@
+{
+  "kind": "form",
+  "version": "1",
+  "data": {
+    "title": "Connect the sample service",
+    "description": "Fill in the details to continue.",
+    "schema": {
+      "type": "object",
+      "required": ["name", "region", "api_key"],
+      "properties": {
+        "name": { "type": "string", "title": "Display name", "maxLength": 40 },
+        "region": { "type": "string", "title": "Region", "enum": ["us-east", "eu-west", "ap-south"] },
+        "replicas": { "type": "integer", "title": "Replicas", "minimum": 1, "maximum": 10, "default": 2 },
+        "notify": { "type": "boolean", "title": "Notify on failure", "default": true },
+        "tags": { "type": "array", "title": "Tags", "items": { "type": "string", "enum": ["web", "batch", "internal"] } },
+        "start": { "type": "string", "title": "Start date", "format": "date" },
+        "notes": { "type": "string", "title": "Notes", "format": "textarea", "description": "Optional." },
+        "api_key": { "type": "string", "title": "API key", "format": "secret", "description": "Never shown again." },
+        "advanced": { "title": "Advanced", "oneOf": [{ "type": "string" }, { "type": "number" }] }
+      }
+    },
+    "defaultValues": { "name": "Sample service", "region": "eu-west", "tags": ["web"], "start": "2030-01-15" }
+  }
+}

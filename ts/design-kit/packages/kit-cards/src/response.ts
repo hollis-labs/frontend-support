@@ -111,6 +111,10 @@ export type PriorResponseState =
   | { readonly kind: 'pending' }
   | { readonly kind: 'submitted' }
   | { readonly kind: 'canceled' }
+  /** The server says the ask lapsed. Terminal; the client never infers this from a clock. */
+  | { readonly kind: 'expired' }
+  /** Replaced by a newer card. Terminal; the host may link the replacement. */
+  | { readonly kind: 'superseded' }
   /** The handler failed. Terminal on the wire; a host may still offer a retry. */
   | { readonly kind: 'failed'; readonly status: string }
   /**
@@ -136,6 +140,10 @@ export function classifyPriorResponse(status: string | null | undefined): PriorR
     case 'canceled':
     case 'cancelled':
       return { kind: 'canceled' }
+    case 'expired':
+      return { kind: 'expired' }
+    case 'superseded':
+      return { kind: 'superseded' }
     case 'error':
     case 'failed':
       return { kind: 'failed', status }

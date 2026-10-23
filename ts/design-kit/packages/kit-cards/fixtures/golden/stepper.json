@@ -1,0 +1,13 @@
+{
+  "kind": "stepper",
+  "version": "1",
+  "data": {
+    "title": "Set up the sample project",
+    "step": 1,
+    "steps": [
+      { "id": "s1", "label": "Name", "text": "Choose a project name." },
+      { "id": "s2", "label": "Access", "text": "Pick who can see it." },
+      { "id": "s3", "label": "Review", "text": "Check everything and finish." }
+    ]
+  }
+}

@@ -17,7 +17,8 @@
     "paths": {
       "@/*": ["./src/*"],
       "@hollis-labs/design-components": ["../design-components/src/index.ts"],
-      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"]
+      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"],
+      "@hollis-labs/kit-cards": ["../kit-cards/src/index.ts"]
     }
   },
   "include": ["src", "vite.config.ts", "vitest.config.ts"]

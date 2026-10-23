@@ -1,0 +1,5 @@
+{
+  "kind": "group",
+  "version": "1",
+  "data": { "title": "Pending decisions", "description": "Two items need you.", "children": ["confirmation", "choice"] }
+}

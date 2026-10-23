@@ -32,6 +32,14 @@
  * an optional peer would point at a directory that may not exist.
  */
 
+/*
+ * THE CARDS' CLASS STRINGS LIVE IN kit-cards' `dist`, not in this package's: kit-chat
+ * re-exports them. Importing kit-cards' source.css here keeps an existing adopter that
+ * imports only this file from rendering the cards unstyled. New consumers should still
+ * import `@hollis-labs/kit-cards/source.css` directly (two lines, see its README).
+ */
+@import "@hollis-labs/kit-cards/source.css";
+
 @source "../../dist/**/*.js";
 
 /* A compact correspondence form, using the shared FormDialog scaffold. */

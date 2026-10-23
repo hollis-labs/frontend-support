@@ -37,6 +37,7 @@ npm install @base-ui/react react react-dom lucide-react     # peers
 @import "tailwindcss";
 @import "@hollis-labs/design-tokens/design-tokens.css";
 @import "@hollis-labs/design-components/source.css";
+@import "@hollis-labs/kit-cards/source.css";         /* ← the cards live here; kit-chat re-exports them */
 @import "@hollis-labs/kit-chat/source.css";          /* ← THIS ONE */
 ```
 

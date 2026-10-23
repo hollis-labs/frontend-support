@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ConfirmationCard } from '../cards/confirmation-card'
+import { ConfirmationCard } from '@hollis-labs/kit-cards'
 import { ConfirmationAccepted, ConfirmationRejected, ConfirmationRequest, ConfirmationTitle } from '../components/confirmation'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput, type ToolState } from '../components/tool'
 import { Queue, QueueItem, QueueItemAction, QueueItemActions, QueueItemContent, QueueItemDescription, QueueItemFile, QueueItemImage, QueueItemIndicator, QueueList, QueueSection, QueueSectionContent, QueueSectionLabel, QueueSectionTrigger } from '../components/queue'
