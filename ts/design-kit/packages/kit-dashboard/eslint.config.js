@@ -29,5 +29,9 @@ export default defineConfig([
       'react-refresh/only-export-components': 'off',
     },
   },
+  // REPORT-ONLY, ON PURPOSE: 70 no-undefined-token findings (dash-status-* tokens the
+  // contract does not know) are printed on every lint run but do not fail it. No count
+  // is recorded anywhere; a gate asserts a property of the code, never a quantity.
+  // CW-20261023-0033 fixes them and raises this to 'error' like the other packages.
   ...(await designConfig({ severity: 'warn' })),
 ])

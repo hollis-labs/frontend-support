@@ -75,7 +75,6 @@
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "lint": "eslint .",
-    "lint:design": "node ../eslint-config-design/scripts/ratchet.mjs src",
     "test": "vitest",
     "test:run": "vitest run",
     "demo": "vite --config demo/vite.config.ts",
