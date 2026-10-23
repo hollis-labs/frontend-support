@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { ArrowDown, ArrowUp, Table as TableIcon } from 'lucide-react'
 import { cn, Button } from '@hollis-labs/design-components'
 import { Envelope, EnvelopeBody, EnvelopeFooter, EnvelopeHeader } from './envelope'
-import { acceptsInput, classifyPriorResponse, type CardResponder } from '../lib/response'
+import { acceptsInput, classifyPriorResponse, type CardResponder } from '../response'
 
 /**
  * Rows, sortable, and optionally answerable — pick one and send it back.

@@ -1,10 +1,12 @@
 import { useId, useState, type ReactNode } from 'react'
 import { HelpCircle } from 'lucide-react'
 import { Button, Input, Pill } from '@hollis-labs/design-components'
-import { acceptsInput, classifyPriorResponse, type CardResponder } from '../lib/response'
+import { AnswerableNotices, ResolvedFooter } from '../answerable'
+import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
+import type { CardResponder } from '../response'
 import { Envelope, EnvelopeBody, EnvelopeFooter, EnvelopeHeader } from './envelope'
 
-export interface PromptCardProps {
+export interface PromptCardProps extends AnswerableStateProps {
   readonly questionId: string
   readonly title: ReactNode
   readonly description?: ReactNode
@@ -12,7 +14,6 @@ export interface PromptCardProps {
   readonly value: string
   readonly onValueChange: (value: string) => void
   readonly onRespond: CardResponder
-  readonly priorStatus?: string | null
   readonly inputLabel?: string
   readonly submitLabel?: ReactNode
   readonly cancelLabel?: ReactNode
@@ -20,33 +21,29 @@ export interface PromptCardProps {
 }
 
 /** Text elicitation only. Boolean choices reuse ConfirmationCard. */
-export function PromptCard({ questionId, title, description, value, onValueChange, onRespond, priorStatus, inputLabel = 'Response', submitLabel = 'Submit', cancelLabel = 'Decline', className }: PromptCardProps) {
+export function PromptCard({ questionId, title, description, value, onValueChange, onRespond, priorStatus, busy: hostBusy, stale, onReload, elevation, receipt, supersededBy, inputLabel = 'Response', submitLabel = 'Submit', cancelLabel = 'Decline', className }: PromptCardProps) {
   const id = useId()
-  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const state = classifyPriorResponse(priorStatus)
+  const { state, disabled, busy, transitioned, run } = useAnswerable({ priorStatus, busy: hostBusy, stale, elevation })
   const settled = state.kind === 'submitted' || state.kind === 'canceled'
-  const disabled = busy || !acceptsInput(state)
+  const lapsed = state.kind === 'expired' || state.kind === 'superseded' || state.kind === 'failed'
 
   async function respond(cancel = false) {
     if (disabled || (!cancel && value.trim() === '')) return
-    setBusy(true)
     setError(null)
     try {
-      await onRespond(cancel ? { status: 'canceled' } : {
+      await run(() => onRespond(cancel ? { status: 'canceled' } : {
         status: 'submitted', answers: [{ questionId, value: value.trim() }],
-      })
+      }))
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Could not submit response. Try again.')
-    } finally {
-      setBusy(false)
     }
   }
 
   return (
     <Envelope accent="info" muted={settled} className={className}>
       <EnvelopeHeader icon={HelpCircle} label="Prompt" tone="info"
-        meta={state.kind !== 'open' ? <Pill>{state.kind === 'submitted' ? 'Submitted' : state.kind === 'canceled' ? 'Declined' : state.kind === 'pending' ? 'Working' : state.kind === 'failed' ? 'Failed' : 'Unknown state'}</Pill> : null} />
+        meta={state.kind !== 'open' ? <Pill>{state.kind === 'submitted' ? 'Submitted' : state.kind === 'canceled' ? 'Declined' : state.kind === 'pending' ? 'Working' : state.kind === 'failed' ? 'Failed' : state.kind === 'expired' ? 'Expired' : state.kind === 'superseded' ? 'Superseded' : 'Unknown state'}</Pill> : null} />
       <EnvelopeBody title={title} description={description}>
         {settled ? (
           state.kind === 'submitted' ? <p className="whitespace-pre-wrap text-control text-fg-secondary">{value}</p> : null
@@ -54,7 +51,7 @@ export function PromptCard({ questionId, title, description, value, onValueChang
           <div className="flex flex-col gap-2">
             <label htmlFor={id} className="text-caption text-fg-muted">{inputLabel}</label>
             <Input id={id} value={value} disabled={disabled} onChange={(event) => onValueChange(event.target.value)}
-              className="text-control md:text-(length:--text-control)"
+              className="text-control max-sm:min-h-11 md:text-(length:--text-control)"
               onKeyDown={(event) => {
                 if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) {
                   event.preventDefault()
@@ -65,12 +62,19 @@ export function PromptCard({ questionId, title, description, value, onValueChang
           </div>
         )}
         {error ? <p role="alert" className="mt-2 text-control text-danger">{error}</p> : null}
+        {stale || elevation ? (
+          <div className="mt-3 flex flex-col gap-2">
+            <AnswerableNotices stale={stale} onReload={onReload} elevation={elevation} />
+          </div>
+        ) : null}
       </EnvelopeBody>
-      {!settled ? (
+      {settled || lapsed ? (
+        receipt || lapsed ? <ResolvedFooter state={state} receipt={receipt} supersededBy={supersededBy} focusOnMount={transitioned} statusInHeader /> : null
+      ) : !elevation ? (
         <EnvelopeFooter className="flex-wrap justify-end">
           {busy ? <span role="status" className="mr-auto text-caption text-fg-muted">Submitting…</span> : null}
-          <Button type="button" variant="ghost" size="sm" disabled={disabled} onClick={() => void respond(true)}>{cancelLabel}</Button>
-          <Button type="button" size="sm" disabled={disabled || value.trim() === ''} onClick={() => void respond()}>{submitLabel}</Button>
+          <Button type="button" variant="ghost" size="sm" className="max-sm:min-h-11" disabled={disabled} onClick={() => void respond(true)}>{cancelLabel}</Button>
+          <Button type="button" size="sm" className="max-sm:min-h-11" disabled={disabled || value.trim() === ''} onClick={() => void respond()}>{submitLabel}</Button>
         </EnvelopeFooter>
       ) : null}
     </Envelope>

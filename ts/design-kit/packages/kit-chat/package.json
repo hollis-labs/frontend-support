@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-chat",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "publishConfig": {
     "access": "public",
     "registry": "https://registry.npmjs.org/"
@@ -74,6 +74,7 @@
     "@hollis-labs/design-bindings": "^0.1.0",
     "@hollis-labs/design-components": "^0.5.0",
     "@hollis-labs/design-tokens": "^0.5.0",
+    "@hollis-labs/kit-cards": "^0.0.0",
     "@shadcn/react": "^0.3.1",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.5.0"

@@ -27,6 +27,11 @@ export type { ResizableChatPanelProps } from './components/resizable-chat-panel'
 export { ForwardMessageDialog } from './components/forward-message-dialog'
 export type { ForwardMessageDialogProps, ForwardRecipient } from './components/forward-message-dialog'
 
+/*
+ * THE CARD SET LIVES IN @hollis-labs/kit-cards. These re-exports keep every name a
+ * kit-chat adopter imported, so an existing import keeps working; kit-chat carries no
+ * second Envelope chassis. New code should import from kit-cards directly.
+ */
 export {
   ArtifactCard,
   DocumentCard,
@@ -47,7 +52,7 @@ export {
   ProgressCard,
   TableCard,
   TimelineCard,
-} from './cards'
+} from '@hollis-labs/kit-cards'
 export type {
   ArtifactCardProps,
   DocumentCardProps,
@@ -76,17 +81,17 @@ export type {
   TimelineCardProps,
   TimelineEvent,
   TimelineStatus,
-} from './cards'
+} from '@hollis-labs/kit-cards'
 
-/* The response seam. See lib/response.ts for why emit is closed and read is open. */
-export { acceptsInput, classifyPriorResponse } from './lib/response'
+/* The response seam (kit-cards/src/response.ts): emit is closed, read is open. */
+export { acceptsInput, classifyPriorResponse } from '@hollis-labs/kit-cards'
 export type {
   CardAnswer,
   CardDecision,
   CardOutcome,
   CardResponder,
   PriorResponseState,
-} from './lib/response'
+} from '@hollis-labs/kit-cards'
 
 export { useStallDetector } from './lib/use-stall-detector'
 

@@ -7,7 +7,7 @@
  */
 import { cn } from '@hollis-labs/design-components'
 import { type ComponentProps, type ReactNode } from 'react'
-import { useConfirmationCard } from '../lib/confirmation-context'
+import { useConfirmationCard } from '@hollis-labs/kit-cards'
 
 export type ConfirmationTitleProps = ComponentProps<'span'>
 export function ConfirmationTitle({ className, ...props }: ConfirmationTitleProps) {

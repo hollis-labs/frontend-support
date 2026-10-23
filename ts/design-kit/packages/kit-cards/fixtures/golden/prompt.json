@@ -1,0 +1,11 @@
+{
+  "kind": "prompt",
+  "version": "1",
+  "data": {
+    "questionId": "q-name",
+    "title": "What should the report be called?",
+    "description": "A short name is fine.",
+    "inputLabel": "Report name",
+    "value": "Weekly sample summary"
+  }
+}

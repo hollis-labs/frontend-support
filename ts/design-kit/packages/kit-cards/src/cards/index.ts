@@ -1,8 +1,9 @@
 /**
  * The card set — the chassis, and the shapes that compose on it.
  *
- * A CARD IS A SHAPE, NOT A WIRE KIND. There is no `ApprovalCard` here and there will
- * not be one: a renderer keyed to a wire kind is the design layer asserting wire
+ * A CARD IS A SHAPE, NOT A WIRE KIND. `ApprovalCard` below is the approval SHAPE — a
+ * risk class, the thing approved, who asked — not a wire kind, and no card here names
+ * one. Do not add a card keyed to a wire kind: a renderer keyed to a wire kind is the design layer asserting wire
  * identity, which the portfolio's ownership table gives to `go-envelopes`. A host
  * binds ITS kinds to THESE shapes through `@hollis-labs/design-bindings`, and the
  * binding table is host-local by construction. Two of the wire-kind renderers that
@@ -59,3 +60,21 @@ export type { CardMissProps, CardFallbackDeclinedProps } from './card-miss'
 
 export { CardBoundary } from './card-boundary'
 export type { CardBoundaryProps } from './card-boundary'
+
+export { ApprovalCard } from './approval-card'
+export type { ApprovalCardProps, ApprovalEffect, ApprovalRisk } from './approval-card'
+
+export { ChoiceCard } from './choice-card'
+export type { ChoiceCardProps, ChoiceOption } from './choice-card'
+
+export { ReviewCard } from './review-card'
+export type { ReviewCardProps } from './review-card'
+
+export { ErrorCard, StatusBanner } from './error-card'
+export type { ErrorCardProps, StatusBannerProps } from './error-card'
+
+export { GroupCard, StepperCard } from './group-card'
+export type { GroupCardProps, StepperCardProps } from './group-card'
+
+export { FormCard } from './form-card'
+export type { FormCardProps } from './form-card'

@@ -1,0 +1,19 @@
+{
+  "kind": "approval",
+  "version": "1",
+  "data": {
+    "id": "apr-7f3a",
+    "title": "Move 3 tasks to Done",
+    "description": "The planner proposes these status changes for the sample project.",
+    "risk": "medium",
+    "requester": "planner-agent",
+    "expiresAt": "2030-01-01 12:00 UTC",
+    "digest": "d41d8c9a",
+    "origin": "sample-tracker",
+    "effects": [
+      { "id": "e1", "label": "TASK-101 → Done", "detail": "Was In review" },
+      { "id": "e2", "label": "TASK-102 → Done", "detail": "Was In review" },
+      { "id": "e3", "label": "TASK-107 → Done", "detail": "Was Blocked" }
+    ]
+  }
+}
