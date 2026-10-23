@@ -37,6 +37,38 @@ describe('review: engine revision fences and dedupe policy', () => {
     expect(e.get('a')?.status).toBe('approved')
   })
 
+  it('an older held edit cannot roll back a newer server resolution', () => {
+    const e = createCardEngine({ rules: [{ id: 'r', match: { kind: 'test' }, surface: 'inline' }], now: () => 0 })
+    e.ingest({ id: 'a', kind: 'test', revision: 1 })
+    e.setEditing('a', true)
+    e.ingest({ id: 'a', kind: 'test', revision: 3 })
+    e.applyServerState('a', 'approved', { revision: 5 })
+    expect(e.get('a')?.updatedAvailable).toBe(false)
+    e.applyPending('a')
+    expect(e.get('a')?.status).toBe('approved')
+    expect(e.get('a')?.input.revision).not.toBe(3)
+  })
+
+  it('an old held update cannot replace a newer applied input', () => {
+    const e = createCardEngine({ rules: [{ id: 'r', match: { kind: 'test' }, surface: 'inline' }], now: () => 0 })
+    e.ingest({ id: 'a', kind: 'test', revision: 1 })
+    e.setEditing('a', true)
+    e.ingest({ id: 'a', kind: 'test', revision: 3 })
+    e.setEditing('a', false)
+    e.ingest({ id: 'a', kind: 'test', revision: 4 })
+    e.applyPending('a')
+    expect(e.get('a')?.input.revision).toBe(4)
+  })
+
+  it('a still-current held edit is applied', () => {
+    const e = createCardEngine({ rules: [{ id: 'r', match: { kind: 'test' }, surface: 'inline' }], now: () => 0 })
+    e.ingest({ id: 'a', kind: 'test', revision: 1 })
+    e.setEditing('a', true)
+    e.ingest({ id: 'a', kind: 'test', revision: 3 })
+    e.applyPending('a')
+    expect(e.get('a')?.input.revision).toBe(3)
+  })
+
   it('editing preserves plain dedupe rather than superseding', () => {
     const e = make()
     e.ingest({ id: 'a', kind: 'test', subject: 's' })

@@ -100,6 +100,25 @@ export function createCardEngine(options: EngineOptions): CardEngine {
     }
   }
 
+  /**
+   * Held same-id work is obsolete once the card has moved past its revision, by a newer
+   * ingest or by server state. Such work is discarded, never applied.
+   */
+  function obsolete(held: HeldEntry | undefined, current: CardViewModel): boolean {
+    if (!held || held.mode !== 'update') return false
+    const r = held.card.revision
+    if (r == null) return false
+    return (current.revisionFloor != null && r < current.revisionFloor) || (current.input.revision != null && r <= current.input.revision)
+  }
+
+  /** Remove obsolete held work for `id` from a snapshot about to be committed. */
+  function sweep(held: EngineSnapshot['held'], id: string, current: CardViewModel): { held: EngineSnapshot['held']; card: CardViewModel } {
+    if (!obsolete(held[id], current)) return { held, card: current }
+    const rest = { ...held }
+    delete rest[id]
+    return { held: rest, card: { ...current, updatedAvailable: false } }
+  }
+
   /** Hold work for `targetId`, never letting an older arrival replace a newer held one. */
   function hold(snap: EngineSnapshot, targetId: string, entry: HeldEntry, target: CardViewModel): CardViewModel {
     const current = snap.held[targetId]
@@ -127,9 +146,10 @@ export function createCardEngine(options: EngineOptions): CardEngine {
         return existing
       }
       if (existing.editing) return hold(snap, card.id, { card, mode: 'update' }, existing)
-      const next = build(card, rule, existing)
-      commit({ ...snap, cards: { ...snap.cards, [card.id]: next } })
-      return next
+      const built = build(card, rule, existing)
+      const swept = sweep(snap.held, card.id, built)
+      commit({ ...snap, held: swept.held, cards: { ...snap.cards, [card.id]: swept.card } })
+      return swept.card
     }
 
     const next = build(card, rule)
@@ -166,13 +186,9 @@ export function createCardEngine(options: EngineOptions): CardEngine {
     const card = snap.cards[id]
     if (!card) return
     if (extra?.revision != null && card.revisionFloor != null && extra.revision < card.revisionFloor) return
-    commit({
-      ...snap,
-      cards: {
-        ...snap.cards,
-        [id]: { ...card, status, supersededBy: extra?.supersededBy ?? card.supersededBy, revisionFloor: maxRev(card.revisionFloor, extra?.revision) },
-      },
-    })
+    const updated = { ...card, status, supersededBy: extra?.supersededBy ?? card.supersededBy, revisionFloor: maxRev(card.revisionFloor, extra?.revision) }
+    const swept = sweep(snap.held, id, updated)
+    commit({ ...snap, held: swept.held, cards: { ...snap.cards, [id]: swept.card } })
   }
 
   function setEditing(id: string, editing: boolean) {
@@ -195,6 +211,11 @@ export function createCardEngine(options: EngineOptions): CardEngine {
       return
     }
     const idle = { ...card, editing: false }
+    if (obsolete(held, card)) {
+      // The card moved past this work while it waited; applying it would roll the card back.
+      commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: { ...idle, editing: card.editing, updatedAvailable: false } } })
+      return
+    }
     if (held.mode === 'update') {
       commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: build(held.card, rule, idle) } })
       return
