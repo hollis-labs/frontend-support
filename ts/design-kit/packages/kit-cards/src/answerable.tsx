@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useRef, type ReactElement, type ReactNode } from 'react'
 import { RefreshCw, Lock } from 'lucide-react'
 import { Button, cn, TONE_CLASSES, type IconComponent, type Tone } from '@hollis-labs/design-components'
 import { presentationFor, type AnswerableStateProps, type CardReceipt } from './answerable-state'
@@ -118,17 +118,33 @@ export interface CardNoticeProps {
   readonly children: ReactNode
 }
 
-/** A quiet in-card notice. Text always carries the meaning; tone only reinforces. */
+/**
+ * A quiet in-card notice. Text always carries the meaning; tone only reinforces.
+ *
+ * The action sits UNDER the text below `sm` (full width) and beside it from `sm` up, so a
+ * 390px viewport never squeezes the message into a narrow column. The action is described
+ * by the notice (`aria-describedby`), so a screen reader that lands on it hears why it is
+ * there — for the elevation CTA, why the card is read-only.
+ */
 export function CardNotice({ tone = 'info', icon: Icon, role = 'status', action, className, children }: CardNoticeProps) {
+  const id = useId()
+  const describedAction =
+    isValidElement(action) && (action.props as { 'aria-describedby'?: string })['aria-describedby'] == null
+      ? cloneElement(action as ReactElement<{ 'aria-describedby'?: string }>, { 'aria-describedby': id })
+      : action
   return (
     <div
       data-slot="card-notice"
       role={role}
-      className={cn('flex min-w-0 items-start gap-2 rounded-control border px-3 py-2 text-control', TONE_CLASSES[tone], className)}
+      className={cn('flex min-w-0 flex-col gap-2 rounded-control border px-3 py-2 text-control sm:flex-row sm:items-start', TONE_CLASSES[tone], className)}
     >
-      {Icon ? <Icon className="mt-0.5 size-3.5 shrink-0" aria-hidden /> : null}
-      <div className="min-w-0 flex-1 [overflow-wrap:anywhere]">{children}</div>
-      {action != null ? <div className="shrink-0">{action}</div> : null}
+      <div className="flex min-w-0 flex-1 items-start gap-2">
+        {Icon ? <Icon className="mt-0.5 size-3.5 shrink-0" aria-hidden /> : null}
+        <div id={id} className="min-w-0 flex-1 [overflow-wrap:anywhere]">{children}</div>
+      </div>
+      {describedAction != null ? (
+        <div data-slot="card-notice-action" className="w-full sm:w-auto sm:shrink-0 max-sm:[&>*]:w-full">{describedAction}</div>
+      ) : null}
     </div>
   )
 }

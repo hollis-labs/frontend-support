@@ -11,6 +11,8 @@ npm run build && npm run typecheck && npm run lint && npm run test:run
 npm run e2e -w @hollis-labs/kit-cards      # builds the production gallery, then Playwright
 ```
 
+In a fresh sandbox the matrix needs `npx playwright install chromium`, matching the installed `@playwright/test` version.
+
 `npm run lint` in kit-cards applies `designConfig({ severity: 'error' })`. A deliberate `text-[13px]`, a hex literal, a
 raw palette class and an invented token (`bg-bg-surface`) each failed lint, then were removed.
 
@@ -27,6 +29,7 @@ Computed-style assertions (read from the browser, compared with probe elements u
 - envelope radius equals `rounded-panel`; envelope background equals `bg-elevated`
 - title colour equals `text-fg`; title size equals `text-sm`
 - body control text computes to 13px and `text-control` resolves to 13px
+- at 390, the stale notice's action sits under its text (full width), not beside it
 - at 390, every visible button, text input, select and textarea is at least 44px tall
 
 The first run of the 44px check failed for ConfirmationCard, PromptCard and the high-risk phrase field (28-32px); they

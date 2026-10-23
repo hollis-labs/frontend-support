@@ -151,6 +151,7 @@ export function FormCard({
     <Envelope accent={a.live ? 'info' : undefined} muted={!a.live} className={className}>
       <EnvelopeHeader icon={ClipboardList} tone="info" label="Form" />
       <EnvelopeBody title={title} description={description}>
+        {a.live ? (
         <form
           noValidate
           onSubmit={(event) => {
@@ -218,6 +219,10 @@ export function FormCard({
             ) : null}
           </Stack>
         </form>
+        ) : (
+          // A finished form is a read-only summary, not a populated field list above its receipt.
+          <FormReceipt fields={compiled.fields} values={values} />
+        )}
       </EnvelopeBody>
       {a.live && !elevation ? (
         <EnvelopeFooter>
@@ -234,7 +239,7 @@ export function FormCard({
       ) : a.live ? null : (
         <ResolvedFooter
           state={a.state}
-          receipt={{ ...receipt, summary: receipt?.summary ?? (a.state.kind === 'submitted' ? <FormReceipt fields={compiled.fields} values={values} /> : undefined) }}
+          receipt={receipt}
           supersededBy={supersededBy}
           focusOnMount={a.transitioned}
         />
@@ -243,16 +248,16 @@ export function FormCard({
   )
 }
 
-/** The answers, read-only. Sensitive fields are named but never shown. */
+/** The answers, read-only, for every terminal state. Sensitive fields are named and never shown. */
 function FormReceipt({ fields, values }: { fields: readonly FormField[]; values: FormValues }) {
   const shown = fields.filter((f) => !isBlank(values[f.key]) || f.sensitive)
   if (shown.length === 0) return null
   return (
-    <ul className="space-y-0.5">
+    <ul data-slot="form-summary" className="space-y-0.5 text-control">
       {shown.map((f) => (
         <li key={f.key}>
           <span className="text-fg-muted">{f.title}: </span>
-          {f.sensitive ? <span>•••• (provided by reference)</span> : <span>{display(values[f.key])}</span>}
+          {f.sensitive ? <span>Provided by reference</span> : <span>{display(values[f.key])}</span>}
         </li>
       ))}
     </ul>

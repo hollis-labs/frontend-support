@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { createCardEngine, type CardRule } from '../engine'
 import { compileFormSchema } from '../form/schema'
-import { FormCard } from '..'
+import { ApprovalCard, FormCard } from '..'
 
 afterEach(cleanup)
 
@@ -124,5 +124,23 @@ describe('review: validation links', () => {
     const fieldset = container.querySelector('fieldset')!
     expect(fieldset.contains(document.activeElement), 'error link left focus on the summary').toBe(true)
     expect(document.activeElement).not.toBe(fieldset)
+  })
+})
+
+describe('designer polish', () => {
+  it('a notice action is described by the notice, so the reason is heard', () => {
+    render(<ApprovalCard title="T" risk="low" elevation={{ reason: 'Confirm identity first.', action: <button type="button">Elevate</button> }} onRespond={() => {}} />)
+    const button = screen.getByRole('button', { name: 'Elevate' })
+    const id = button.getAttribute('aria-describedby')!
+    expect(document.getElementById(id)!.textContent).toMatch(/Read-only\. Confirm identity first/)
+  })
+
+  it('a terminal form is a read-only summary: no fields, secret by reference', () => {
+    render(<FormCard title="F" priorStatus="failed" schema={{ type: 'object', properties: { name: { type: 'string', title: 'Name' }, key: { type: 'string', title: 'Key', format: 'secret' } } }} defaultValues={{ name: 'svc', key: ['synthetic', 'sample'].join('-') }} onRespond={() => {}} />)
+    expect(screen.queryByRole('textbox')).toBeNull()
+    expect(document.querySelector('input')).toBeNull()
+    expect(screen.getByText('svc')).toBeTruthy()
+    expect(screen.getByText(/Provided by reference/)).toBeTruthy()
+    expect(document.body.textContent).not.toContain('synthetic-sample')
   })
 })

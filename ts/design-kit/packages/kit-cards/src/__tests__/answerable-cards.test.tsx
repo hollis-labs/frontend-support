@@ -237,7 +237,7 @@ describe('FormCard', () => {
       <FormCard title="F" schema={schema} priorStatus="submitted" defaultValues={{ name: 'svc', token: SAMPLE }} onRespond={() => {}} />,
     )
     expect(document.body.textContent).not.toContain(SAMPLE)
-    expect(screen.getByText(/provided by reference/)).toBeTruthy()
+    expect(screen.getByText(/provided by reference/i)).toBeTruthy()
   })
 
   it('keeps the draft on a failed submit and shows the error', async () => {

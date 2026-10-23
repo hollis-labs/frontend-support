@@ -90,6 +90,10 @@ test('stale card alerts and keeps the reload action reachable by keyboard', asyn
   await expect(page.getByRole('alert')).toContainText('changed')
   await page.keyboard.press('Tab')
   expect(await focused(page)).toBe('button|Reload, keep my answers')
+  // Approve is disabled while stale, so it cannot be reached by keyboard.
+  await expect(page.getByRole('button', { name: 'Approve' })).toBeDisabled()
+  await page.keyboard.press('Tab')
+  expect(await focused(page)).not.toBe('button|Approve')
 })
 
 test('reduced motion is respected: no running animation on a card', async ({ browser }) => {

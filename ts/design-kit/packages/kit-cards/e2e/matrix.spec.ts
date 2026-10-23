@@ -53,6 +53,11 @@ async function inspect(page: Page, vp: number) {
       controlSize: control ? getComputedStyle(control).fontSize : null,
       controlToken: probe('text-control', 'font-size'),
       shortTargets: short,
+      noticeBeside: [...root.querySelectorAll<HTMLElement>('[data-slot="card-notice"]')].some((n) => {
+        const act = n.querySelector<HTMLElement>('[data-slot="card-notice-action"]')
+        const text = act?.previousElementSibling as HTMLElement | null
+        return !!act && !!text && act.getBoundingClientRect().top < text.getBoundingClientRect().bottom - 1
+      }),
       hasEnvelope: !!env,
     }
   }, vp)
@@ -86,6 +91,7 @@ test('matrix', async ({ browser }) => {
           if (m.titleColor && m.titleColor !== m.fgColor) failures.push(`title colour ${m.titleColor} != text-fg ${m.fgColor}`)
           if (m.titleSize && m.titleSize !== m.smSize) failures.push(`title size ${m.titleSize} != text-sm ${m.smSize}`)
         }
+        if (vp.width < 600 && m.noticeBeside) failures.push('notice action sits beside its text at 390')
         if (m.controlSize && m.controlSize !== '13px') failures.push(`body control text is ${m.controlSize}, expected 13px`)
         if (m.controlToken !== '13px') failures.push(`text-control token resolves to ${m.controlToken}`)
         if (vp.width < 600 && m.shortTargets.length) failures.push(`touch targets under 44px: ${m.shortTargets.join(', ')}`)
