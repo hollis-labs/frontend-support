@@ -125,6 +125,8 @@ export function FormCard({
         for (const f of compiled.fields) {
           const v = coerceValue(f, values[f.key])
           if (v === undefined) continue
+          // Defence in depth: a sensitive field is NEVER sent as ordinary data.
+          if (f.sensitive && f.kind !== 'secret') throw new Error(`Field "${f.key}" is secret and cannot be submitted as data.`)
           if (f.kind === 'secret') {
             if (!storeSecret) throw new Error('This form has a secret field but no secret handler.')
             data[f.key] = { ref: await storeSecret(f.key, String(v)) }
@@ -183,7 +185,12 @@ export function FormCard({
                         onClick={(event) => {
                           // A bare hash link scrolls but does not move focus; put it on the control.
                           event.preventDefault()
-                          document.getElementById(`${base}-${key}`)?.focus()
+                          const target = document.getElementById(`${base}-${key}`)
+                          // A labelled group (multi-select) is not focusable; focus its first control.
+                          const control = target?.matches('input, select, textarea, button')
+                            ? target
+                            : target?.querySelector<HTMLElement>('input, select, textarea, button, [role="checkbox"]')
+                          control?.focus()
                         }}
                       >
                         {message}

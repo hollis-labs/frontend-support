@@ -7,6 +7,7 @@ import type {
   EngineOptions,
   EngineSnapshot,
   EngineStore,
+  HeldEntry,
   Surface,
 } from './types'
 
@@ -42,6 +43,12 @@ export interface CardEngine {
   get(id: string): CardViewModel | undefined
   snapshot(): EngineSnapshot
   subscribe(listener: () => void): () => void
+}
+
+function maxRev(a: number | null | undefined, b: number | null | undefined): number | null {
+  if (a == null) return b ?? null
+  if (b == null) return a
+  return Math.max(a, b)
 }
 
 const EMPTY: EngineSnapshot = { order: [], cards: {}, held: {} }
@@ -89,7 +96,23 @@ export function createCardEngine(options: EngineOptions): CardEngine {
       editing: prior?.editing ?? false,
       updatedAvailable: false,
       toastDismissed: prior?.toastDismissed ?? false,
+      revisionFloor: maxRev(prior?.revisionFloor, card.revision),
     }
+  }
+
+  /** Hold work for `targetId`, never letting an older arrival replace a newer held one. */
+  function hold(snap: EngineSnapshot, targetId: string, entry: HeldEntry, target: CardViewModel): CardViewModel {
+    const current = snap.held[targetId]
+    const r = entry.card.revision
+    if (current && current.card.id === entry.card.id && r != null && current.card.revision != null && r <= current.card.revision) {
+      return target // stale against what is already held
+    }
+    commit({
+      ...snap,
+      held: { ...snap.held, [targetId]: entry },
+      cards: { ...snap.cards, [targetId]: { ...target, updatedAvailable: true, revisionFloor: entry.mode === 'update' ? maxRev(target.revisionFloor, r) : target.revisionFloor } },
+    })
+    return store.get().cards[targetId]
   }
 
   function ingest(card: CardInput): CardViewModel | null {
@@ -100,13 +123,10 @@ export function createCardEngine(options: EngineOptions): CardEngine {
 
     // Same id: an update. Lower or equal revision is stale and ignored.
     if (existing) {
-      if (card.revision != null && existing.input.revision != null && card.revision <= existing.input.revision) {
+      if (card.revision != null && existing.revisionFloor != null && card.revision <= existing.revisionFloor) {
         return existing
       }
-      if (existing.editing) {
-        commit({ ...snap, held: { ...snap.held, [card.id]: card }, cards: { ...snap.cards, [card.id]: { ...existing, updatedAvailable: true } } })
-        return snap.cards[card.id]
-      }
+      if (existing.editing) return hold(snap, card.id, { card, mode: 'update' }, existing)
       const next = build(card, rule, existing)
       commit({ ...snap, cards: { ...snap.cards, [card.id]: next } })
       return next
@@ -121,12 +141,7 @@ export function createCardEngine(options: EngineOptions): CardEngine {
       if (rule.supersedes === 'dedupe-key') {
         if (twin.editing) {
           // HOLD the replacement: the old card stays live and tells the person.
-          commit({
-            ...snap,
-            held: { ...snap.held, [twin.id]: card },
-            cards: { ...snap.cards, [twin.id]: { ...twin, updatedAvailable: true } },
-          })
-          return twin
+          return hold(snap, twin.id, { card, mode: 'supersede' }, twin)
         }
         commit({
           order: [...snap.order, next.id],
@@ -136,10 +151,7 @@ export function createCardEngine(options: EngineOptions): CardEngine {
         return next
       }
       // Plain dedupe: fold into the existing card IN PLACE (no new row, no reorder).
-      if (twin.editing) {
-        commit({ ...snap, held: { ...snap.held, [twin.id]: card }, cards: { ...snap.cards, [twin.id]: { ...twin, updatedAvailable: true } } })
-        return twin
-      }
+      if (twin.editing) return hold(snap, twin.id, { card, mode: 'dedupe' }, twin)
       const merged = build({ ...card, id: twin.id }, rule, twin)
       commit({ ...snap, cards: { ...snap.cards, [twin.id]: merged } })
       return merged
@@ -153,8 +165,14 @@ export function createCardEngine(options: EngineOptions): CardEngine {
     const snap = store.get()
     const card = snap.cards[id]
     if (!card) return
-    if (extra?.revision != null && card.input.revision != null && extra.revision < card.input.revision) return
-    commit({ ...snap, cards: { ...snap.cards, [id]: { ...card, status, supersededBy: extra?.supersededBy ?? card.supersededBy } } })
+    if (extra?.revision != null && card.revisionFloor != null && extra.revision < card.revisionFloor) return
+    commit({
+      ...snap,
+      cards: {
+        ...snap.cards,
+        [id]: { ...card, status, supersededBy: extra?.supersededBy ?? card.supersededBy, revisionFloor: maxRev(card.revisionFloor, extra?.revision) },
+      },
+    })
   }
 
   function setEditing(id: string, editing: boolean) {
@@ -171,21 +189,27 @@ export function createCardEngine(options: EngineOptions): CardEngine {
     if (!card || !held) return
     const rest = { ...snap.held }
     delete rest[id]
-    const rule = pickRule(options.rules, held)
+    const rule = pickRule(options.rules, held.card)
     if (!rule) {
       commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: { ...card, updatedAvailable: false } } })
       return
     }
-    if (held.id === id) {
-      commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: build(held, rule, { ...card, editing: false }) } })
+    const idle = { ...card, editing: false }
+    if (held.mode === 'update') {
+      commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: build(held.card, rule, idle) } })
+      return
+    }
+    if (held.mode === 'dedupe') {
+      // Plain dedupe stays plain: fold into the existing card in place, never supersede.
+      commit({ ...snap, held: rest, cards: { ...snap.cards, [id]: build({ ...held.card, id }, rule, idle) } })
       return
     }
     // A held replacement under a different id: supersede now, append the new card.
-    const next = build(held, rule)
+    const next = build(held.card, rule)
     commit({
       order: [...snap.order, next.id],
       held: rest,
-      cards: { ...snap.cards, [id]: { ...card, status: 'superseded', supersededBy: next.id, updatedAvailable: false, editing: false }, [next.id]: next },
+      cards: { ...snap.cards, [id]: { ...idle, status: 'superseded', supersededBy: next.id, updatedAvailable: false }, [next.id]: next },
     })
   }
 

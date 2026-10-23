@@ -44,6 +44,8 @@ export interface FormField {
   readonly pattern?: string
   /** Keywords present on the property that this subset does not honour. */
   readonly unsupported: readonly string[]
+  /** A declaration that cannot be honoured safely. Non-empty makes the form unsubmittable. */
+  readonly problem?: string
 }
 
 export interface CompiledForm {
@@ -85,6 +87,23 @@ function compileProperty(key: string, raw: unknown, required: boolean): FormFiel
     unsupported,
   }
   const fallback = (extra: string[] = []): FormField => ({ ...common, kind: 'fallback', unsupported: [...unsupported, ...extra] })
+
+  // SECRET FIRST, BEFORE ANY OTHER SHAPE. A secret declaration must stay masked and go by
+  // reference whatever else the property says; letting `enum` or an unsupported keyword win
+  // would render an unmasked control and send the value as ordinary data. It stays a
+  // `secret` field; a combination that cannot be honoured is a form-level problem
+  // (fail closed), never a quieter field kind.
+  if (common.sensitive) {
+    const problems: string[] = []
+    if (raw.type !== 'string') problems.push('a secret must be a string')
+    if (unsupported.length > 0) problems.push(`unsupported keyword(s) ${unsupported.join(', ')}`)
+    return {
+      ...common,
+      kind: 'secret',
+      sensitive: true,
+      ...(problems.length ? { problem: `Field "${key}" is declared secret but ${problems.join(' and ')}.` } : {}),
+    }
+  }
   if (unsupported.length > 0) return fallback()
 
   switch (raw.type) {
@@ -126,10 +145,9 @@ export function compileFormSchema(schema: unknown): CompiledForm {
   const requiredList = Array.isArray(schema.required) ? schema.required.filter((k): k is string => typeof k === 'string') : []
   const keys = Object.keys(schema.properties)
   for (const r of requiredList) if (!keys.includes(r)) issues.push(`Required field "${r}" has no property.`)
-  return {
-    fields: keys.map((key) => compileProperty(key, (schema.properties as Record<string, unknown>)[key], requiredList.includes(key))),
-    issues,
-  }
+  const fields = keys.map((key) => compileProperty(key, (schema.properties as Record<string, unknown>)[key], requiredList.includes(key)))
+  for (const f of fields) if (f.problem) issues.push(f.problem)
+  return { fields, issues }
 }
 
 export type FormValues = Readonly<Record<string, unknown>>

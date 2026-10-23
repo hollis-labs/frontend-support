@@ -86,6 +86,18 @@ export interface CardViewModel {
   /** A swap/update is waiting because the person is editing; show an "updated" affordance. */
   readonly updatedAvailable: boolean
   readonly toastDismissed: boolean
+  /**
+   * Highest revision accepted for this card from ANY entry point (ingest, a held arrival,
+   * or server state). Anything at or below it is stale and rejected.
+   */
+  readonly revisionFloor: number | null
+}
+
+/** Work waiting because its target card is being edited, with the policy it matched. */
+export interface HeldEntry {
+  readonly card: CardInput
+  /** `update`: same id. `supersede`/`dedupe`: a new id that matched a dedupe key. */
+  readonly mode: 'update' | 'supersede' | 'dedupe'
 }
 
 export interface EngineSnapshot {
@@ -93,7 +105,7 @@ export interface EngineSnapshot {
   readonly order: readonly string[]
   readonly cards: Readonly<Record<string, CardViewModel>>
   /** Held replacements keyed by the id they will replace. */
-  readonly held: Readonly<Record<string, CardInput>>
+  readonly held: Readonly<Record<string, HeldEntry>>
 }
 
 /** The host owns persistence. The default store is memory. */

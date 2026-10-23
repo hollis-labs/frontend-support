@@ -11,6 +11,7 @@ export type {
   EngineOptions,
   EngineSnapshot,
   EngineStore,
+  HeldEntry,
   MatchValue,
   RuleAction,
   RuleMatch,
