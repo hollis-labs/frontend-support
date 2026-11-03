@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-voice",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Voice kit — speech input, microphone and voice selection, transcript and audio playback. Props down, messages up: no transport, no STT/TTS, no opinion about where audio goes.",
   "keywords": [
     "react",
@@ -94,5 +94,8 @@
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^2.1.9"
   },
-  "private": true
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }

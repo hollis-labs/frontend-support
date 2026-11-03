@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-code",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Code and developer presentation components; highlighting and ANSI rendering are opt-in.",
   "keywords": [
     "react",
@@ -94,7 +94,6 @@
     "shiki": "^4.5.0",
     "ansi-to-react": "^6.2.6"
   },
-  "private": true,
   "peerDependenciesMeta": {
     "shiki": {
       "optional": true
@@ -102,5 +101,9 @@
     "ansi-to-react": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
