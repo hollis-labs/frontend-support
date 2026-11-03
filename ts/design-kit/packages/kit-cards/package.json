@@ -1,7 +1,6 @@
 {
   "name": "@hollis-labs/kit-cards",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
   "description": "Cards kit — the Envelope chassis, card shapes, answerable cards, a headless lifecycle engine and a renderer registry. Props down, outcomes up: no transport, no wire.",
   "keywords": [
     "react",
@@ -97,5 +96,9 @@
     "typescript-eslint": "^8.58.0",
     "@tailwindcss/vite": "^4.2.2",
     "tailwindcss": "^4.2.2"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }

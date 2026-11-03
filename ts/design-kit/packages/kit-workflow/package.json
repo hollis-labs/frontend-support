@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-workflow",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Token-styled controlled workflow canvas primitives; React Flow is opt-in.",
   "keywords": [
     "react",
@@ -91,10 +91,13 @@
     "tailwindcss": "^4.2.2",
     "typescript-eslint": "^8.58.0"
   },
-  "private": true,
   "peerDependenciesMeta": {
     "@xyflow/react": {
       "optional": true
     }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
   }
 }
