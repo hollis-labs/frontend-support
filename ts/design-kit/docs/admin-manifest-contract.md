@@ -1,8 +1,10 @@
-# Admin manifest contract — proposal v1
+# Admin manifest contract v1
 
-**Decision checkpoint:** CW-20261001-0503, 2026-10-01. Proposed for Chrispian's
-review; this document does not approve implementation or claim any app serves
-these endpoints today. It elaborates decision 3 of the accepted Tesseract ADR
+**Status:** approved 2026-10-01 (decision CW-20261001-0503). Implemented by the
+go-envelopes admin package (`ui/ui-go/envelopes/admin` in `hollis-labs/libs`,
+see its `README.md`). Known gaps, as that README states: only scope kind `app`
+is implemented, and `series` and `diagnostics` are declared but not implemented
+(always empty arrays). It elaborates decision 3 of the accepted Tesseract ADR
 `project/design-kit/knowledge/adr:adr_vnext_gui_story`.
 
 The backend declares configuration, supported operations and observation
