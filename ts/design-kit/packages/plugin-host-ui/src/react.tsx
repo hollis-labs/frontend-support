@@ -3,7 +3,7 @@ import type { ActionResult } from './actions-contract.js'
 import { Component, createContext, createElement, Suspense, useCallback, useRef, useState, useContext, useEffect, useMemo, useSyncExternalStore, type ComponentType, type ErrorInfo, type ReactNode } from 'react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, Button } from '@hollis-labs/design-components'
 import type { ContributionView, PluginHostReader } from './host.js'
-import { drawerTabId, PANEL_KIND, DRAWER_TAB_KIND } from './host.js'
+import { dockTabId, PANEL_KIND, DOCK_TAB_KIND } from './host.js'
 import { orderContributions } from './order.js'
 
 const HostContext = createContext<PluginHostReader | null>(null)
@@ -29,8 +29,8 @@ export function usePluginPanels() {
   const views = usePluginViews()
   return useMemo(() => views.filter(view => view.ref.kind === PANEL_KIND), [views])
 }
-export function usePluginDrawerTabs(region: string) {
-  return usePluginSlots(region).filter(view => view.ref.kind === DRAWER_TAB_KIND)
+export function usePluginDockTabs(region: string) {
+  return usePluginSlots(region).filter(view => view.ref.kind === DOCK_TAB_KIND)
 }
 /** Stable typed intent callback; unmount/runtime replacement cancels this hook's requests. */
 export function usePluginAction() {
@@ -129,8 +129,8 @@ export function PluginPanelBody({ panel, fallback, loading }: { panel: Contribut
     </Suspense>
   </PluginRenderBoundary>
 }
-export function PluginDrawerTabBody({ tab, fallback, loading }: { tab: ContributionView; fallback?: ReactNode; loading?: ReactNode }) {
-  return <div data-plugin-tab={drawerTabId(tab.ref)}><PluginPanelBody panel={tab} fallback={fallback} loading={loading} /></div>
+export function PluginDockTabBody({ tab, fallback, loading }: { tab: ContributionView; fallback?: ReactNode; loading?: ReactNode }) {
+  return <div data-plugin-tab={dockTabId(tab.ref)}><PluginPanelBody panel={tab} fallback={fallback} loading={loading} /></div>
 }
 export function WidgetRenderer({ widget, fallback, loading }: { widget?: ContributionView; fallback?: ReactNode; loading?: ReactNode }) {
   return widget?.widget ? <PluginPanelBody panel={widget} fallback={fallback} loading={loading} /> : fallback ?? <ViewNotice>Widget unavailable.</ViewNotice>

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- **BREAKING:** rename the `drawer.tab` contribution kind to `dock.tab`, a clean break with no alias, deprecated re-export or shim. Hosts must update catalogs, regions and manifests that declare `drawer.tab`; entries of that kind are now refused as `unsupported-kind`.
+- **BREAKING:** `DRAWER_TAB_KIND` is now `DOCK_TAB_KIND`, `usePluginDrawerTabs` is `usePluginDockTabs`, `PluginDrawerTabBody` is `PluginDockTabBody` and `drawerTabId` is `dockTabId`.
+
 ## Unreleased
 
 - Prepare the package for public delivery, preserving the public runtime,

@@ -5,7 +5,7 @@ import { orderContributions, type OrderingPolicy } from './order.js'
 import type { PluginSettingsAdapter } from './settings-contract.js'
 /** Built-in registry v2 render kind names; hosts opt in upstream. */
 export const PANEL_KIND = 'panel'
-export const DRAWER_TAB_KIND = 'drawer.tab'
+export const DOCK_TAB_KIND = 'dock.tab'
 export const WIDGET_KIND = 'widget'
 
 /** Structural view of registry v2. No registry package or wire parser is bundled. */
@@ -66,7 +66,7 @@ export interface ContributionRef {
 export function contributionId(ref: Pick<ContributionRef, 'kind' | 'owner' | 'key'>): string {
   return JSON.stringify([ref.kind, ref.owner, ref.key])
 }
-export function drawerTabId(ref: Pick<ContributionRef, 'owner' | 'key'>): string {
+export function dockTabId(ref: Pick<ContributionRef, 'owner' | 'key'>): string {
   return `plugin:${encodeURIComponent(ref.owner)}:${encodeURIComponent(ref.key)}`
 }
 export type PluginIsolationMode = 'sandboxed-frame' | 'main-origin'

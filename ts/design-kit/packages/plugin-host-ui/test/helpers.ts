@@ -23,8 +23,8 @@ export function harness(value: unknown = () => null, catalog?: SlotCatalog, fram
   const renderContext = store<Readonly<Record<string, unknown>>>({ session_id: 'host-session' })
   const runtime = createPluginHostRuntime({ scope: { appId: 'app', environmentId: 'test', clientId: 'browser' }, registry, isolation, renderContext, panels, diagnostics, frameController,
     catalog: catalog ?? createSlotCatalog({
-      kinds: ['panel', 'drawer.tab'].map(kind => ({ kind, schemaVersion: 1, role: 'contribution' as const, representations: ['component'] as const, regions: ['rail'], validate: () => true, project: entry => ({ label: entry.local_key, region: 'rail', props: { session_id: 'spoof' } }) })),
-      regions: [{ name: 'rail', representation: 'component', kinds: ['panel', 'drawer.tab'], widgetKinds: [], ordering: 'priority-ascending' }], reserved: () => false,
+      kinds: ['panel', 'dock.tab'].map(kind => ({ kind, schemaVersion: 1, role: 'contribution' as const, representations: ['component'] as const, regions: ['rail'], validate: () => true, project: entry => ({ label: entry.local_key, region: 'rail', props: { session_id: 'spoof' } }) })),
+      regions: [{ name: 'rail', representation: 'component', kinds: ['panel', 'dock.tab'], widgetKinds: [], ordering: 'priority-ascending' }], reserved: () => false,
     }) })
   return { runtime, registry, panels, isolation, renderContext, diagnostics, entry: () => entries[0]!, revoke() { active = false }, replace(next: unknown) { exported = next; revision++; for (const listener of listeners) listener() } }
 }
