@@ -10,6 +10,11 @@ anything specific to it.
 
 ---
 
+## Unreleased — design-app-runtime: versioned store (additive)
+
+`design-app-runtime` adds `createVersionedStore` / `useVersionedStore`, a generic versioned value store
+for runtime-swappable design-bindings tables. Additive; no new dependency (CW-20261105-0005).
+
 ## Unreleased — design-bindings 0.2.0 (BREAKING), kit-cards 0.2.0
 
 `design-bindings` 0.2.0 is a clean break: isolation-only trust vocabulary (Tangent ADR 0009;
