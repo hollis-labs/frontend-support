@@ -54,17 +54,17 @@ it('keeps same-label review rows distinct and blocks approval and cancellation w
   view.rerender(<PluginReviewDialog open title="Review" rows={[]} onApprove={approve} onOpenChange={change} />)
   fireEvent.click(screen.getByRole('button', { name: 'Approve' })); expect(approve).toHaveBeenCalledOnce()
 })
-it('selects registry v2 drawer.tab declarations and renders an owner-qualified tab ID', async () => {
-  const { usePluginDrawerTabs, PluginDrawerTabBody } = await import('../src/react.js')
-  const h = harness(() => <p>Drawer content</p>)
-  await h.runtime.sync([{ ...h.entry(), kind: 'drawer.tab', owner_id: 'owner:name', local_key: 'tab/name' }])
-  function Drawer() { const tabs = usePluginDrawerTabs('rail'); return <>{tabs.map(tab => <PluginDrawerTabBody key={tab.id} tab={tab} />)}</> }
-  const view = render(<PluginHostProvider runtime={h.runtime}><Drawer /></PluginHostProvider>)
-  expect(screen.getByText('Drawer content')).toBeTruthy()
+it('selects registry v2 dock.tab declarations and renders an owner-qualified tab ID', async () => {
+  const { usePluginDockTabs, PluginDockTabBody } = await import('../src/react.js')
+  const h = harness(() => <p>Dock content</p>)
+  await h.runtime.sync([{ ...h.entry(), kind: 'dock.tab', owner_id: 'owner:name', local_key: 'tab/name' }])
+  function Dock() { const tabs = usePluginDockTabs('rail'); return <>{tabs.map(tab => <PluginDockTabBody key={tab.id} tab={tab} />)}</> }
+  const view = render(<PluginHostProvider runtime={h.runtime}><Dock /></PluginHostProvider>)
+  expect(screen.getByText('Dock content')).toBeTruthy()
   expect(view.container.querySelector('[data-plugin-tab]')?.getAttribute('data-plugin-tab')).toBe('plugin:owner%3Aname:tab%2Fname')
   expect(h.panels.reconcile).toHaveBeenLastCalledWith(h.runtime.scope, [])
-  await act(() => h.runtime.sync([{ ...h.entry(), kind: 'drawer-tab' }]))
-  expect(screen.queryByText('Drawer content')).toBeNull()
+  await act(() => h.runtime.sync([{ ...h.entry(), kind: 'drawer.tab' }]))
+  expect(screen.queryByText('Dock content')).toBeNull()
 })
 it('displays identity and current/previous bundle evidence and approves without a payload', async () => {
   const { PluginReviewDialog } = await import('../src/react.js')

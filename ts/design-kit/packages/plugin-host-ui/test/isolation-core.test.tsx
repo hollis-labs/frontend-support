@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, expect, it, vi } from 'vitest'
 import { act, cleanup, render, screen } from '@testing-library/react'
-import { PluginHostProvider, PluginPanelBody, PluginDrawerTabBody, WidgetRenderer, usePluginPanels } from '../src/react.js'
+import { PluginHostProvider, PluginPanelBody, PluginDockTabBody, WidgetRenderer, usePluginPanels } from '../src/react.js'
 import type { PluginFrameController, PluginFrameRenderState } from '../src/host.js'
 import { harness, store } from './helpers.js'
 afterEach(cleanup)
@@ -52,9 +52,9 @@ it('disposes an old frame before entering main-origin and refuses unknown app po
   act(() => h.isolation.set({ appId: 'app', effectiveMode: 'main-origin', revision: '3' }))
   expect(order[0]).toBe('disposed'); expect(screen.getByText('Parent view')).toBeTruthy()
 })
-it('shares the structural frame path with drawer and widget bodies and exposes explicit failure', () => {
+it('shares the structural frame path with dock and widget bodies and exposes explicit failure', () => {
   const h = frameHarness(), release = h.runtime.retain(), view = h.runtime.getSnapshot().views[0]!
-  const rendered = render(<PluginHostProvider runtime={h.runtime}><PluginDrawerTabBody tab={view} /><WidgetRenderer widget={{ ...view, widget: true }} /></PluginHostProvider>)
+  const rendered = render(<PluginHostProvider runtime={h.runtime}><PluginDockTabBody tab={view} /><WidgetRenderer widget={{ ...view, widget: true }} /></PluginHostProvider>)
   expect(h.controller.mount).toHaveBeenCalledTimes(2); expect(h.parentExport).not.toHaveBeenCalled()
   act(() => h.state.set({ status: 'failed', reason: 'policy-unavailable' }))
   expect(screen.getAllByText('Plugin view failed.')).toHaveLength(2)
