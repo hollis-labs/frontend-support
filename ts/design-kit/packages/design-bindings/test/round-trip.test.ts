@@ -35,6 +35,9 @@ import {
   type BindingRequest,
 } from '../src/index.ts'
 
+/** A host-origin resolution of the fixtures' version. */
+const HOST = { version: '1.0', origin: 'host' } as const
+
 /** `approval-card` fed the envelope's `approval` field. Was `props: "approval"`. */
 const approvalCard: BindingRequest = {
   kind: 'approval-card',
@@ -43,7 +46,7 @@ const approvalCard: BindingRequest = {
   rendererClass: 'react-component',
   entry: 'components/chat/envelopes/ApprovalCard#ApprovalCard',
   payload: { from: 'field', field: 'approval', as: 'approval' },
-  requestedTrust: 'core-trusted',
+  requestedIsolation: 'main-origin',
   fallback: { kind: 'none' },
 }
 
@@ -55,7 +58,7 @@ const subagentSpawnApproval: BindingRequest = {
   rendererClass: 'react-component',
   entry: 'components/chat/envelopes/ApprovalCard#ApprovalCard',
   payload: { from: 'data' },
-  requestedTrust: 'core-trusted',
+  requestedIsolation: 'main-origin',
   fallback: { kind: 'none' },
 }
 
@@ -63,15 +66,15 @@ function table() {
   return defineBindingTable({
     contractDigest: 'sha256:test',
     resolverConfig: { inlinePayloadLimitBytes: 262144 },
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [approvalCard, subagentSpawnApproval],
   })
 }
 
 test('both rows resolve, and they share one renderer identity', () => {
   const t = table()
-  const a = resolve(t, 'approval-card')
-  const b = resolve(t, 'subagent-spawn-approval')
+  const a = resolve(t, 'approval-card', HOST)
+  const b = resolve(t, 'subagent-spawn-approval', HOST)
 
   strictEqual(a.ok, true)
   strictEqual(b.ok, true)
@@ -84,8 +87,8 @@ test('both rows resolve, and they share one renderer identity', () => {
 
 test('the payload paths differ, which is what Record<kind, string> cannot express', () => {
   const t = table()
-  const a = resolve(t, 'approval-card')
-  const b = resolve(t, 'subagent-spawn-approval')
+  const a = resolve(t, 'approval-card', HOST)
+  const b = resolve(t, 'subagent-spawn-approval', HOST)
   if (!a.ok || !b.ok) throw new Error('both rows must resolve')
 
   // A `Record<kind, string>` maps each kind to one component identity. These two
@@ -98,8 +101,8 @@ test('the payload paths differ, which is what Record<kind, string> cannot expres
 
 test('each payload binding round-trips through composition unchanged', () => {
   const t = table()
-  const a = resolve(t, 'approval-card')
-  const b = resolve(t, 'subagent-spawn-approval')
+  const a = resolve(t, 'approval-card', HOST)
+  const b = resolve(t, 'subagent-spawn-approval', HOST)
   if (!a.ok || !b.ok) throw new Error('both rows must resolve')
 
   deepStrictEqual(a.binding.payload, { from: 'field', field: 'approval', as: 'approval' })
@@ -121,7 +124,7 @@ test('a third kind can join the same renderer without touching the other two', (
   const t = defineBindingTable({
     contractDigest: 'sha256:test',
     resolverConfig: { inlinePayloadLimitBytes: 262144 },
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [
       approvalCard,
       subagentSpawnApproval,
@@ -131,7 +134,7 @@ test('a third kind can join the same renderer without touching the other two', (
 
   const ids = t.rows.map((row) => row.rendererId)
   deepStrictEqual(ids, ['approval', 'approval', 'approval'])
-  const c = resolve(t, 'tool-use-approval')
+  const c = resolve(t, 'tool-use-approval', HOST)
   strictEqual(c.ok, true)
   if (c.ok) deepStrictEqual(c.binding.payload, { from: 'whole' })
 })

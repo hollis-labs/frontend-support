@@ -36,6 +36,9 @@ import {
   type PayloadBinding,
 } from '../src/index.ts'
 
+/** A host-origin resolution of the fixtures' version. */
+const HOST = { version: '1.0', origin: 'host' } as const
+
 const valid: BindingRequest = {
   kind: 'info-card',
   version: '1.0',
@@ -43,7 +46,7 @@ const valid: BindingRequest = {
   rendererClass: 'react-component',
   entry: 'components/InfoCard#InfoCard',
   payload: { from: 'data' },
-  requestedTrust: 'core-trusted',
+  requestedIsolation: 'main-origin',
   fallback: { kind: 'none' },
 }
 
@@ -87,26 +90,21 @@ const badPayload: PayloadBinding = { from: 'style', value: 'any-value-at-all' }
 // 2. SETTLED ANSWER #3 — a kit's rows cannot become authoritative
 // ===========================================================================
 
-// A kit cannot declare its own trust. Trust is granted, and the field is absent from
-// the request rather than optional on it, so the attempt names the field it may not
-// have instead of being silently ignored.
+// A kit cannot declare its own isolation. Isolation is granted, and the field is
+// absent from the request (it carries `requestedIsolation`) rather than optional on
+// it, so the attempt names the field it may not have instead of being ignored.
 // @ts-expect-error — a declaration may not assert its own privilege.
-const selfGranted: BindingRequest = { ...valid, trustClass: 'core-trusted' }
-
-// Nor its own isolation, which the host derives from the grant.
-// @ts-expect-error — derived by the host, never declared.
 const selfIsolated: BindingRequest = { ...valid, isolation: 'main-origin' }
 
 // A request is not a binding: the host-only fields are missing, so a kit's rows
 // cannot be passed anywhere a composed row is expected.
-// @ts-expect-error — BindingRequest lacks trustClass, isolation, state, digest, brand.
+// @ts-expect-error — BindingRequest lacks isolation, state, digest, brand.
 const requestAsBinding: Binding = valid
 
 // And a kit cannot write the composed shape out by hand, which is the case the type
 // split alone would not cover. The brand cannot be named outside the package.
 const handBuilt = {
   ...valid,
-  trustClass: 'core-trusted' as const,
   isolation: 'main-origin' as const,
   state: 'available' as const,
   stateReason: '',
@@ -131,7 +129,7 @@ const selfConfigured: BindingRequest = { ...valid, resolverConfig: { inlinePaylo
 // A kit cannot mint a table either, so it cannot hand a host something that already
 // claims authority over wire kinds.
 // @ts-expect-error — BindingTable is branded; only defineBindingTable produces one.
-const forgedTable: BindingTable = { contractDigest: 'x', rows: [], byKind: new Map() }
+const forgedTable: BindingTable = { contractDigest: 'x', rows: [], byKindVersion: new Map(), versionsByKind: new Map() }
 
 // And the resolver refuses anything that did not come from a host's composition.
 // Inside a function that is never called: the assertion is the compile error, and
@@ -150,19 +148,19 @@ function resolverRefusesAnArray() {
 const hostTable: BindingTable = defineBindingTable({
   contractDigest: 'sha256:test',
   resolverConfig: { inlinePayloadLimitBytes: 262144 },
-  trust: constantTrust('core-trusted'),
+  trust: constantTrust('main-origin'),
   defaults: [valid],
   rows: [],
 })
 
 // `resolve` takes a plain string, not the host's generated kind union — the unknown
 // kind is the case it exists for.
-const unknown = resolve(hostTable, 'a.kind.this.host.never.heard.of')
+const unknown = resolve(hostTable, 'a.kind.this.host.never.heard.of', HOST)
 
 test('the defences in this file are checked by typecheck, not by this runner', () => {
   // Referenced so `noUnusedLocals` does not remove the assertions above.
   ok([withColour, withSize, withClassName, withOptions, badPayload].length === 5)
-  ok([selfGranted, selfIsolated, selfCapped, selfConfigured].length === 4)
+  ok([selfIsolated, selfCapped, selfConfigured].length === 3)
   ok([requestAsBinding, forgedBinding, forgedTable].length === 3)
   ok(hostTable.rows.length === 1)
   ok(unknown.ok === false)

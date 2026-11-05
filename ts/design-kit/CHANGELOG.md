@@ -10,6 +10,17 @@ anything specific to it.
 
 ---
 
+## Unreleased — design-bindings 0.2.0 (BREAKING), kit-cards 0.2.0
+
+`design-bindings` 0.2.0 is a clean break: isolation-only trust vocabulary (Tangent ADR 0009;
+`TrustClass`, `isolationFor`, `trustClassPermits` removed), resolution by `kind@version`
+(unknown version of a known kind is `unavailable`), and `resolve(table, kind, { version, origin })`
+with agent-origin content barred from `main-origin`. `kit-cards` 0.2.0 follows. `kit-chat`
+changes only its `design-bindings` range (`^0.2.0`) and takes the new number at the next core
+release. See each package's `CHANGELOG.md` (CW-20261105-0004).
+
+---
+
 ## kit-admin 0.1.0 — 2026-10-03 — first release (independent version)
 
 `kit-admin` releases controlled manifest-driven admin navigation and page

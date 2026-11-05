@@ -104,7 +104,7 @@ const rows: BindingRequest<MyKind>[] = [
     rendererClass: 'react-component',                        //   one renderer, many kinds
     entry: 'components/ApprovalCard#ApprovalCard',           // module AND symbol, one field
     payload: { from: 'field', field: 'approval', as: 'approval' },
-    requestedTrust: 'core-trusted',                          // a request, not a grant
+    requestedIsolation: 'main-origin',                       // a request, not a grant
     fallback: { kind: 'none' },
   },
 ]
@@ -113,13 +113,14 @@ const rows: BindingRequest<MyKind>[] = [
 const table = defineBindingTable({
   contractDigest: CATALOG_DIGEST,
   resolverConfig: { inlinePayloadLimitBytes: 262_144 },  // host policy, stated once
-  trust: constantTrust('core-trusted'),   // or a real policy — see below
+  trust: constantTrust('main-origin'),   // or a real policy — see below
   defaults: kitChatBindings,              // inert rows a kit offered
-  rows,                                   // yours; beats a default for the same kind
+  rows,                                   // yours; beats a default for the same kind@version
 })
 
 // What you ask at render time. Never throws.
-const r = resolve(table, envelope.kind)
+// `version` is the envelope's schema version; `origin` is who produced the content.
+const r = resolve(table, envelope.kind, { version: envelope.version, origin: 'host' })
 if (r.ok) draw(r.binding, r.inlinePayloadLimitBytes)
 else drawFallback(r.code, r.reason, r.fallbackRendererId)
 ```
@@ -149,9 +150,9 @@ A generator emits `BindingRequest<K>[]` as data. It needs to satisfy four things
    layer may never assert wire identity.
 2. **`entry` is `"module/path#ExportedSymbol"`** — one field, so the module and the
    symbol cannot drift apart. Use `parseEntry` when loading.
-3. **`requestedTrust` is a request.** Emit what the manifest asked for. Your
+3. **`requestedIsolation` is a request.** Emit what the manifest asked for. Your
    `HostPolicy` decides what it gets.
-4. **Emit no trust grant, no isolation, no state, and no digest.** Those are not
+4. **Emit no granted isolation, no state, and no digest.** Those are not
    yours; they are absent from the type, so the compiler agrees.
 
 There is no registry here — no module-level state, no `register()`. A table is a
@@ -210,15 +211,15 @@ like before a host has decided to draw it.
 | code | what happened | what the operator does |
 |---|---|---|
 | `unclassified` | nothing in this build classifies the kind | ship a row, or expect the kind |
-| `unavailable` | classified; this build will not serve it | ask for a different workflow |
-| `quarantined` | a trust claim was refused | review the claim — it was not downgraded |
+| `unavailable` | classified; this build will not serve it, or has no row for that `version` of a known kind | ask for a different workflow or version |
+| `quarantined` | an isolation claim was refused, or agent-origin content met an ambient-authority isolation | review the claim — it was not downgraded |
 | `ambiguous` | two rows in one tier declared it | declare one host row to settle it |
 
 There is deliberately **no `trust_unimplemented` code**, and its absence is a decision
-rather than an oversight. Tangent needs one because it reads trust classes as strings
-from a generated table, so "this build does not implement that class" is a real
-runtime state. Here `TrustClass` is a closed union and `TRUST_PROFILES` is a mapped
-type over it, so a class without a profile is a compile error. The case was
+rather than an oversight. Tangent needs one because it reads isolations as strings
+from a generated table, so "this build does not implement that isolation" is a real
+runtime state. Here `Isolation` is a closed union and `TRUST_PROFILES` is a mapped
+type over it, so an isolation without a profile is a compile error. The case was
 eliminated by the shape, not dropped — do not add the code back.
 
 `fallbackRendererId` is **only ever a fallback that preserves meaning**. A declared
@@ -323,3 +324,16 @@ No test framework and no lint dependency: the tests use `node:test`, which ships
 Node. `test/shape.test.ts` is checked by **typecheck**, not by the runner — its
 `@ts-expect-error` directives fail the build both if a defence is removed and if one
 becomes unnecessary.
+
+## Isolation, version and origin (0.2.0)
+
+- **The trust vocabulary is isolation only** (Tangent ADR 0009): `main-origin |
+  host-primitive | sandboxed-frame | external-surface`. There is no `TrustClass`; a row
+  *requests* an isolation (`requestedIsolation`), the host *grants* one (`Binding.isolation`,
+  `HostDecision.admit`).
+- **Resolution is by `kind@version`.** A known kind at a version with no row is
+  `unavailable`; an unknown kind stays `unclassified`. Two versions of one kind in a tier are
+  not a collision; the same `kind@version` twice is `ambiguous`.
+- **`resolve(table, kind, { version, origin })`.** `origin: 'agent'` content is barred from any
+  isolation whose profile has `ambientHostAuthority` (`main-origin`): it resolves to
+  `quarantined`, never to a downgrade.

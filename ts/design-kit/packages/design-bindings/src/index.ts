@@ -38,11 +38,11 @@ export type {
 
 export type {
   RendererClass,
-  TrustClass,
   Isolation,
+  Origin,
   TrustProfile,
 } from './trust.ts'
-export { TRUST_PROFILES, trustProfileFor, isolationFor, trustClassPermits } from './trust.ts'
+export { TRUST_PROFILES, trustProfileFor, isolationPermits } from './trust.ts'
 
 export type {
   HostDecision,
@@ -51,7 +51,7 @@ export type {
   BindingTableSpec,
   BindingTable,
 } from './table.ts'
-export { defineBindingTable, constantTrust } from './table.ts'
+export { defineBindingTable, constantTrust, bindingKey } from './table.ts'
 
-export type { MissCode, Drawable, Miss, Resolution, ParsedEntry } from './resolve.ts'
+export type { MissCode, Drawable, Miss, Resolution, ResolveOptions, ParsedEntry } from './resolve.ts'
 export { resolve, safeFallbackOf, parseEntry } from './resolve.ts'

@@ -12,9 +12,11 @@ import {
   defineBindingTable,
   constantTrust,
   resolve,
-  isolationFor,
   type BindingRequest,
 } from '../src/index.ts'
+
+/** A host-origin resolution of the fixtures' version. */
+const HOST = { version: '1.0', origin: 'host' } as const
 
 /** What a kit ships: a request, for a kind it implements. */
 const kitDefault: BindingRequest = {
@@ -24,7 +26,7 @@ const kitDefault: BindingRequest = {
   rendererClass: 'react-component',
   entry: '@hollis-labs/kit-chat/MessageCard#MessageCard',
   payload: { from: 'data' },
-  requestedTrust: 'core-trusted',
+  requestedIsolation: 'main-origin',
   fallback: { kind: 'none' },
 }
 
@@ -36,11 +38,11 @@ const base = {
 test('a kit default composes when the host does not declare the kind itself', () => {
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     defaults: [kitDefault],
     rows: [],
   })
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, true)
   if (r.ok) strictEqual(r.binding.rendererId, 'kit-chat.message')
 })
@@ -51,13 +53,13 @@ test('a host row beats a kit default, and the default simply does not compose', 
   const hostRow: BindingRequest = { ...kitDefault, rendererId: 'app.message', entry: 'components/Message#Message' }
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     defaults: [kitDefault],
     rows: [hostRow],
   })
 
   strictEqual(t.rows.length, 1)
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   if (r.ok) strictEqual(r.binding.rendererId, 'app.message')
 })
 
@@ -67,12 +69,12 @@ test('two kits claiming one kind is ambiguous, not first-wins', () => {
   const otherKit: BindingRequest = { ...kitDefault, rendererId: 'other-kit.message' }
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     defaults: [kitDefault, otherKit],
     rows: [],
   })
 
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, false)
   if (r.ok) return
   strictEqual(r.code, 'ambiguous')
@@ -84,12 +86,12 @@ test('a host settles an ambiguity by declaring its own row', () => {
   const hostRow: BindingRequest = { ...kitDefault, rendererId: 'app.message' }
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     defaults: [kitDefault, otherKit],
     rows: [hostRow],
   })
 
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, true)
   if (r.ok) strictEqual(r.binding.rendererId, 'app.message')
 })
@@ -97,37 +99,36 @@ test('a host settles an ambiguity by declaring its own row', () => {
 test('a host declaring one kind twice is ambiguous too', () => {
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [kitDefault, { ...kitDefault, rendererId: 'second' }],
   })
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   if (!r.ok) strictEqual(r.code, 'ambiguous')
 })
 
-test('isolation is derived from the granted class, never from the request', () => {
+test('isolation is what the host granted, and the request cannot state one', () => {
   // The request cannot state an isolation — there is no field for it. What a host
   // grants decides where it runs, which is Tangent's rule generalised.
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('sandboxed-code'),
+    trust: constantTrust('sandboxed-frame'),
     rows: [{ ...kitDefault, rendererClass: 'sandboxed-frame' }],
   })
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, true)
   if (!r.ok) return
   strictEqual(r.binding.isolation, 'sandboxed-frame')
-  strictEqual(r.binding.isolation, isolationFor('sandboxed-code'))
 })
 
 test('a host grant overrides what the row requested, because a request is a request', () => {
   const t = defineBindingTable({
     ...base,
-    trust: constantTrust('portfolio-trusted'),
-    rows: [kitDefault], // requests 'core-trusted'
+    trust: constantTrust('main-origin'),
+    rows: [{ ...kitDefault, rendererClass: 'declarative', requestedIsolation: 'host-primitive' }],
   })
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, true)
-  if (r.ok) strictEqual(r.binding.trustClass, 'portfolio-trusted')
+  if (r.ok) strictEqual(r.binding.isolation, 'main-origin')
 })
 
 test('a host policy can decide per row, from evidence the row does not carry', () => {
@@ -135,13 +136,13 @@ test('a host policy can decide per row, from evidence the row does not carry', (
     ...base,
     trust: (request) =>
       request.entry.startsWith('@hollis-labs/')
-        ? { admit: 'core-trusted' }
+        ? { admit: 'main-origin' }
         : { quarantine: 'renderers outside the portfolio scope are not admitted in this build' },
     rows: [kitDefault, { ...kitDefault, kind: 'vendor.card', entry: 'vendor/Thing#Thing' }],
   })
 
-  strictEqual(resolve(t, 'chat.message').ok, true)
-  const vendor = resolve(t, 'vendor.card')
+  strictEqual(resolve(t, 'chat.message', HOST).ok, true)
+  const vendor = resolve(t, 'vendor.card', HOST)
   strictEqual(vendor.ok, false)
   if (!vendor.ok) strictEqual(vendor.code, 'quarantined')
 })
@@ -151,18 +152,18 @@ test('composition never throws, and one bad row does not cost the others', () =>
   // could have drawn. A miss is a classification here too, not only in resolve.
   const t = defineBindingTable({
     ...base,
-    trust: (request) => (request.kind === 'bad' ? { quarantine: 'no' } : { admit: 'core-trusted' }),
+    trust: (request) => (request.kind === 'bad' ? { quarantine: 'no' } : { admit: 'main-origin' }),
     rows: [{ ...kitDefault, kind: 'bad' }, kitDefault],
   })
   strictEqual(t.rows.length, 2)
-  strictEqual(resolve(t, 'chat.message').ok, true)
+  strictEqual(resolve(t, 'chat.message', HOST).ok, true)
 })
 
 test('the contract digest is stamped on the table and every row it composed', () => {
   const t = defineBindingTable({
     ...base,
     contractDigest: 'sha256:catalog-v7',
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [kitDefault],
   })
   strictEqual(t.contractDigest, 'sha256:catalog-v7')
@@ -177,7 +178,7 @@ test('the payload ceiling is resolver config, and no row carries the constant', 
   const t = defineBindingTable({
     ...base,
     resolverConfig: { inlinePayloadLimitBytes: 1024 },
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [kitDefault],
   })
 
@@ -185,7 +186,7 @@ test('the payload ceiling is resolver config, and no row carries the constant', 
   strictEqual('inlinePayloadLimitBytes' in t.rows[0]!, false)
 
   // The ceiling still applies to every resolution. It did not go away; it moved.
-  const r = resolve(t, 'chat.message')
+  const r = resolve(t, 'chat.message', HOST)
   strictEqual(r.ok, true)
   if (r.ok) strictEqual(r.inlinePayloadLimitBytes, 1024)
 })
@@ -196,13 +197,13 @@ test('a host policy may override the ceiling for one kind', () => {
     resolverConfig: { inlinePayloadLimitBytes: 262144 },
     trust: (request) =>
       request.kind === 'chat.attachment'
-        ? { admit: 'core-trusted', inlinePayloadLimitBytes: 8 }
-        : { admit: 'core-trusted' },
+        ? { admit: 'main-origin', inlinePayloadLimitBytes: 8 }
+        : { admit: 'main-origin' },
     rows: [kitDefault, { ...kitDefault, kind: 'chat.attachment' }],
   })
 
-  const plain = resolve(t, 'chat.message')
-  const capped = resolve(t, 'chat.attachment')
+  const plain = resolve(t, 'chat.message', HOST)
+  const capped = resolve(t, 'chat.attachment', HOST)
   if (plain.ok) strictEqual(plain.inlinePayloadLimitBytes, 262144)
   if (capped.ok) strictEqual(capped.inlinePayloadLimitBytes, 8)
 
@@ -216,9 +217,57 @@ test('the config is reachable for a miss, which has no row to read', () => {
   const t = defineBindingTable({
     ...base,
     resolverConfig: { inlinePayloadLimitBytes: 4096 },
-    trust: constantTrust('core-trusted'),
+    trust: constantTrust('main-origin'),
     rows: [],
   })
-  strictEqual(resolve(t, 'nothing.here').ok, false)
+  strictEqual(resolve(t, 'nothing.here', HOST).ok, false)
   strictEqual(t.resolverConfig.inlinePayloadLimitBytes, 4096)
+})
+
+test('resolution is by kind AND version; an unknown version of a known kind is unavailable', () => {
+  const t = defineBindingTable({
+    ...base,
+    trust: constantTrust('main-origin'),
+    rows: [kitDefault, { ...kitDefault, version: '2.0', rendererId: 'chat.message.v2' }],
+  })
+  const v1 = resolve(t, 'chat.message', { version: '1.0', origin: 'host' })
+  const v2 = resolve(t, 'chat.message', { version: '2.0', origin: 'host' })
+  strictEqual(v1.ok && v1.binding.rendererId, kitDefault.rendererId)
+  strictEqual(v2.ok && v2.binding.rendererId, 'chat.message.v2')
+  const v3 = resolve(t, 'chat.message', { version: '3.0', origin: 'host' })
+  strictEqual(v3.ok, false)
+  if (!v3.ok) strictEqual(v3.code, 'unavailable')
+  const other = resolve(t, 'no.such.kind', { version: '1.0', origin: 'host' })
+  if (!other.ok) strictEqual(other.code, 'unclassified')
+})
+
+test('two versions of one kind in a tier are not a collision; the same version twice is', () => {
+  const t = defineBindingTable({
+    ...base,
+    trust: constantTrust('main-origin'),
+    rows: [
+      kitDefault,
+      { ...kitDefault, version: '2.0' },
+      { ...kitDefault, version: '2.0', rendererId: 'dup' },
+    ],
+  })
+  strictEqual(resolve(t, 'chat.message', { version: '1.0', origin: 'host' }).ok, true)
+  const dup = resolve(t, 'chat.message', { version: '2.0', origin: 'host' })
+  strictEqual(dup.ok, false)
+  if (!dup.ok) strictEqual(dup.code, 'ambiguous')
+})
+
+test('agent-origin content is barred from ambient-authority isolation, never downgraded', () => {
+  const main = defineBindingTable({ ...base, trust: constantTrust('main-origin'), rows: [kitDefault] })
+  const agent = resolve(main, 'chat.message', { version: '1.0', origin: 'agent' })
+  strictEqual(agent.ok, false)
+  if (!agent.ok) strictEqual(agent.code, 'quarantined')
+  strictEqual(resolve(main, 'chat.message', HOST).ok, true)
+
+  const framed = defineBindingTable({
+    ...base,
+    trust: constantTrust('sandboxed-frame'),
+    rows: [{ ...kitDefault, rendererClass: 'sandboxed-frame' }],
+  })
+  strictEqual(resolve(framed, 'chat.message', { version: '1.0', origin: 'agent' }).ok, true)
 })

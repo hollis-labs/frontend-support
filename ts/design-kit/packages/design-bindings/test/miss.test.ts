@@ -18,6 +18,9 @@ import {
   type HostPolicy,
 } from '../src/index.ts'
 
+/** A host-origin resolution of the fixtures' version. */
+const HOST = { version: '1.0', origin: 'host' } as const
+
 const card: BindingRequest = {
   kind: 'info-card',
   version: '1.0',
@@ -25,11 +28,11 @@ const card: BindingRequest = {
   rendererClass: 'react-component',
   entry: 'components/InfoCard#InfoCard',
   payload: { from: 'data' },
-  requestedTrust: 'core-trusted',
+  requestedIsolation: 'main-origin',
   fallback: { kind: 'none' },
 }
 
-function tableWith(rows: readonly BindingRequest[], trust: HostPolicy = constantTrust('core-trusted')) {
+function tableWith(rows: readonly BindingRequest[], trust: HostPolicy = constantTrust('main-origin')) {
   return defineBindingTable({
     contractDigest: 'sha256:test',
     resolverConfig: { inlinePayloadLimitBytes: 262144 },
@@ -40,9 +43,9 @@ function tableWith(rows: readonly BindingRequest[], trust: HostPolicy = constant
 
 test('an unknown kind is classified, not thrown — the normal plugin case', () => {
   const t = tableWith([card])
-  doesNotThrow(() => resolve(t, 'some.plugin.kind.nobody.ships'))
+  doesNotThrow(() => resolve(t, 'some.plugin.kind.nobody.ships', HOST))
 
-  const r = resolve(t, 'some.plugin.kind.nobody.ships')
+  const r = resolve(t, 'some.plugin.kind.nobody.ships', HOST)
   strictEqual(r.ok, false)
   if (r.ok) return
   strictEqual(r.code, 'unclassified')
@@ -55,22 +58,22 @@ test('an unknown kind is classified, not thrown — the normal plugin case', () 
 test('resolve does not throw on the degenerate inputs a real wire produces', () => {
   const t = tableWith([card])
   for (const kind of ['', ' ', '__proto__', 'constructor', 'toString', '0']) {
-    doesNotThrow(() => resolve(t, kind), `threw on ${JSON.stringify(kind)}`)
-    strictEqual(resolve(t, kind).ok, false)
+    doesNotThrow(() => resolve(t, kind, HOST), `threw on ${JSON.stringify(kind)}`)
+    strictEqual(resolve(t, kind, HOST).ok, false)
   }
 })
 
 test('an empty table classifies every kind rather than failing to build', () => {
   const t = tableWith([])
   strictEqual(t.rows.length, 0)
-  const r = resolve(t, 'info-card')
+  const r = resolve(t, 'info-card', HOST)
   strictEqual(r.ok, false)
   if (!r.ok) strictEqual(r.code, 'unclassified')
 })
 
 test('a refused trust claim is quarantined and says so, and is never downgraded', () => {
   const t = tableWith([card], () => ({ quarantine: 'the publisher signature did not verify' }))
-  const r = resolve(t, 'info-card')
+  const r = resolve(t, 'info-card', HOST)
 
   strictEqual(r.ok, false)
   if (r.ok) return
@@ -81,21 +84,21 @@ test('a refused trust claim is quarantined and says so, and is never downgraded'
   // have been allowed to run. It kept what it asked for and is refused.
   const row = t.rows[0]!
   strictEqual(row.state, 'quarantined')
-  strictEqual(row.trustClass, 'core-trusted')
+  strictEqual(row.isolation, 'main-origin')
 })
 
 test('an incoherent grant is quarantined by composition, whatever the host said', () => {
-  // `declarative` trust cannot contain a `sandboxed-frame` renderer. That is a
+  // `host-primitive` cannot contain a `sandboxed-frame` renderer. That is a
   // category error rather than a policy choice, so composition refuses it — as a
   // quarantine, never as a downgrade to a class that happens to fit.
   const sandboxed: BindingRequest = {
     ...card,
     kind: 'third-party-widget',
     rendererClass: 'sandboxed-frame',
-    requestedTrust: 'sandboxed-code',
+    requestedIsolation: 'sandboxed-frame',
   }
-  const t = tableWith([sandboxed], constantTrust('declarative'))
-  const r = resolve(t, 'third-party-widget')
+  const t = tableWith([sandboxed], constantTrust('host-primitive'))
+  const r = resolve(t, 'third-party-widget', HOST)
 
   strictEqual(r.ok, false)
   if (r.ok) return
@@ -105,7 +108,7 @@ test('an incoherent grant is quarantined by composition, whatever the host said'
 
 test('unavailable is distinct from unclassified, because the remedies differ', () => {
   const t = tableWith([card], () => ({ unavailable: 'this build ships no approvals UI' }))
-  const r = resolve(t, 'info-card')
+  const r = resolve(t, 'info-card', HOST)
 
   strictEqual(r.ok, false)
   if (r.ok) return
@@ -119,7 +122,7 @@ test('a safe fallback is offered on a miss', () => {
     fallback: { kind: 'safe', rendererId: 'generic-json', degradation: 'renders the payload as a titled JSON view' },
   }
   const t = tableWith([withFallback], () => ({ unavailable: 'not in this build' }))
-  const r = resolve(t, 'info-card')
+  const r = resolve(t, 'info-card', HOST)
 
   strictEqual(r.ok, false)
   if (!r.ok) strictEqual(r.fallbackRendererId, 'generic-json')
@@ -135,7 +138,7 @@ test('an UNSAFE fallback is recorded on the row and never offered', () => {
     fallback: { kind: 'unsafe', rendererId: 'plain-text', degradation: 'drops the approve/deny control' },
   }
   const t = tableWith([withUnsafe], () => ({ unavailable: 'not in this build' }))
-  const r = resolve(t, 'approval-card')
+  const r = resolve(t, 'approval-card', HOST)
 
   strictEqual(r.ok, false)
   if (r.ok) return
@@ -148,6 +151,6 @@ test('an UNSAFE fallback is recorded on the row and never offered', () => {
 
 test('no fallback yields null, which means draw the generic view and name the kind', () => {
   const t = tableWith([card], () => ({ unavailable: 'not in this build' }))
-  const r = resolve(t, 'info-card')
+  const r = resolve(t, 'info-card', HOST)
   if (!r.ok) strictEqual(r.fallbackRendererId, null)
 })

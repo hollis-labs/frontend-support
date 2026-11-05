@@ -1,5 +1,12 @@
 # @hollis-labs/kit-cards
 
+## 0.2.0 — BREAKING (CW-20261105-0004)
+
+- Follows design-bindings 0.2.0 (`^0.2.0`): the registry speaks isolation, not trust classes.
+  `requestedTrust` → `requestedIsolation`, `grantedTrust` → `grantedIsolation`, `grantTrust` →
+  `grantIsolation`, `GrantRequest.requestedIsolation`. Default request is `main-origin` (was
+  `portfolio-trusted`). `Origin` is now the design-bindings type, re-exported. No aliases.
+
 ## Unreleased (0.0.0, private)
 
 - New package. The card set, the `CardOutcome` / `CardResponder` response seam and `classifyPriorResponse` moved here

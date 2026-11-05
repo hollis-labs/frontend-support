@@ -1,10 +1,11 @@
 import type { ComponentType } from 'react'
 import {
-  trustClassPermits,
+  isolationPermits,
   trustProfileFor,
   type MissCode,
   type RendererClass,
-  type TrustClass,
+  type Isolation,
+  type Origin,
 } from '@hollis-labs/design-bindings'
 
 /**
@@ -18,24 +19,24 @@ import {
  * kit assert its own binding, which is exactly what the BindingRequest/Binding split
  * exists to prevent. So the registry is an INSTANCE a host creates (no module-level
  * state), owned by kit-cards, and it consumes design-bindings' vocabulary — MissCode,
- * RendererClass, TrustClass and the trust profiles — rather than redefining it.
+ * RendererClass, Isolation, Origin and the trust profiles — rather than redefining it.
  * See CHANGELOG for the escalation.
  *
- * TRUST IS REQUESTED BY THE REGISTRATION AND GRANTED BY THE HOST. `register` carries
- * `requestedTrust`; the host's `grantTrust` decides. A refused claim is QUARANTINED —
+ * ISOLATION IS REQUESTED BY THE REGISTRATION AND GRANTED BY THE HOST. `register` carries
+ * `requestedIsolation`; the host's `grantIsolation` decides. A refused claim is QUARANTINED —
  * the entry resolves to a `quarantined` miss and is never silently downgraded to a
- * lower class. Agent-originated content may only use an entry whose granted trust has
+ * lower isolation. Agent-originated content may only use an entry whose granted isolation has
  * no ambient host authority.
  *
  * UNKNOWN KINDS DEGRADE, NEVER BLANK: `resolve` always returns something drawable —
  * a component or a miss the slot draws as `CardMiss`.
  */
 
-export type Origin = 'host' | 'agent'
+export type { Origin }
 
 export interface RegisterOptions {
   readonly rendererClass?: RendererClass
-  readonly requestedTrust?: TrustClass
+  readonly requestedIsolation?: Isolation
 }
 
 export interface CardRegistration<P = never> {
@@ -45,21 +46,21 @@ export interface CardRegistration<P = never> {
   /** JSON Schema for the payload. Kept for hosts and conformance suites; not enforced here. */
   readonly schema: unknown
   readonly rendererClass: RendererClass
-  readonly requestedTrust: TrustClass
+  readonly requestedIsolation: Isolation
   /** `null` until granted; `null` after a refusal too — see `granted`. */
-  readonly grantedTrust: TrustClass | null
+  readonly grantedIsolation: Isolation | null
 }
 
 export interface GrantRequest {
   readonly kind: string
   readonly version: string
   readonly rendererClass: RendererClass
-  readonly requestedTrust: TrustClass
+  readonly requestedIsolation: Isolation
 }
 
 export interface CardRegistryOptions {
-  /** The host's decision. Return the class to grant, or `null` to refuse. Default: refuse all. */
-  readonly grantTrust?: (request: GrantRequest) => TrustClass | null
+  /** The host's decision. Return the isolation to grant, or `null` to refuse. Default: refuse all. */
+  readonly grantIsolation?: (request: GrantRequest) => Isolation | null
 }
 
 export type CardResolution =
@@ -80,7 +81,7 @@ export interface CardRegistry {
 }
 
 export function createCardRegistry(options: CardRegistryOptions = {}): CardRegistry {
-  const grant = options.grantTrust ?? (() => null)
+  const grant = options.grantIsolation ?? (() => null)
   const entries = new Map<string, CardRegistration>()
   const keyOf = (kind: string, version: string) => `${kind}@${version}`
 
@@ -93,18 +94,18 @@ export function createCardRegistry(options: CardRegistryOptions = {}): CardRegis
         throw new Error(`Card renderer already registered for ${key}.`)
       }
       const rendererClass = opts.rendererClass ?? 'react-component'
-      const requestedTrust = opts.requestedTrust ?? 'portfolio-trusted'
-      const decided = grant({ kind, version, rendererClass, requestedTrust })
+      const requestedIsolation = opts.requestedIsolation ?? 'main-origin'
+      const decided = grant({ kind, version, rendererClass, requestedIsolation })
       // A grant must still permit the renderer class; otherwise it is a refusal.
-      const grantedTrust = decided != null && trustClassPermits(decided, rendererClass) ? decided : null
+      const grantedIsolation = decided != null && isolationPermits(decided, rendererClass) ? decided : null
       entries.set(key, {
         kind,
         version,
         component: component as ComponentType<never>,
         schema,
         rendererClass,
-        requestedTrust,
-        grantedTrust,
+        requestedIsolation,
+        grantedIsolation,
       })
     },
 
@@ -116,11 +117,11 @@ export function createCardRegistry(options: CardRegistryOptions = {}): CardRegis
           ? { ok: false, code: 'unavailable', wireKind: kind, reason: `Version ${version} is not available; this build has ${known.join(', ')}.` }
           : { ok: false, code: 'unclassified', wireKind: kind, reason: `No renderer is registered for ${kind}.` }
       }
-      if (entry.grantedTrust == null) {
-        return { ok: false, code: 'quarantined', wireKind: kind, reason: `The host refused the ${entry.requestedTrust} trust claim for ${kind}@${version}.` }
+      if (entry.grantedIsolation == null) {
+        return { ok: false, code: 'quarantined', wireKind: kind, reason: `The host refused the ${entry.requestedIsolation} isolation claim for ${kind}@${version}.` }
       }
-      if (origin === 'agent' && trustProfileFor(entry.grantedTrust).ambientHostAuthority) {
-        return { ok: false, code: 'quarantined', wireKind: kind, reason: `Agent-originated content may not use a renderer with ambient host authority (${entry.grantedTrust}).` }
+      if (origin === 'agent' && trustProfileFor(entry.grantedIsolation).ambientHostAuthority) {
+        return { ok: false, code: 'quarantined', wireKind: kind, reason: `Agent-originated content may not use a renderer with ambient host authority (${entry.grantedIsolation}).` }
       }
       return { ok: true, entry }
     },

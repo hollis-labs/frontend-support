@@ -80,16 +80,16 @@ an answerable card (it gets a durable `home`); dedupe/supersede never reorder an
 replacement is held and the card shows `updatedAvailable` until the host calls `applyPending`. `describeExpiry` returns
 the absolute time and a countdown only in the final minute.
 
-## Renderer registry and trust
+## Renderer registry and isolation
 
 Import it from `@hollis-labs/kit-cards/registry`. It is a separate entry because it loads `design-bindings` at runtime (that package publishes TypeScript source as its `main`); the root entry never does, so an adopter that only draws cards is unaffected.
 
 
 `design-bindings` deliberately has no `register()` (its header: no global registry, zero runtime dependencies, a binding
 is host-local by construction), so the registry here is an **instance** a host creates — no module state — that reuses
-design-bindings' `MissCode`, `RendererClass`, `TrustClass` and trust profiles. Trust is *requested* by the registration
-and *granted* by the host's `grantTrust` (default: refuse everything); a refused claim resolves to a `quarantined`
-miss and is never downgraded; agent-originated content may only use a renderer whose granted class has no ambient host
+design-bindings' `MissCode`, `RendererClass`, `Isolation` and trust profiles. Isolation is *requested* by the registration
+and *granted* by the host's `grantIsolation` (default: refuse everything); a refused claim resolves to a `quarantined`
+miss and is never downgraded; agent-originated content may only use a renderer whose granted isolation has no ambient host
 authority. A duplicate `(kind, version)` throws rather than being chosen by call order.
 
 ## Promotion rule
