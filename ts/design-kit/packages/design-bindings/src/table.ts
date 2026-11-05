@@ -24,7 +24,7 @@
  */
 import type { HostComposed } from './internal/brand.ts'
 import type { Binding, BindingRequest, BindingState } from './binding.ts'
-import { isolationFor, trustClassPermits, type TrustClass } from './trust.ts'
+import { isolationPermits, type Isolation } from './trust.ts'
 
 /**
  * What a host decides about one declared row.
@@ -36,7 +36,8 @@ import { isolationFor, trustClassPermits, type TrustClass } from './trust.ts'
  */
 export type HostDecision =
   /**
-   * Grant this trust class. Isolation is derived from it; the row does not choose.
+   * Grant this isolation. The row asked for one (`requestedIsolation`); the host
+   * decides what it gets.
    *
    * `inlinePayloadLimitBytes` is the per-row override, and this is the ONLY place one
    * can be set. It is optional and absent by default: the ceiling normally comes from
@@ -49,7 +50,7 @@ export type HostDecision =
    * keeps it out of `BindingRequest` — a kit cannot express one, for the same reason
    * it cannot declare its own trust.
    */
-  | { readonly admit: TrustClass; readonly inlinePayloadLimitBytes?: number }
+  | { readonly admit: Isolation; readonly inlinePayloadLimitBytes?: number }
   /**
    * Refuse the trust claim. NEVER a downgrade — see `trust.ts` rule 3. The reason is
    * shown to an operator, so write it as a sentence.
@@ -77,8 +78,8 @@ export type HostPolicy<K extends string = string> = (request: BindingRequest<K>)
  * cheap rather than cheap in principle: a simple host writes
  * `trust: constantTrust('core-trusted')` and never thinks about it again.
  */
-export function constantTrust<K extends string = string>(trustClass: TrustClass): HostPolicy<K> {
-  return () => ({ admit: trustClass })
+export function constantTrust<K extends string = string>(isolation: Isolation): HostPolicy<K> {
+  return () => ({ admit: isolation })
 }
 
 /**
@@ -160,8 +161,13 @@ export interface BindingTable<K extends string = string> extends HostComposed {
   readonly resolverConfig: ResolverConfig
   /** Every composed row, including the ones that will not draw, in input order. */
   readonly rows: readonly Binding<K>[]
-  /** Lookup index. Present so `resolve` is O(1) and hosts do not each build one. */
-  readonly byKind: ReadonlyMap<K, Binding<K>>
+  /**
+   * Lookup index by `kind@version` (see `bindingKey`). Present so `resolve` is O(1)
+   * and hosts do not each build one.
+   */
+  readonly byKindVersion: ReadonlyMap<string, Binding<K>>
+  /** Every version this table classifies for a kind, for telling a version miss from a kind miss. */
+  readonly versionsByKind: ReadonlyMap<K, readonly string[]>
 }
 
 /**
@@ -189,12 +195,13 @@ export function defineBindingTable<K extends string = string>(
   // declaring its own row is exactly how a host settles a collision between kits, so
   // that made the remedy unreachable. A kit-tier collision is moot the moment the
   // host declares the kind itself, because those defaults are not composed at all.
-  const seen = { host: new Set<K>(), kit: new Set<K>() }
-  const duplicated = { host: new Set<K>(), kit: new Set<K>() }
+  const seen = { host: new Set<string>(), kit: new Set<string>() }
+  const duplicated = { host: new Set<string>(), kit: new Set<string>() }
   for (const { request, fromHost } of declared) {
     const tier = fromHost ? 'host' : 'kit'
-    if (seen[tier].has(request.kind)) duplicated[tier].add(request.kind)
-    seen[tier].add(request.kind)
+    const key = bindingKey(request.kind, request.version)
+    if (seen[tier].has(key)) duplicated[tier].add(key)
+    seen[tier].add(key)
   }
   const hostKinds = seen.host
 
@@ -202,11 +209,12 @@ export function defineBindingTable<K extends string = string>(
   for (const { request, fromHost } of declared) {
     // A kit default for a kind this host declares itself is not composed at all. It
     // is not a conflict and not an error; it is the default having done its job.
-    if (!fromHost && hostKinds.has(request.kind)) continue
+    const key = bindingKey(request.kind, request.version)
+    if (!fromHost && hostKinds.has(key)) continue
 
-    if (duplicated[fromHost ? 'host' : 'kit'].has(request.kind)) {
+    if (duplicated[fromHost ? 'host' : 'kit'].has(key)) {
       rows.push(
-        compose(request, spec, 'ambiguous', 'core-trusted',
+        compose(request, spec, 'ambiguous', request.requestedIsolation,
           `more than one ${fromHost ? 'host row' : 'kit default'} declares "${request.kind}"; ` +
           'declare a single host row for it to settle which one draws'),
       )
@@ -216,23 +224,23 @@ export function defineBindingTable<K extends string = string>(
     const decision = spec.trust(request)
 
     if ('quarantine' in decision) {
-      rows.push(compose(request, spec, 'quarantined', request.requestedTrust, decision.quarantine))
+      rows.push(compose(request, spec, 'quarantined', request.requestedIsolation, decision.quarantine))
       continue
     }
     if ('unavailable' in decision) {
-      rows.push(compose(request, spec, 'unavailable', request.requestedTrust, decision.unavailable))
+      rows.push(compose(request, spec, 'unavailable', request.requestedIsolation, decision.unavailable))
       continue
     }
 
     // An incoherent grant is a category error rather than a policy choice a host is
-    // entitled to make: `declarative` trust cannot contain a `sandboxed-frame`
+    // entitled to make: `host-primitive` cannot contain a `sandboxed-frame`
     // renderer, whatever anyone decided. Refused as a QUARANTINE and not as a
     // downgrade to a class that does fit, because a renderer running at less
     // privilege than it needs looks like success and is not.
-    if (!trustClassPermits(decision.admit, request.rendererClass)) {
+    if (!isolationPermits(decision.admit, request.rendererClass)) {
       rows.push(
         compose(request, spec, 'quarantined', decision.admit,
-          `trust class "${decision.admit}" cannot serve a "${request.rendererClass}" renderer; ` +
+          `isolation "${decision.admit}" cannot serve a "${request.rendererClass}" renderer; ` +
           'the grant was refused rather than downgraded'),
       )
       continue
@@ -243,8 +251,15 @@ export function defineBindingTable<K extends string = string>(
     )
   }
 
-  const byKind = new Map<K, Binding<K>>()
-  for (const row of rows) byKind.set(row.kind, row)
+  const byKindVersion = new Map<string, Binding<K>>()
+  const versions = new Map<K, string[]>()
+  for (const row of rows) {
+    byKindVersion.set(bindingKey(row.kind, row.version), row)
+    const list = versions.get(row.kind)
+    if (list) list.push(row.version)
+    else versions.set(row.kind, [row.version])
+  }
+  const versionsByKind: ReadonlyMap<K, readonly string[]> = versions
 
   // THE MINT. The `as unknown as` is the loud form on purpose — the brand exists so
   // that producing a resolvable table is an act a reviewer can see, and this is the
@@ -253,8 +268,14 @@ export function defineBindingTable<K extends string = string>(
     contractDigest: spec.contractDigest,
     resolverConfig: spec.resolverConfig,
     rows,
-    byKind,
+    byKindVersion,
+    versionsByKind,
   } as unknown as BindingTable<K>
+}
+
+/** The key a row is indexed under: `kind@version`. */
+export function bindingKey(kind: string, version: string): string {
+  return `${kind}@${version}`
 }
 
 /** Build one composed row. The single place a `Binding` is minted. */
@@ -262,7 +283,7 @@ function compose<K extends string>(
   request: BindingRequest<K>,
   spec: BindingTableSpec<K>,
   state: BindingState,
-  trustClass: TrustClass,
+  isolation: Isolation,
   stateReason: string,
   /**
    * The per-row ceiling override, or undefined for the overwhelmingly common case of
@@ -279,8 +300,7 @@ function compose<K extends string>(
     rendererClass: request.rendererClass,
     entry: request.entry,
     payload: request.payload,
-    trustClass,
-    isolation: isolationFor(trustClass),
+    isolation,
     // Spread so the key is ABSENT rather than present-and-undefined when there is no
     // override. `'inlinePayloadLimitBytes' in binding` then means what it says, and a
     // serialised table does not carry a column of nulls for a field nobody set.

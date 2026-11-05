@@ -185,11 +185,11 @@ function staticCases(): CardCase[] {
 
 function registryCases(): CardCase[] {
   const registry = createCardRegistry({
-    grantTrust: ({ requestedTrust }) => (requestedTrust === 'core-trusted' ? null : requestedTrust),
+    grantIsolation: ({ requestedIsolation }) => (requestedIsolation === 'sandboxed-frame' ? null : requestedIsolation),
   })
   registry.register('sample.note', '1', () => <p className="text-control text-fg">A registered renderer drew this.</p>, { type: 'object' })
   registry.register('sample.note', '2', () => <p className="text-control text-fg">v2</p>, { type: 'object' })
-  registry.register('sample.claim', '1', () => <p>never drawn</p>, { type: 'object' }, { requestedTrust: 'core-trusted' })
+  registry.register('sample.claim', '1', () => <p>never drawn</p>, { type: 'object' }, { requestedIsolation: 'sandboxed-frame' })
   registry.register('sample.boom', '1', Boom, { type: 'object' })
   const slot = (kind: string, version: string, origin?: 'agent') =>
     <CardSlot registry={registry} kind={kind} version={version} origin={origin} props={{}} />

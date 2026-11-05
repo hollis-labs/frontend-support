@@ -39,7 +39,7 @@ available just relocates the drift somewhere harder to see.
 
 Current releases: the six core packages (`design-tokens`, `design-components`,
 `design-app-runtime`, `kit-dashboard`, `kit-chat` and `eslint-config-design`) at **`0.4.0`**,
-released together at one number; `design-bindings` at `0.1.0`; `kit-settings` at `0.2.0`;
+released together at one number; `design-bindings` at `0.2.0`; `kit-settings` at `0.2.0`;
 and `kit-observe` at `0.1.1`. `kit-account` is private. See
 [`CHANGELOG.md`](./CHANGELOG.md).
 `kit-chat` was an empty stub when the first six published, so it was excluded rather than

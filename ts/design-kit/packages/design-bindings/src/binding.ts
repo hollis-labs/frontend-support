@@ -52,7 +52,7 @@
  * wire binding.
  */
 import type { HostComposed } from './internal/brand.ts'
-import type { RendererClass, TrustClass, Isolation } from './trust.ts'
+import type { RendererClass, Isolation } from './trust.ts'
 
 /**
  * How the envelope's payload reaches the component.
@@ -152,9 +152,8 @@ export type BindingState =
  * a request except `defineBindingTable`, which is a host's own call.
  *
  * WHAT IS ABSENT, AND WHY EACH ONE IS ABSENT RATHER THAN OPTIONAL:
- *   - `trustClass`   — the host GRANTS trust. A declaration would be a thing
- *                      asserting its own privilege.
- *   - `isolation`    — the host DERIVES it from the grant (`isolationFor`).
+ *   - `isolation`    — the host GRANTS it. A declaration would be a thing
+ *                      asserting its own privilege; the row carries `requestedIsolation`.
  *   - `state`        — whether a build serves a kind is a fact about that build.
  *   - `contractDigest` — the host stamps the catalog it generated against.
  *   - `inlinePayloadLimitBytes` — host policy, and the class of fact this split
@@ -195,12 +194,12 @@ export interface BindingRequest<K extends string = string> {
   /** How the payload reaches the component. */
   readonly payload: PayloadBinding
   /** The privilege this row ASKS FOR. The host decides what it gets. */
-  readonly requestedTrust: TrustClass
+  readonly requestedIsolation: Isolation
   readonly fallback: FallbackBinding
 }
 
 /**
- * A row a host has composed: trust granted, isolation derived, state decided.
+ * A row a host has composed: isolation granted, state decided.
  *
  * Only `defineBindingTable` produces one — see `internal/brand.ts` for why that is
  * enforced in the type system rather than asked for in a comment.
@@ -213,8 +212,6 @@ export interface Binding<K extends string = string> extends HostComposed {
   readonly entry: string
   readonly payload: PayloadBinding
   /** GRANTED by the host, not requested by the row. */
-  readonly trustClass: TrustClass
-  /** DERIVED from the grant. Never declared. */
   readonly isolation: Isolation
   /**
    * A payload ceiling for THIS row only, present when the host's policy set one.
@@ -223,16 +220,15 @@ export interface Binding<K extends string = string> extends HostComposed {
    * 2026-09-11. Tangent carries it on every row and all 19 carry the identical
    * 262144 — a value present on 100% of rows carries no per-row information, so it
    * is host policy denormalised into a table. Put against the two fields it sits
-   * beside: trust is genuinely per-row because a binding REQUESTS it, and isolation
-   * is deliberately kept off the row because the host DERIVES it. A payload ceiling
-   * behaves like isolation, not like trust. So the host states it once in
+   * beside: isolation is genuinely per-row because a binding REQUESTS it, and a
+   * payload ceiling is never requested by a binding. So the host states it once in
    * `ResolverConfig` and no row carries the constant.
    *
    * THE FIELD IS NOT GONE, AND READING ITS ABSENCE AS "THE SECURITY FIELD WAS
    * REMOVED" IS THE WRONG READING — somebody will, so it is written here. The
    * ceiling exists from day one and applies to every resolution; nobody faces a
    * migration the first time they need it, which was the whole reason settled
-   * answer #2 kept trust and isolation in the shape. What changed is that it is
+   * answer #2 kept the isolation dimension in the shape. What changed is that it is
    * supplied ONCE by the host instead of repeated identically per row.
    *
    * This optional field is the override, for a host that genuinely varies the

@@ -322,7 +322,7 @@ for the Flux gap list and browser checks in an isolated ops-chat consumer.
 ```tsx
 import { ConfirmationCard, CardBoundary, CardMiss } from '@hollis-labs/kit-chat'
 
-const r = resolve(table, envelope.kind)   // your table, from @hollis-labs/design-bindings
+const r = resolve(table, envelope.kind, { version: envelope.version, origin: 'host' })   // your table, from @hollis-labs/design-bindings
 
 items.push({
   kind: 'card',

@@ -19,6 +19,8 @@
  */
 import type { Binding } from './binding.ts'
 import type { BindingTable } from './table.ts'
+import { bindingKey } from './table.ts'
+import { trustProfileFor, type Origin } from './trust.ts'
 
 /**
  * Why a kind will not draw.
@@ -31,15 +33,18 @@ import type { BindingTable } from './table.ts'
  * somebody reading it does something different.
  *
  * A code the proposal listed and this does not: `trust_unimplemented`. Tangent needs
- * it because it reads trust classes as strings from a generated table. Here
- * `TrustClass` is a closed union and `TRUST_PROFILES` is a mapped type over it, so
- * an unimplemented class is a compile error rather than a runtime code. It was
+ * it because it reads isolations as strings from a generated table. Here
+ * `Isolation` is a closed union and `TRUST_PROFILES` is a mapped type over it, so
+ * an unimplemented isolation is a compile error rather than a runtime code. It was
  * eliminated by the shape, not dropped.
  */
 export type MissCode =
   /** Nothing in this build classifies the kind. Ship a row, or expect the kind. */
   | 'unclassified'
-  /** Classified, and this build will not serve it. Ask for a different workflow. */
+  /**
+   * Classified, and this build will not serve it — including a known kind asked for
+   * at a version this build has no row for. Ask for a different workflow or version.
+   */
   | 'unavailable'
   /** A trust claim the host refused. Review the claim; it was not downgraded. */
   | 'quarantined'
@@ -82,6 +87,17 @@ export interface Miss {
   readonly fallbackRendererId: string | null
 }
 
+/** What a caller must say about the content it is asking to draw. */
+export interface ResolveOptions {
+  /** The kind's schema version, as carried by the envelope. */
+  readonly version: string
+  /**
+   * Who produced the content. Agent-origin content is barred from any isolation with
+   * ambient host authority: it resolves to `quarantined`, never to a downgrade.
+   */
+  readonly origin: Origin
+}
+
 export type Resolution<K extends string = string> = Drawable<K> | Miss
 
 /**
@@ -96,10 +112,21 @@ export type Resolution<K extends string = string> = Drawable<K> | Miss
 export function resolve<K extends string = string>(
   table: BindingTable<K>,
   kind: string,
+  options: ResolveOptions,
 ): Resolution<K> {
-  const binding = table.byKind.get(kind as K)
+  const binding = table.byKindVersion.get(bindingKey(kind, options.version))
 
   if (!binding) {
+    const known = table.versionsByKind.get(kind as K)
+    if (known) {
+      return {
+        ok: false,
+        code: 'unavailable',
+        kind,
+        reason: `"${kind}" is classified at ${known.join(', ')}; this build has no row for version ${options.version}`,
+        fallbackRendererId: null,
+      }
+    }
     return {
       ok: false,
       code: 'unclassified',
@@ -110,6 +137,15 @@ export function resolve<K extends string = string>(
   }
 
   if (binding.state === 'available') {
+    if (options.origin === 'agent' && trustProfileFor(binding.isolation).ambientHostAuthority) {
+      return {
+        ok: false,
+        code: 'quarantined',
+        kind,
+        reason: `agent-originated content may not use a renderer with ambient host authority (${binding.isolation})`,
+        fallbackRendererId: safeFallbackOf(binding),
+      }
+    }
     return {
       ok: true,
       binding,

@@ -10,12 +10,13 @@
  *
  *   1. Trust is REQUESTED by the thing being bound and GRANTED by the host. A
  *      manifest never asserts its own privilege. `BindingRequest.requestedTrust` is
- *      a request; `Binding.trustClass` is a grant; they are different fields on
+ *      a request; `Binding.isolation` is a grant; they are different fields on
  *      different types for that reason.
  *
- *   2. Isolation is DERIVED by the host, never declared. A declaration states
- *      intent; the host computes the consequence. Hence `isolationFor` below and
- *      no `isolation` field on the request.
+ *   2. THE VOCABULARY IS ISOLATION AND NOTHING ELSE (Tangent ADR 0009). There is
+ *      no trust class sitting above it: a request asks for an isolation and a host
+ *      grants one. Where a renderer runs IS the privilege it holds, so a second name
+ *      for the same fact was a place for the two to disagree.
  *
  *   3. A failed trust claim is QUARANTINED, never silently downgraded. Running a
  *      renderer at less privilege than it asked for looks like success and is not:
@@ -43,98 +44,78 @@ export type RendererClass =
   | 'external-surface'
 
 /**
- * The privilege level a binding asks for, and that a host grants or refuses.
+ * Where a renderer runs, which is the whole of the privilege it holds (ADR 0009).
  *
  * A closed union rather than a string, which is what makes "this build does not
- * implement that trust class" unrepresentable rather than a runtime code. Tangent
- * needs that fourth refusal code because it reads a generated string table; here
- * the compiler has already answered it.
+ * implement that isolation" unrepresentable rather than a runtime code.
  */
-export type TrustClass =
-  | 'core-trusted'
-  | 'portfolio-trusted'
-  | 'declarative'
-  | 'sandboxed-code'
-  | 'external-surface'
-
-/** Where a granted trust class runs a renderer. Derived by the host, never declared. */
 export type Isolation =
   | 'main-origin'
   | 'host-primitive'
   | 'sandboxed-frame'
   | 'external-surface'
 
+/** Where a content item came from, which decides what authority it may be drawn with. */
+export type Origin = 'host' | 'agent'
+
 /**
- * What one trust class means, in the terms a host needs to act on it.
+ * What one isolation means, in the terms a host needs to act on it.
  *
  * DELIBERATELY NOT CARRIED FROM TANGENT: its `capabilities` list
  * (`file.read_scoped`, `process.exec`, …). That vocabulary is Tangent's host policy,
- * generated from its own `internal/definition/trust.go`, and a shared contract
- * package asserting a capability vocabulary for seven apps would be this epic's own
- * failure mode one layer over — the same mistake as `component:` in go-envelopes,
- * with capabilities instead of appearance. A host that needs capabilities keeps them
- * in its own policy and keys them off `trustClass`.
+ * and a shared contract package asserting a capability vocabulary for seven apps
+ * would be this epic's own failure mode one layer over. A host that needs
+ * capabilities keeps them in its own policy and keys them off `isolation`.
  *
- * What IS carried is the part that is structural rather than policy: where the class
- * runs, whether publisher code executes at all, whether it reaches the host's own
- * authority, and which renderer classes it can coherently serve.
+ * What IS carried is the part that is structural rather than policy: whether
+ * publisher code executes at all, whether it reaches the host's own authority, and
+ * which renderer classes it can coherently serve.
  */
 export interface TrustProfile {
-  readonly trustClass: TrustClass
   readonly isolation: Isolation
-  /** False for the classes where no publisher-authored code executes at all. */
+  /** False for the isolations where no publisher-authored code executes at all. */
   readonly executesPublisherCode: boolean
-  /** Whether this isolation can reach the host's own origin, storage and session. */
+  /**
+   * Whether this isolation can reach the host's own origin, storage and session.
+   * Agent-origin content is barred from any isolation where this is true.
+   */
   readonly ambientHostAuthority: boolean
   /**
-   * The renderer classes this trust class can coherently serve.
+   * The renderer classes this isolation can coherently serve.
    *
-   * Granting `declarative` trust to a `sandboxed-frame` renderer is not a policy
-   * choice a host is entitled to make — it is a category error, and composition
-   * quarantines it. See `defineBindingTable`.
+   * Granting `host-primitive` to a `sandboxed-frame` renderer is not a policy choice
+   * a host is entitled to make — it is a category error, and composition quarantines
+   * it. See `defineBindingTable`.
    */
   readonly rendererClasses: readonly RendererClass[]
 }
 
 /**
- * Every trust class, with its profile.
+ * Every isolation, with its profile.
  *
- * The mapped key type is doing real work: adding a member to `TrustClass` without a
+ * The mapped key type is doing real work: adding a member to `Isolation` without a
  * profile here is a compile error, so the union and this table cannot drift apart.
- * That is the same failure Tangent contains with a second drift suite, made
- * impossible instead of tested for.
  */
-export const TRUST_PROFILES: { readonly [C in TrustClass]: TrustProfile } = {
-  'core-trusted': {
-    trustClass: 'core-trusted',
+export const TRUST_PROFILES: { readonly [I in Isolation]: TrustProfile } = {
+  'main-origin': {
     isolation: 'main-origin',
     executesPublisherCode: true,
     ambientHostAuthority: true,
     rendererClasses: ['react-component', 'declarative'],
   },
-  'portfolio-trusted': {
-    trustClass: 'portfolio-trusted',
-    isolation: 'main-origin',
-    executesPublisherCode: true,
-    ambientHostAuthority: true,
-    rendererClasses: ['react-component', 'declarative'],
-  },
-  declarative: {
-    trustClass: 'declarative',
+  'host-primitive': {
     isolation: 'host-primitive',
     executesPublisherCode: false,
     ambientHostAuthority: false,
     rendererClasses: ['declarative'],
   },
-  'sandboxed-code': {
-    trustClass: 'sandboxed-code',
+  'sandboxed-frame': {
     isolation: 'sandboxed-frame',
     executesPublisherCode: true,
     ambientHostAuthority: false,
     rendererClasses: ['sandboxed-frame'],
   },
   'external-surface': {
-    trustClass: 'external-surface',
     isolation: 'external-surface',
     executesPublisherCode: false,
     ambientHostAuthority: false,
@@ -142,28 +123,18 @@ export const TRUST_PROFILES: { readonly [C in TrustClass]: TrustProfile } = {
   },
 }
 
-/** The profile for a trust class. Total, because `TrustClass` is closed. */
-export function trustProfileFor(trustClass: TrustClass): TrustProfile {
-  return TRUST_PROFILES[trustClass]
+/** The profile for an isolation. Total, because `Isolation` is closed. */
+export function trustProfileFor(isolation: Isolation): TrustProfile {
+  return TRUST_PROFILES[isolation]
 }
 
 /**
- * Where a granted trust class runs a renderer.
- *
- * Exists as a function rather than a field on the request so that rule 2 above is
- * enforced by there being nowhere to declare it, not by a reviewer noticing.
- */
-export function isolationFor(trustClass: TrustClass): Isolation {
-  return TRUST_PROFILES[trustClass].isolation
-}
-
-/**
- * Whether a trust class can coherently serve a renderer class.
+ * Whether an isolation can coherently serve a renderer class.
  *
  * Used by composition to quarantine an incoherent grant. Exported because a host
  * writing its own policy is better off refusing up front, with its own message,
  * than discovering the refusal in the composed table.
  */
-export function trustClassPermits(trustClass: TrustClass, rendererClass: RendererClass): boolean {
-  return TRUST_PROFILES[trustClass].rendererClasses.includes(rendererClass)
+export function isolationPermits(isolation: Isolation, rendererClass: RendererClass): boolean {
+  return TRUST_PROFILES[isolation].rendererClasses.includes(rendererClass)
 }
