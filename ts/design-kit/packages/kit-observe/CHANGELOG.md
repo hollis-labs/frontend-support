@@ -1,5 +1,10 @@
 # @hollis-labs/kit-observe
 
+## 0.1.2 — 2026-11-04
+
+- Widen the optional `@hollis-labs/kit-dashboard` peer to `^0.5.0 || ^0.6.0` (already on
+  main from #8, never published) so npm no longer fails with ERESOLVE next to kit-dashboard 0.6.
+
 ## 0.1.1 — 2026-10-02
 
 Requires design-components and design-tokens `^0.4.0`; the optional dashboard
