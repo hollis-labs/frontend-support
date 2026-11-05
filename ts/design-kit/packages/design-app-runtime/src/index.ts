@@ -104,3 +104,7 @@ export {
   type UseAppShellAsideOptions,
   type AppShellAsideHandle,
 } from './hooks/use-app-shell-aside'
+
+// Generic versioned value store (e.g. a runtime-swappable design-bindings table).
+export { createVersionedStore, type VersionedStore } from './lib/versioned-store'
+export { useVersionedStore } from './hooks/use-versioned-store'
