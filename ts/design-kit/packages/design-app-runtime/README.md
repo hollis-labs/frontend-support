@@ -47,9 +47,46 @@ for complete value declarations and production-browser verification.
 | api | `createApiClient`, `ApiError`, `createApiContext`, `normalizeKeys`, `toSnakeCase`, `parseMetadataJson`, `normalize*` |
 | hooks | `usePoll`, `useSSE`, `useElapsed`, `refreshPolledData`, `createRefreshRegistry` |
 | state / nav | `createRouter`, `createScopedStorage`, `createListCursor`, `listCursorNeighbors` |
+| versioned store | `createVersionedStore`, `useVersionedStore`, `VersionedStore` |
 | display | `formatRelativeTime`, `formatShortDate`, `formatCount`, `formatDuration` |
 | wire types | `JsonValue`, `JsonObject`, `JsonPrimitive`, `ISODateString` |
 | opt-in css | `@hollis-labs/design-app-runtime/shell-reset.css` |
+
+## Swapping a design-bindings table at runtime
+
+`createVersionedStore` is generic: it holds one immutable value, bumps `version()` when
+the reference changes, and notifies subscribers. This package does **not** import
+`@hollis-labs/design-bindings`; the app composes the table and stores it.
+
+```tsx
+import { createVersionedStore, useVersionedStore } from '@hollis-labs/design-app-runtime'
+import { defineBindingTable, resolve } from '@hollis-labs/design-bindings'
+
+const tableStore = createVersionedStore(defineBindingTable(initialEntries))
+
+// On plugin registry sync (the app wires the subscription):
+function onRegistrySync(entries) {
+  let next
+  try {
+    next = defineBindingTable(entries)
+  } catch (error) {
+    report(error) // composing failed: keep the previous table
+    return
+  }
+  tableStore.set(next)
+}
+
+function Slot({ kind }) {
+  const table = useVersionedStore(tableStore)
+  return render(resolve(table, kind, { version, origin }))
+}
+```
+
+**Rebuild-failure rule:** the store only ever holds a value you pass to `set`. If
+composing the next table throws, do not call `set`; the previous table stays current,
+and the store never holds a partial value. `set` with the same reference is a no-op.
+A listener that throws does not stop other listeners; its error is rethrown
+asynchronously.
 
 ## What is deliberately NOT here
 

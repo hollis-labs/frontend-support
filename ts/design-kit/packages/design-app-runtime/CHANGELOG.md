@@ -1,6 +1,8 @@
 # @hollis-labs/design-app-runtime
 
-## Unreleased — CW-20261010-0072
+## Unreleased — CW-20261010-0072, CW-20261105-0005
+
+- Add generic `createVersionedStore` and `useVersionedStore` (additive): an immutable value with `version()` and `subscribe`, for runtime-swappable design-bindings tables. No new dependency; does not import design-bindings.
 
 - Commit-scoped source/store/viewport/layer leases reject retired callbacks even after ID reuse and unmount. Hook spread props carry explicit trigger/fallback admission; closing focus is owned by the underlying Sheet. Temporary overlays reset on source or viewport transitions without persisting them.
 
