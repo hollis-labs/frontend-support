@@ -34,6 +34,7 @@ jobs:
         kit-cards kit-account kit-code kit-voice kit-workflow
         kit-chat
         kit-dashboard kit-observe kit-settings kit-admin plugin-host-ui
+        app-shell
     defaults:
       run:
         working-directory: ts/design-kit
