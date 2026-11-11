@@ -1,0 +1,72 @@
+{
+  "name": "@hollis-labs/app-shell",
+  "version": "0.1.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "Manifest-driven app shell: consumes the Substrate generated frontend manifest and places its contributions in the host's regions.",
+  "keywords": [
+    "react",
+    "app-shell",
+    "manifest",
+    "design-system"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/design-kit/packages/app-shell"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/app-shell#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
+  },
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "files": [
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "eslint .",
+    "test": "vitest",
+    "test:run": "vitest run"
+  },
+  "peerDependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "dependencies": {
+    "@hollis-labs/design-bindings": "^0.2.0",
+    "@hollis-labs/design-components": "^0.5.0",
+    "@hollis-labs/plugin-host-ui": "^0.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@hollis-labs/eslint-config-design": "^0.5.0",
+    "@testing-library/react": "^16.3.0",
+    "@types/node": "^24.12.2",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.39.4",
+    "globals": "^17.4.0",
+    "jsdom": "^25.0.1",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "typescript-eslint": "^8.58.0",
+    "vitest": "^4.1.11"
+  }
+}

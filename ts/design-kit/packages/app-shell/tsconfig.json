@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "paths": {
+      "@hollis-labs/design-bindings": ["../design-bindings/src/index.ts"],
+      "@hollis-labs/design-components": ["../design-components/src/index.ts"],
+      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"],
+      "@hollis-labs/plugin-host-ui/react": ["../plugin-host-ui/src/react.tsx"],
+      "@hollis-labs/plugin-host-ui": ["../plugin-host-ui/src/index.ts"]
+    }
+  },
+  "include": ["src", "test", "vitest.config.ts"]
+}
