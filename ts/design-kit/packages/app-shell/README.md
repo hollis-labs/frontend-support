@@ -49,6 +49,21 @@ Controlled components for the six Substrate page types, matching the committed g
 page holds the state and submits through `useActionGateway()` (see `test/fixtures.tsx` for list and detail pages built this
 way). Narrow layout is the host's choice (`narrow`, `orientation="strip"`, `MobileTabBar`).
 
+## Menus and commands (SF-3d)
+
+`menu.item` and `command` contributions render in four places, all running through the action gateway (the shell never decides risk
+or confirmation; a `high` entry or a backend `needs_confirmation` opens the gateway's confirmation overlay):
+
+- `command.palette`: the kit's `SearchPalette`, opened with Ctrl/Cmd+K or the header "Commands" button. Filters on label, group and `keywords`.
+- `row.actions` and `menu:<subject-kind>`: the kit's `OverflowMenu`. `<RowActions subject={{kind, id}} />` (row actions + that kind's menu) and
+  `<ContextActions subject />` (the kind's menu only) are for pages; the subject rides along as `hollis_action.subject`.
+- `toolbar.primary`: a toolbar in the shell header.
+
+Action: `navigate` takes a surface route path (a path no surface owns is skipped with a diagnostic; URLs are never followed), `openRegion`
+(+ `tab`) opens a dock tab, `call` names an agent function. Order is `order` (default 100), then module, then key; high-risk entries
+come last, behind a divider. An item that cannot work is skipped and listed in Diagnostics; menus need `actions` on `ManifestShell`
+and say so in Diagnostics when it is missing. Goldens: `a-menu` (row overflow, danger last behind a divider).
+
 ## Panel preferences (SF-3)
 
 `createPanelPrefs({ storage, panels })` keeps panel order, enabled flags, the default panel and the agent/user dismiss state in an
@@ -58,5 +73,4 @@ Plugin panels cannot reuse a built-in's or another plugin's id.
 
 ## Not here
 
-Backend action endpoints, auth and key handling, page content, and any app change. `menu.item` and `command` are parsed and
-validated (`action`, `risk`, `order`, `when`, `keywords`, `group`) but not rendered yet; they are still skipped as unknown kinds.
+Backend action endpoints, auth and key handling, page content, and any app change. Dock-level behaviour beyond the manifest's attributes.

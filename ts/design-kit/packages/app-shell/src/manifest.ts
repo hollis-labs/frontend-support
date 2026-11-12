@@ -10,7 +10,7 @@ import type { BindingDemand } from '@hollis-labs/design-bindings'
 
 export const SUPPORTED_MANIFEST_VERSION = 0
 
-export const KNOWN_KINDS = ['nav.item', 'nav.group', 'settings.region', 'surface', 'panel', 'dock.tab', 'widget', 'slot'] as const
+export const KNOWN_KINDS = ['nav.item', 'nav.group', 'settings.region', 'surface', 'panel', 'dock.tab', 'widget', 'slot', 'menu.item', 'command'] as const
 export type ContributionKind = (typeof KNOWN_KINDS)[number]
 
 export const REGION_NAV_PRIMARY = 'nav.primary'
@@ -20,6 +20,11 @@ export const REGION_SETTINGS_SECTIONS = 'settings.sections'
 export const REGION_SURFACE_PAGE = 'surface.page'
 export const REGION_ASIDE_PANELS = 'aside.panels'
 export const REGION_WIDGETS_GRID = 'widgets.grid'
+export const REGION_COMMAND_PALETTE = 'command.palette'
+export const REGION_ROW_ACTIONS = 'row.actions'
+export const REGION_TOOLBAR_PRIMARY = 'toolbar.primary'
+/** A context menu for one subject kind: `menu:<subject-kind>`. */
+export const REGION_MENU_PREFIX = 'menu:'
 
 export type SurfaceLayout = 'list' | 'detail' | 'form' | 'settings' | 'dashboard'
 
