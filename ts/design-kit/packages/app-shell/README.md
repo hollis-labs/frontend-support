@@ -33,8 +33,16 @@ import manifest from './frontend.manifest.json'
 - Hosts supply page bodies (`pages`, by surface key) and views (`views`, by `view` name). A failing view is contained by
   plugin-host-ui's render boundary.
 
+## Action gateway
+
+Pass `actions` to `ManifestShell` and call `useActionGateway().handleCall({ surfaceId, functionCallId, callFunction: { '@call': 'items.save', hollis_action: { id, subject, risk, basis }, input } }, { trigger })`.
+The result is `{ functionCallId, value: <outcome> }`. `actions` supplies the backend, the agent function names it routes, the
+audit sink, the step-up grant issuer (`issueGrant`; auth is the host's) and optionally `risk`, `currentBasis`, `describe`, `undo`,
+`catalog` (overrides and `openOverlay` / `setData`) and `onReview`. Semantics and statuses: see CHANGELOG 0.3.0. The core
+(`createActionGateway`) has no React dependency.
+
 ## Not here
 
-The action gateway (risk, confirmation, outcome policy; SF-5b), page content, and any app change. The manifest's region
+Backend action endpoints, auth and key handling, page content, and any app change. The manifest's region
 catalog (`{name, docked, anchor}`) does not yet carry `openState`, `exclusive`, `sizes`, `dismissKey` or `mobile`, so the host
 supplies them through `dockAttributes`; when Substrate adds them, the shell should read them from the catalog instead.
