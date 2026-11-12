@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0
+
+- Bottom dock resize and `DockTabStrip` (SF-3 PR2; lifted copy-from-only from Nanite's chat drawer, with kit tokens and steps in place
+  of raw values, and text glyphs instead of an icon library).
+- Dock attributes gain `anchor: 'side' | 'bottom'` and `heightPx { min, default, max? }` (defaults 120 / 240 / 640; `heightPx` only with
+  `anchor: 'bottom'`, otherwise refused with an `invalid-dock-attributes` diagnostic). A bottom dock is exclusive unless the host says otherwise.
+  `ResolvedDockAttributes` gains `anchor` and `heightPx`.
+- `useDockState` gains `height(region)` / `setHeight(region, px)`: clamped to the range and remembered through the injected `LayoutStorage`.
+- `DockResizeHandle`: a separator on the dock's top edge with pointer capture (drag up grows), double-click closes, release below the
+  minimum closes, and Arrow Up/Down (24px), Home and End resize from the keyboard. Esc and focus return reuse `useDockState`.
+- `DockTabStrip` (`id, label, active, runningPip?, closeable?, pinnable?, pinned?`; `card` and `inline` variants; scroll controls on
+  overflow; arrow keys move between tabs). The shell shows it in a bottom dock whose region has more than one tab.
+- On a narrow screen a bottom-anchored dock is the existing bottom sheet (no handle).
+
 ## 0.6.0
 
 - Panel preferences and the agent/user dismiss machine (SF-3 PR1): `createPanelPrefs({ storage, panels })`, a framework-agnostic

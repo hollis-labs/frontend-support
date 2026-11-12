@@ -18,7 +18,7 @@ const dialogs = () => screen.queryAllByRole('dialog').map(d => d.getAttribute('a
 describe('dock attributes', () => {
   it('defaults: hidden, not exclusive, one size, Esc, bottom sheet on mobile', () => {
     const model = buildShellModel(twoTabs, { admin })
-    expect(model.docks[0]!.attributes).toEqual({ openState: 'hidden', exclusive: false, sizes: { options: ['md'], default: 'md' }, dismissKey: 'Esc', mobile: 'bottom-sheet' })
+    expect(model.docks[0]!.attributes).toEqual({ openState: 'hidden', exclusive: false, sizes: { options: ['md'], default: 'md' }, dismissKey: 'Esc', mobile: 'bottom-sheet', anchor: 'side', heightPx: { min: 120, default: 240, max: 640 } })
     mount()
     expect(dialogs()).toEqual([])
     click('Inspector'); click('Logs')

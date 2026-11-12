@@ -24,7 +24,13 @@ export interface DockAttributes {
   dismissKey?: 'Esc'
   /** How the region presents on a narrow screen. */
   mobile?: 'bottom-sheet'
+  /** `side` (default) is a right-hand panel; `bottom` is a resizable bottom dock (a bottom sheet on a narrow screen). */
+  anchor?: 'side' | 'bottom'
+  /** Bottom dock height in px: the least a drag may leave open, the starting height and the most. Defaults 120 / 240 / 640. */
+  heightPx?: DockHeight
 }
+
+export interface DockHeight { min: number; default: number; max?: number }
 
 export interface ResolvedDockAttributes {
   openState: 'hidden' | 'open'
@@ -32,10 +38,14 @@ export interface ResolvedDockAttributes {
   sizes: { options: readonly DockSize[]; default: DockSize }
   dismissKey: 'Esc'
   mobile: 'bottom-sheet'
+  anchor: 'side' | 'bottom'
+  heightPx: Required<DockHeight>
 }
 
+export const DEFAULT_DOCK_HEIGHT: Required<DockHeight> = { min: 120, default: 240, max: 640 }
+
 export const DEFAULT_DOCK_ATTRIBUTES: ResolvedDockAttributes = {
-  openState: 'hidden', exclusive: false, sizes: { options: ['md'], default: 'md' }, dismissKey: 'Esc', mobile: 'bottom-sheet',
+  openState: 'hidden', exclusive: false, sizes: { options: ['md'], default: 'md' }, dismissKey: 'Esc', mobile: 'bottom-sheet', anchor: 'side', heightPx: DEFAULT_DOCK_HEIGHT,
 }
 
 const sizeOk = (v: unknown): v is DockSize => (DOCK_SIZES as readonly unknown[]).includes(v)
@@ -47,6 +57,13 @@ export function dockAttributeProblems(a: DockAttributes): string[] {
   if (a.exclusive !== undefined && typeof a.exclusive !== 'boolean') out.push('exclusive is not a boolean')
   if (a.dismissKey !== undefined && a.dismissKey !== 'Esc') out.push(`dismissKey "${String(a.dismissKey)}"`)
   if (a.mobile !== undefined && a.mobile !== 'bottom-sheet') out.push(`mobile "${String(a.mobile)}"`)
+  if (a.anchor !== undefined && a.anchor !== 'side' && a.anchor !== 'bottom') out.push(`anchor "${String(a.anchor)}"`)
+  if (a.heightPx !== undefined) {
+    const { min, default: def, max = DEFAULT_DOCK_HEIGHT.max } = a.heightPx
+    if (![min, def, max].every(n => Number.isFinite(n) && n > 0)) out.push('heightPx values must be positive numbers')
+    else if (!(min <= def && def <= max)) out.push('heightPx must satisfy min <= default <= max')
+    if (a.anchor !== 'bottom') out.push('heightPx applies only to anchor "bottom"')
+  }
   if (a.sizes !== undefined) {
     const { options, default: def } = a.sizes
     if (!Array.isArray(options) || !options.length || !options.every(sizeOk) || new Set(options).size !== options.length) out.push('sizes.options must be a non-empty list of distinct size tokens')
@@ -63,9 +80,13 @@ export function resolveDockAttributes(region: string, given: DockAttributes | un
     diagnostics.push({ code: 'invalid-dock-attributes', message: `Dock attributes for region "${region}" were not applied: ${problems.join('; ')}.` })
     return DEFAULT_DOCK_ATTRIBUTES
   }
+  const anchor = given.anchor ?? DEFAULT_DOCK_ATTRIBUTES.anchor
   return {
     openState: given.openState ?? DEFAULT_DOCK_ATTRIBUTES.openState,
-    exclusive: given.exclusive ?? DEFAULT_DOCK_ATTRIBUTES.exclusive,
+    // A bottom dock shows one tab at a time, switched from its tab strip.
+    exclusive: given.exclusive ?? anchor === 'bottom',
+    anchor,
+    heightPx: { ...DEFAULT_DOCK_HEIGHT, ...given.heightPx },
     sizes: given.sizes ?? DEFAULT_DOCK_ATTRIBUTES.sizes,
     dismissKey: given.dismissKey ?? DEFAULT_DOCK_ATTRIBUTES.dismissKey,
     mobile: given.mobile ?? DEFAULT_DOCK_ATTRIBUTES.mobile,
@@ -86,9 +107,15 @@ export interface DockState {
   close(tab: string): void
   size(region: string): DockSize
   setSize(region: string, size: DockSize): void
+  /** A bottom dock's height in px: the user's last drag, else the region's default. */
+  height(region: string): number
+  setHeight(region: string, px: number): void
 }
 
 const sizeKey = (app: string, region: string) => `app-shell:dock-size:${app}:${region}`
+const heightKey = (app: string, region: string) => `app-shell:dock-height:${app}:${region}`
+
+export const clampHeight = (h: Required<DockHeight>, px: number): number => Math.min(h.max, Math.max(h.min, Math.round(px)))
 
 export function useDockState(app: string, regions: readonly DockRegionState[], storage?: LayoutStorage): DockState {
   const [raw, setRaw] = useState<readonly DockOpen[]>(() =>
@@ -126,5 +153,20 @@ export function useDockState(app: string, regions: readonly DockRegionState[], s
     setPicked(p => ({ ...p, [region]: next }))
     try { storage?.write(sizeKey(app, region), next) } catch { /* a full or blocked store only loses the memory */ }
   }, [byRegion, storage, app])
-  return useMemo(() => ({ open, isOpen: tab => open.some(o => o.tab === tab), toggle, close, size, setSize }), [open, toggle, close, size, setSize])
+  const [heights, setHeights] = useState<Readonly<Record<string, number>>>({})
+  const height = useCallback((region: string): number => {
+    const range = (byRegion.get(region)?.attributes ?? DEFAULT_DOCK_ATTRIBUTES).heightPx
+    if (heights[region] !== undefined) return clampHeight(range, heights[region])
+    let stored: number | null = null
+    try { const raw = storage?.read(heightKey(app, region)); stored = raw ? Number(raw) : null } catch { stored = null }
+    return stored !== null && Number.isFinite(stored) ? clampHeight(range, stored) : range.default
+  }, [byRegion, heights, storage, app])
+  const setHeight = useCallback((region: string, px: number) => {
+    const range = byRegion.get(region)?.attributes.heightPx
+    if (!range || !Number.isFinite(px)) return
+    const next = clampHeight(range, px)
+    setHeights(h => ({ ...h, [region]: next }))
+    try { storage?.write(heightKey(app, region), String(next)) } catch { /* a full or blocked store only loses the memory */ }
+  }, [byRegion, storage, app])
+  return useMemo(() => ({ open, isOpen: tab => open.some(o => o.tab === tab), toggle, close, size, setSize, height, setHeight }), [open, toggle, close, size, setSize, height, setHeight])
 }
