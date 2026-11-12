@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.11.0
+
+- Responsive navigation (CW-20261112-0110). At 1023px and below (the breakpoint docks already use, or `isNarrow`) the 240px nav rail is no longer
+  rendered: a bottom tab bar (56px plus the bottom safe-area inset, 44px minimum targets) shows the first three `nav.primary` items and a More
+  tab; with four or fewer destinations in total every one is a tab and there is no More. The More sheet (dialog, scrim, Esc, focus trap, focus
+  returns to the More tab) lists the remaining primary items, each `nav.group` as a titled section, `nav.footer` items, then Diagnostics. The
+  active item is marked (`aria-current`), on the More tab too when it lives in More. The sheet closes on route change. The tab bar hides while
+  a text field has focus. An app with no nav renders no bar. At 1024px and above the rail is unchanged. The bar renders beside the shell, so
+  crossing the breakpoint does not remount the page.
+- Docked tabs presented as bottom sheets now sit over a scrim.
+- Exports `planNarrowNav`, `PRIMARY_TAB_COUNT`, `MAX_ALL_TABS`, `NarrowNavPlan`.
+- Not yet: the identity chip and the "You" section (CW-20261112-0107 has not landed), nav skeleton tabs while loading (the model has no pending
+  nav state), and the count badge (nav items carry no count today).
+
 ## 0.10.0
 
 - Renders `menu.item` and `command` (SF-3d): the command palette (`CommandPalette` on the kit's `SearchPalette`, Ctrl/Cmd+K), `RowActions` and
