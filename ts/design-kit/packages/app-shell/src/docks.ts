@@ -1,18 +1,18 @@
 /**
- * Docked-region behaviour from the SF-2 vocabulary (v0.3, "Docked regions"): `openState`,
- * `exclusive`, `sizes`, `dismissKey` and `mobile`. `anchor` comes from the manifest's region
- * catalog; the rest are not in that catalog yet, so the host supplies them per region and the
- * shell applies them. A region the host says nothing about gets the vocabulary defaults.
+ * Docked-region behaviour from the SF-2 vocabulary ("Docked regions"): `openState`, `exclusive`,
+ * `sizes`, `dismissKey`, `mobile`, `anchor` and `heightPx`. The manifest's region catalog carries
+ * them natively in snake_case; `dockAttributesOfRegion` maps them across. A region that says
+ * nothing gets the vocabulary defaults.
  */
 import { useCallback, useMemo, useState } from 'react'
 import type { LayoutStorage } from '@hollis-labs/plugin-host-ui'
 import { nextOrder, restoreFocus } from './overlays'
-import type { ShellDiagnostic } from './manifest'
+import type { ManifestRegion, ShellDiagnostic } from './manifest'
 
 export const DOCK_SIZES = ['sm', 'md', 'lg'] as const
 export type DockSize = (typeof DOCK_SIZES)[number]
 
-/** The attributes a host publishes for a docked region. */
+/** The attributes of a docked region (camelCase; the manifest writes them snake_case). */
 export interface DockAttributes {
   /** `hidden` (default) or `open`: whether the region starts with its first tab showing. */
   openState?: 'hidden' | 'open'
@@ -49,6 +49,23 @@ export const DEFAULT_DOCK_ATTRIBUTES: ResolvedDockAttributes = {
 }
 
 const sizeOk = (v: unknown): v is DockSize => (DOCK_SIZES as readonly unknown[]).includes(v)
+
+/**
+ * Map a catalog region's snake_case attributes to `DockAttributes`. The manifest's `edge` is the
+ * side/bottom choice (its `anchor` is the inline region the dock sits under), so `edge` becomes `anchor` here.
+ * Values are passed through unchecked; `resolveDockAttributes` refuses a bad set.
+ */
+export function dockAttributesOfRegion(r: ManifestRegion): DockAttributes | undefined {
+  const a: Record<string, unknown> = {}
+  if (r.open_state !== undefined) a.openState = r.open_state
+  if (r.exclusive !== undefined) a.exclusive = r.exclusive
+  if (r.sizes !== undefined) a.sizes = r.sizes
+  if (r.dismiss_key !== undefined) a.dismissKey = r.dismiss_key
+  if (r.mobile !== undefined) a.mobile = r.mobile
+  if (r.edge !== undefined) a.anchor = r.edge
+  if (r.height_px !== undefined) a.heightPx = r.height_px
+  return Object.keys(a).length ? (a as DockAttributes) : undefined
+}
 
 /** Check one region's attributes; returns the problems (empty when valid). */
 export function dockAttributeProblems(a: DockAttributes): string[] {

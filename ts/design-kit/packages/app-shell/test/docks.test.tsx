@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { ManifestShell, buildShellModel, createShellPluginHost, type FrontendManifest, type ManifestShellProps } from '../src'
-import { admin, manifest, pages, views } from './fixtures'
+import { admin, manifest, pages, views, withRegion } from './fixtures'
 
 const tab = (key: string, label: string) => ({ module: 'console', kind: 'dock.tab', key, label, view: 'inspector', region: 'shell.right' })
 const twoTabs: FrontendManifest = {
@@ -12,6 +12,7 @@ const twoTabs: FrontendManifest = {
 }
 const mount = (over: Partial<ManifestShellProps> = {}) =>
   render(<ManifestShell manifest={twoTabs} admin={admin} apiBase="/api" path="/" onNavigate={() => {}} views={views} pages={pages} isNarrow={false} {...over} />)
+const dock = (attrs: Record<string, unknown>) => ({ manifest: withRegion(twoTabs, 'shell.right', attrs) })
 const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }))
 const dialogs = () => screen.queryAllByRole('dialog').map(d => d.getAttribute('aria-label'))
 
@@ -25,7 +26,7 @@ describe('dock attributes', () => {
     expect(dialogs()).toEqual(['Inspector', 'Logs'])
   })
   it('exclusive: opening a tab closes the region\'s other tab', () => {
-    mount({ dockAttributes: { 'shell.right': { exclusive: true } } })
+    mount(dock({ exclusive: true }))
     click('Inspector'); click('Logs')
     expect(dialogs()).toEqual(['Logs'])
   })
@@ -37,15 +38,15 @@ describe('dock attributes', () => {
     expect(dialogs()).toEqual([])
   })
   it('openState open starts the region with its first tab showing', () => {
-    mount({ dockAttributes: { 'shell.right': { openState: 'open' } } })
+    mount(dock({ open_state: 'open' }))
     expect(dialogs()).toEqual(['Inspector'])
     expect(screen.getAllByText('inspector body').length).toBeGreaterThan(0)
   })
   it('sizes: default token class, user choice applied and remembered', () => {
     const mem = new Map<string, string>()
     const storage = { read: (k: string) => mem.get(k) ?? null, write: (k: string, v: string) => { mem.set(k, v) }, remove: (k: string) => { mem.delete(k) } }
-    const attrs = { 'shell.right': { sizes: { options: ['sm', 'md', 'lg'] as const, default: 'sm' as const } } }
-    const first = mount({ dockAttributes: attrs, dockStorage: storage })
+    const attrs = dock({ sizes: { options: ['sm', 'md', 'lg'], default: 'sm' } })
+    const first = mount({ ...attrs, dockStorage: storage })
     click('Inspector')
     const dlg = () => screen.getByRole('dialog', { name: 'Inspector' })
     expect(dlg().getAttribute('data-size')).toBe('sm')
@@ -53,18 +54,18 @@ describe('dock attributes', () => {
     expect(dlg().getAttribute('data-size')).toBe('lg')
     expect([...mem.values()]).toEqual(['lg'])
     first.unmount()
-    mount({ dockAttributes: attrs, dockStorage: storage })
+    mount({ ...attrs, dockStorage: storage })
     click('Inspector')
     expect(dlg().getAttribute('data-size')).toBe('lg')
   })
   it('a remembered size outside the region\'s options is ignored', () => {
     const storage = { read: () => 'lg', write: () => {}, remove: () => {} }
-    mount({ dockAttributes: { 'shell.right': { sizes: { options: ['sm', 'md'], default: 'md' } } }, dockStorage: storage })
+    mount({ ...dock({ sizes: { options: ['sm', 'md'], default: 'md' } }), dockStorage: storage })
     click('Inspector')
     expect(screen.getByRole('dialog', { name: 'Inspector' }).getAttribute('data-size')).toBe('md')
   })
   it('mobile: a bottom sheet at 390, with no size controls', () => {
-    mount({ isNarrow: true, dockAttributes: { 'shell.right': { sizes: { options: ['sm', 'md'], default: 'md' } } } })
+    mount({ isNarrow: true, ...dock({ sizes: { options: ['sm', 'md'], default: 'md' } }) })
     click('Inspector')
     const dlg = screen.getByRole('dialog', { name: 'Inspector' })
     expect(dlg.getAttribute('data-presentation')).toBe('bottom-sheet')
@@ -93,10 +94,7 @@ describe('dock attributes', () => {
     expect(dialogs()).toHaveLength(3)
   })
   it('refuses invalid attributes and attributes for a region that is not docked, with diagnostics', () => {
-    const model = buildShellModel(twoTabs, { admin, dockAttributes: {
-      'shell.right': { sizes: { options: ['sm'], default: 'lg' } },
-      'shell.header': { exclusive: true },
-    } })
+    const model = buildShellModel(withRegion(withRegion(twoTabs, 'shell.right', { sizes: { options: ['sm'], default: 'lg' } }), 'shell.header', { exclusive: true }), { admin })
     expect(model.diagnostics.map(d => d.code).sort()).toEqual(['invalid-dock-attributes', 'unknown-region'])
     expect(model.docks[0]!.attributes.sizes.default).toBe('md')
   })
