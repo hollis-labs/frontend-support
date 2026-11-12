@@ -48,7 +48,7 @@ export function SessionsPage({ now }: { readonly now?: number } = {}) {
               <div className="text-caption text-fg-muted">Started {when(session.created_at)} · Last seen {when(session.last_seen_at)} · Expires {when(session.expires_at)}</div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {session.current ? <Pill tone="success">This session</Pill> : <Button type="button" variant="ghost" size="sm" aria-label={`Sign out session on ${deviceLabel(session.user_agent)}`} onClick={() => { setError(null); setTarget(session) }}>Sign out…</Button>}
+              {session.current ? <Pill tone="success">This session</Pill> : <Button type="button" variant="outline" size="sm" aria-label={`Sign out session on ${deviceLabel(session.user_agent)}`} onClick={() => { setError(null); setTarget(session) }}>Sign out…</Button>}
             </div>
           </li>
         ))}

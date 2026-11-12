@@ -6,6 +6,7 @@ import { useIdentity } from '../client/identity-context'
 import { errorMessage, isDenied } from '../client/errors'
 import { FormMessage } from './field'
 import { ScopeAdder } from './scopes'
+import { relativeWhen } from './device'
 import { useScopeOptions } from './use-scope-options'
 
 const CODE_LIFETIMES = [
@@ -64,7 +65,7 @@ export function PairingCodesPage({ scopeSuggestions }: PairingCodesPageProps) {
     }
   }
   const expires = secret === null ? null : new Date(secret.expiresAt)
-  const expiresText = expires === null || Number.isNaN(expires.getTime()) ? 'It expires soon.' : `It expires at ${expires.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} and works once.`
+  const expiresText = expires === null || Number.isNaN(expires.getTime()) ? 'It expires soon.' : `It expires ${relativeWhen(secret!.expiresAt, Date.now())} (at ${expires.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}) and works once.`
   return (
     <section aria-labelledby={`${id}-title`} className="flex min-w-0 flex-col items-start gap-3 rounded-panel border border-border bg-bg-elevated p-4">
       <h2 id={`${id}-title`} className="text-control font-semibold text-fg">Pairing codes</h2>

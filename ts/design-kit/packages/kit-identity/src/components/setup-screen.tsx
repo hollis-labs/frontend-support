@@ -27,7 +27,7 @@ export function SetupScreen({ onSubmit, busy = false, error, story, passwordHint
     onSubmit({ display_name: displayName.trim(), username: username.trim(), password })
   }
   return (
-    <AuthLayout title="Set up your account" description="Create the owner account for this app. It is shown only the first time." story={story}>
+    <AuthLayout title="Set up your account" description="Create the owner account for this app. This screen only appears the first time." story={story}>
       <form onSubmit={submit} className="flex flex-col gap-4" aria-busy={busy}>
         <fieldset disabled={busy} className="flex min-w-0 flex-col gap-3">
           <Field label="Display name" value={displayName} onChange={setDisplayName} autoComplete="name" />

@@ -35,6 +35,33 @@ describe('IdentityGate', () => {
     expect(screen.queryByText('shell')).toBeNull()
   })
 
+  it('shows a plain no-owner screen with no form when setup_over_http is false', async () => {
+    const { calls } = mount({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: false } } }, <p>shell</p>)
+    expect(await screen.findByRole('heading', { name: 'No owner yet' })).toBeTruthy()
+    expect(document.body.textContent).toContain('identity setup')
+    expect(document.querySelector('form')).toBeNull()
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByText('shell')).toBeNull()
+    expect(calls).toHaveLength(1)
+  })
+
+  it('shows the form when both setup_required and setup_over_http are true', async () => {
+    mount({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: true } } }, <p>shell</p>)
+    expect(await screen.findByRole('heading', { name: 'Set up your account' })).toBeTruthy()
+    expect(screen.getByLabelText('Username')).toBeTruthy()
+  })
+
+  it('treats 403 setup_offline from POST as the same no-owner screen, not an error', async () => {
+    mount({ 'GET /api/setup': { status: 200, body: { setup_required: true } }, 'POST /api/setup': { status: 403, body: { code: 'setup_offline', message: 'run the app identity setup command on the host' } } }, <p>shell</p>)
+    for (const [label, value] of [['Display name', 'Owner'], ['Username', 'owner'], ['Password', 'correct horse battery'], ['Confirm password', 'correct horse battery']] as const) {
+      fireEvent.change(await screen.findByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(await screen.findByRole('heading', { name: 'No owner yet' })).toBeTruthy()
+    expect(document.querySelector('form')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+
   it('blocks setup on a password mismatch and sends no request', async () => {
     const { calls } = mount({ 'GET /api/setup': { status: 200, body: { setup_required: true } } }, <p>shell</p>)
     fireEvent.change(await screen.findByLabelText('Password'), { target: { value: 'correct horse battery' } })

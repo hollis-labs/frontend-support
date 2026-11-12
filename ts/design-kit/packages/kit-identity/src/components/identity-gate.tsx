@@ -6,6 +6,7 @@ import { IdentityError, errorMessage } from '../client/errors'
 import type { LoginInput, SetupInput } from '../client/types'
 import { AuthLayout, BootScreen } from './auth-layout'
 import { FormMessage } from './field'
+import { SetupOfflineScreen } from './setup-offline-screen'
 import { SetupScreen } from './setup-screen'
 import { SignInScreen } from './sign-in-screen'
 
@@ -14,10 +15,12 @@ export interface IdentityGateProps {
   readonly children: ReactNode
   /** Branding (logo, tagline) shown above the card on every gate screen. */
   readonly story?: ReactNode
+  /** The app's command name, shown in the offline-setup instruction (`<app> identity setup`). */
+  readonly appName?: string
 }
 
 /** Wraps the app: boot, first-run setup and sign-in outside the shell; children only when signed in. */
-export function IdentityGate({ children, story }: IdentityGateProps) {
+export function IdentityGate({ children, story, appName }: IdentityGateProps) {
   const identity = useIdentity()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -33,7 +36,8 @@ export function IdentityGate({ children, story }: IdentityGateProps) {
       if (failure instanceof IdentityError && failure.code === 'setup_closed') {
         identity.showSignIn()
         setNotice('Setup is already complete. Sign in with your account.')
-      } else setError(errorMessage(failure))
+      } else if (failure instanceof IdentityError && failure.code === 'setup_offline') identity.showSetupOffline()
+      else setError(errorMessage(failure))
     } finally {
       setBusy(false)
     }
@@ -51,6 +55,8 @@ export function IdentityGate({ children, story }: IdentityGateProps) {
       )
     case 'setup':
       return <SetupScreen story={story} busy={busy} error={error} onSubmit={(input: SetupInput) => void run(() => identity.setup(input))} />
+    case 'setup-offline':
+      return <SetupOfflineScreen story={story} appName={appName} />
     case 'signed-in':
       return <>{children}</>
     default:

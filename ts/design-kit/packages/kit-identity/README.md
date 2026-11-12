@@ -25,7 +25,7 @@ import { IdentityGate, IDENTITY_ROUTES, IDENTITY_PAGES } from '@hollis-labs/kit-
 </IdentityProvider>
 ```
 
-`IdentityGate` renders boot, first-run setup and sign-in outside the shell (no route, no nav item) and mounts its children
+`IdentityGate` renders boot, first-run setup (or, when the server creates the owner on the host only, a plain no-owner screen) and sign-in outside the shell (no route, no nav item) and mounts its children
 only after a session exists. `IDENTITY_ROUTES` is the in-shell route table (`/identity/account`, `/identity/keys`,
 `/identity/pairing`, `/identity/sessions`, fallback `/identity/sign-out`) with labels and the capability each nav item
 requires (`{app}.admin` for keys and pairing); `IDENTITY_PAGES` maps the same ids to page components. Contribute the

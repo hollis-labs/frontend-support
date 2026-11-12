@@ -10,6 +10,7 @@ import type {
   IdentitySession,
   LoginInput,
   SetupInput,
+  SetupState,
 } from './types'
 
 export interface IdentityPaths {
@@ -49,7 +50,8 @@ interface RequestOptions {
 }
 
 export interface IdentityClient {
-  setupRequired(): Promise<boolean>
+  /** `overHttp` is false when the host creates the owner offline; an absent field is read as true (older servers). */
+  setupState(): Promise<SetupState>
   setup(input: SetupInput): Promise<IdentityProfile>
   login(input: LoginInput): Promise<IdentityProfile>
   logout(): Promise<void>
@@ -77,7 +79,8 @@ async function readError(response: Response): Promise<IdentityError> {
   }
   const flat = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {}
   const code = typeof flat.code === 'string' && flat.code !== '' ? flat.code : 'unknown'
-  const message = typeof flat.message === 'string' && flat.message !== '' ? flat.message : GENERIC_ERROR_MESSAGE
+  const text = [flat.message, flat.error].find((value): value is string => typeof value === 'string' && value !== '')
+  const message = text ?? GENERIC_ERROR_MESSAGE
   return new IdentityError(response.status, code, message, flat.details)
 }
 
@@ -116,9 +119,9 @@ export function createIdentityClient(options: IdentityClientOptions = {}): Ident
   }
 
   return {
-    async setupRequired() {
-      const state = await request<{ setup_required?: boolean }>(paths.setup)
-      return state.setup_required === true
+    async setupState() {
+      const state = await request<{ setup_required?: boolean; setup_over_http?: boolean }>(paths.setup)
+      return { required: state.setup_required === true, overHttp: state.setup_over_http !== false }
     },
     setup: (input) => request<IdentityProfile>(paths.setup, { method: 'POST', body: input }),
     login: (input) => request<IdentityProfile>(paths.login, { method: 'POST', body: input }),

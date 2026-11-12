@@ -151,7 +151,7 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <Pill tone={token.status === 'active' ? 'success' : known && token.status === 'expiring' ? 'warning' : 'neutral'}>{statusLabel(token, at)}</Pill>
-                {isRevocable(token) ? <Button type="button" variant="ghost" size="sm" aria-label={`Revoke ${token.name}`} aria-describedby={denied ? deniedId : undefined} disabled={loading || revoking || !token.canRevoke} onClick={() => onRevokeTargetChange(token.id)}>Revoke…</Button> : null}
+                {isRevocable(token) ? <Button type="button" variant="outline" size="sm" aria-label={`Revoke ${token.name}`} aria-describedby={denied ? deniedId : undefined} disabled={loading || revoking || !token.canRevoke} onClick={() => onRevokeTargetChange(token.id)}>Revoke…</Button> : null}
               </div>
             </li>
           )
