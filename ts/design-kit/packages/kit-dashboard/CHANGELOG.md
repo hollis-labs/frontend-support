@@ -1,3 +1,9 @@
+# @hollis-labs/kit-dashboard
+
+## 0.6.1
+
+- `@hollis-labs/design-app-runtime` range `^0.5.0` → `^0.6.0` (runtime adds the versioned store). No source change.
+
 # Unreleased — CW-20261017-0040
 
 - Share compact view tabs, record-list compositions and detail-dialog roles;

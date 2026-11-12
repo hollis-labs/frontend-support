@@ -1,6 +1,12 @@
 # @hollis-labs/kit-chat
 
-## Unreleased
+## 0.7.0
+
+- Dependency ranges only, no source change: `@hollis-labs/design-bindings` `^0.1.0` → `^0.2.0` and
+  `@hollis-labs/kit-cards` `^0.1.0` → `^0.2.0`. The published 0.6.0 ranges cannot resolve the
+  breaking 0.2.0 releases this package is built and tested against.
+
+## 0.6.0 (published 2026-11-03; entries below carried over)
 
 - 0.6.0 (minor, owner publishes): the card set (Envelope chassis, Info/Metric/Progress/
   Timeline/Diff/Artifact/Document/Confirmation/Table/List/Prompt, CardMiss/CardBoundary)
