@@ -41,6 +41,14 @@ audit sink, the step-up grant issuer (`issueGrant`; auth is the host's) and opti
 `catalog` (overrides and `openOverlay` / `setData`) and `onReview`. Semantics and statuses: see CHANGELOG 0.3.0. The core
 (`createActionGateway`) has no React dependency.
 
+## Page parts (SF-6)
+
+Controlled components for the six Substrate page types, matching the committed goldens in `goldens/`: `SplitPane`,
+`ListRow` with `useSelection` and `SelectModeToggle`, `BulkActionBar`, `ReviewBar` / `ReviewChanges`, `OutlineNav`,
+`SettingsFieldRow` / `SettingsGroupCard`, `SecretRevealDialog` and `MobileTabBar`. They own no data and no action policy: a
+page holds the state and submits through `useActionGateway()` (see `test/fixtures.tsx` for list and detail pages built this
+way). Narrow layout is the host's choice (`narrow`, `orientation="strip"`, `MobileTabBar`).
+
 ## Not here
 
 Backend action endpoints, auth and key handling, page content, and any app change. The manifest's region
