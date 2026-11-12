@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { defineBindingTable } from '@hollis-labs/design-bindings'
 import { ManifestShell, createRendererSelector, type ManifestShellProps } from '../src'
-import { admin, manifest, pages, views } from './fixtures'
+import { admin, manifest, pages, pluginActions, views } from './fixtures'
 
 const mount = (over: Partial<ManifestShellProps> = {}) =>
-  render(<ManifestShell manifest={manifest} admin={admin} apiBase="/api" path="/" onNavigate={() => {}} views={views} pages={pages} isNarrow={false} {...over} />)
+  render(<ManifestShell manifest={manifest} admin={admin} apiBase="/api" path="/" onNavigate={() => {}} views={views} pages={pages} isNarrow={false} actions={pluginActions()} {...over} />)
 
 describe('ManifestShell', () => {
   it('renders each contribution in its region at 1440', () => {
@@ -44,10 +44,10 @@ describe('ManifestShell', () => {
   })
   it('renders list and detail page fixtures', () => {
     const { unmount } = mount({ path: '/items' })
-    expect(screen.getByText('beta')).toBeTruthy()
+    expect(screen.getByText('hollis · 0.9.0 · per-thread notes')).toBeTruthy()
     unmount()
     mount({ path: '/items/detail' })
-    expect(screen.getByText('Name')).toBeTruthy()
+    expect(screen.getByLabelText('Name')).toBeTruthy()
   })
   it('renders settings sections from the admin manifest', () => {
     mount({ path: '/settings' })

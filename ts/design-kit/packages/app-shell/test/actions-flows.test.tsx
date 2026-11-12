@@ -1,57 +1,53 @@
-import { useState } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { ManifestShell, useActionGateway, type AuditEntry, type BackendRequest, type PageComponent, type ShellActions } from '../src'
-import { admin, manifest, views } from './fixtures'
-
-const subject = { kind: 'item', id: 'alpha' }
-
-/** The same page types as the list/detail stand-ins, now submitting actions. */
-const ListPage: PageComponent = () => {
-  const gateway = useActionGateway()
-  return (
-    <div>
-      <button type="button" onClick={e => void gateway.handleCall({ surfaceId: 'items', functionCallId: 'rm', callFunction: { '@call': 'items.remove', hollis_action: { id: 'remove-bulk-1', subject: { kind: 'item', id: 'selection' }, risk: 'high' }, input: { ids: ['alpha', 'beta'] } } }, { trigger: e.currentTarget })}>Remove selected</button>
-    </div>
-  )
-}
-let revision = '7'
-const DetailPage: PageComponent = () => {
-  const gateway = useActionGateway()
-  const [basis, setBasis] = useState('7')
-  const [n, setN] = useState(1)
-  return (
-    <div>
-      <p>Viewing revision {basis}</p>
-      <button type="button" onClick={e => void gateway.handleCall({ surfaceId: 'item', functionCallId: `sv${n}`, callFunction: { '@call': 'items.save', hollis_action: { id: `save-detail-${n}`, subject, risk: 'medium', basis: { revision: basis } }, input: { name: 'alpha2' } } }, { trigger: e.currentTarget })}>Save</button>
-      <button type="button" onClick={() => { setBasis(revision); setN(x => x + 1) }}>Reload</button>
-      <button type="button" data-focus-target="name">Name</button>
-    </div>
-  )
-}
-const pages = { items: ListPage, item: DetailPage }
+import { EDITED, ORIGINAL, admin, host, manifest, pages, pluginActions, subject, views } from './fixtures'
 
 function mount(path: string, reply: (req: BackendRequest) => unknown, over: Partial<ShellActions> = {}) {
   const audit: AuditEntry[] = []
   const requests: unknown[] = []
   const navigate = vi.fn()
-  const actions: ShellActions = {
+  const actions = pluginActions({
     backend: { execute: async req => { requests.push(req); return reply(req) } },
-    agentFunctions: ['items.save', 'items.remove'],
     audit: e => audit.push(e),
-    issueGrant: async () => 'grant-xyz',
-    currentBasis: () => ({ revision }),
     ...over,
-  }
+  })
   render(<ManifestShell manifest={manifest} admin={admin} apiBase="/api" path={path} onNavigate={navigate} views={views} pages={pages} isNarrow={false} actions={actions} />)
   return { audit, requests, navigate }
 }
 
+const edit = () => fireEvent.change(screen.getByLabelText('Description'), { target: { value: EDITED } })
+
 describe('Save with review (detail)', () => {
+  it('the review bar counts changes, Discard restores, review shows the diff and Effect before Save', async () => {
+    host.revision = '7'
+    const { requests, audit } = mount('/items/detail', () => ({ status: 'ok', receipt: 'r-1' }))
+    expect(screen.queryByRole('region', { name: 'Unsaved changes' })).toBeNull()
+    edit()
+    expect(within(screen.getByRole('region', { name: 'Unsaved changes' })).getByText('1 change')).toBeTruthy()
+    fireEvent.click(screen.getByRole('button', { name: 'Discard' }))
+    expect((screen.getByLabelText('Description') as HTMLInputElement).value).toBe(ORIGINAL)
+    edit()
+    fireEvent.click(screen.getByRole('button', { name: 'Review changes' }))
+    const diff = screen.getByRole('group', { name: 'Changes' })
+    expect(within(diff).getByLabelText('Before').textContent).toBe(`- ${ORIGINAL}`)
+    expect(within(diff).getByLabelText('After').textContent).toBe(`+ ${EDITED}`)
+    expect(screen.getByText(/Applies to new sessions/)).toBeTruthy()
+    expect(requests).toHaveLength(0)
+    const save = screen.getByRole('button', { name: 'Save' })
+    save.focus()
+    fireEvent.click(save)
+    await screen.findByText('Done')
+    expect(requests).toHaveLength(1)
+    expect(audit.map(e => [e.id, e.outcome])).toEqual([['save-detail-1', 'ok']])
+  })
   it('stale shows what changed, offers re-review, and a fresh id then saves', async () => {
-    revision = '8'
-    const onReview = vi.fn()
-    const { audit, requests } = mount('/items/detail', () => ({ status: 'ok', receipt: 'r-1' }), { onReview })
+    host.revision = '7'
+    const { audit, requests } = mount('/items/detail', () => ({ status: 'ok', receipt: 'r-1' }))
+    edit()
+    fireEvent.click(screen.getByRole('button', { name: 'Review changes' }))
+    // the page was opened at revision 7; the backend has since moved to 8
+    host.revision = '8'
     const save = screen.getByRole('button', { name: 'Save' })
     save.focus()
     fireEvent.click(save)
@@ -61,19 +57,22 @@ describe('Save with review (detail)', () => {
     expect(requests).toHaveLength(0)
     expect(document.activeElement).toBe(save)
     fireEvent.click(screen.getByRole('button', { name: 'Review changes' }))
-    expect(onReview).toHaveBeenCalledWith({ id: 'save-detail-1', subject, current: { revision: '8' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Reload' }))
-    expect(screen.getByText('Viewing revision 8')).toBeTruthy()
-    fireEvent.click(screen.getByRole('button', { name: 'Save' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Save' }))
     await screen.findByText('Done')
     expect(requests).toHaveLength(1)
     expect(audit.map(e => [e.id, e.outcome])).toEqual([['save-detail-1', 'stale'], ['save-detail-2', 'ok']])
+    expect(subject.id).toBe('notes')
   })
 })
 
 describe('bulk Remove with confirm (list)', () => {
   const open = async () => {
-    const remove = screen.getByRole('button', { name: 'Remove selected' })
+    fireEvent.click(screen.getByRole('button', { name: 'Select' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select billing' }))
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Select mailer' }))
+    const bar = screen.getByRole('toolbar', { name: 'Bulk actions' })
+    expect(within(bar).getByText('2 selected')).toBeTruthy()
+    const remove = within(bar).getByRole('button', { name: 'Remove' })
     remove.focus()
     fireEvent.click(remove)
     return { remove, dialog: await screen.findByRole('alertdialog', { name: 'Confirm action' }) }
@@ -87,6 +86,7 @@ describe('bulk Remove with confirm (list)', () => {
     await screen.findByText('Done')
     expect(requests).toHaveLength(1)
     expect((requests[0] as { action: { confirmation: string } }).action.confirmation).toBe('grant-xyz')
+    expect([...(requests[0] as { input: { ids: string[] } }).input.ids].sort()).toEqual(['billing', 'mailer'])
     expect(screen.queryByRole('alertdialog')).toBeNull()
     expect(document.activeElement).toBe(remove)
     expect(audit.map(e => e.outcome)).toEqual(['ok'])

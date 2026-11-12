@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.4.0
+
+- SF-6 gap components, composed from design-components and tokens only (kit-first lint at error): `SplitPane` (resizable with
+  a keyboard-operable separator; at narrow widths the detail is its own page with a back link), `useSelection` /
+  `SelectModeToggle` / `ListRow` (select mode), `BulkActionBar` (selection count, actions, at most one danger action, last),
+  `ReviewBar` / `DiffView` / `ReviewChanges` (the "N changes, Discard, Review changes" bar; diff and Effect note, then Save;
+  a field error blocks review), `OutlineNav` (`rail` and `strip`; scrolls and marks the section in view),
+  `SettingsFieldRow` / `SettingsGroupCard`, `SecretRevealDialog` (shown once, Copy and Done only; Esc and outside clicks do
+  not dismiss; the host drops the value on Done) and `MobileTabBar` (tabs plus a More bottom sheet of groups).
+- The components are controlled and hold no data; pages submit through the action gateway. Nothing here logs, audits or stores
+  a secret.
+- Test fixtures follow the SF-6 golden frames (list/detail, edit, review, select) in place of the stand-in tables, and the
+  Save-with-review and bulk-Remove-with-confirm flows run through them.
+
 ## 0.3.0
 
 - Action gateway (SF-5b), the host policy point for the S0.3 action schema: `createActionGateway`, and the `actions` prop on
