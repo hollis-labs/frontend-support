@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ApiKeysPage, AccountSecurityPage, IDENTITY_PAGES, IDENTITY_ROUTES, IdentityGate, PairingCodesPage } from '../index'
-import { IdentityProvider } from '../client'
+import { IdentityProvider, useIdentity } from '../client'
 import { deviceLabel, relativeWhen } from '../components/device'
 import { fakeFetch } from './fake'
 
@@ -221,6 +221,16 @@ describe('PairingCodesPage', () => {
     await waitFor(() => expect(document.body.textContent).not.toContain(CODE))
   })
 
+  it('words the expiry relative to now', async () => {
+    const soon = new Date(Date.now() + 10 * 60_000 + 30_000).toISOString()
+    mount({ ...signedIn, 'POST /api/identity/pairing-codes': { status: 201, body: { code: CODE, expires_at: soon } } }, <PairingCodesPage scopeSuggestions={['app.read']} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate pairing code' }))
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'phone' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'app.read' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generate code' }))
+    expect(await screen.findByText(/It expires in 10 minutes \(at .+\) and works once\./)).toBeTruthy()
+  })
+
   it('shows the denied state when the server says 403', async () => {
     mount({ ...signedIn, 'POST /api/identity/pairing-codes': { status: 403, body: { code: 'scope_required', message: 'x' } } }, <PairingCodesPage scopeSuggestions={['app.read']} />)
     fireEvent.click(await screen.findByRole('button', { name: 'Generate pairing code' }))
@@ -229,6 +239,27 @@ describe('PairingCodesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Generate code' }))
     expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Generate pairing code' })).toBeNull()
+  })
+})
+
+describe('identity badge', () => {
+  const Probe = () => <output data-testid="badge">{JSON.stringify(useIdentity().badge)}</output>
+  const badgeFor = async (profile: object) => {
+    mount({
+      'GET /api/setup': { status: 200, body: { setup_required: false } },
+      'GET /api/identity/sessions': { status: 401, body: { code: 'unauthorized', message: 'x' } },
+      'POST /api/login': { status: 200, body: profile },
+    }, <Probe />)
+    await signIn()
+    return JSON.parse((await screen.findByTestId('badge')).textContent ?? '{}')
+  }
+  it('drops the source when it repeats the display name', async () => {
+    const badge = await badgeFor({ ...PROFILE, display_name: 'owner' })
+    expect(badge.displayName).toBe('owner')
+    expect(badge.source).toBeUndefined()
+  })
+  it('keeps the username as source when it differs from the display name', async () => {
+    expect((await badgeFor({ ...PROFILE, display_name: 'Ada L' })).source).toBe('owner')
   })
 })
 
@@ -258,5 +289,6 @@ describe('device label', () => {
     expect(deviceLabel('')).toBe('Unknown device')
     expect(deviceLabel(undefined)).toBe('Unknown device')
     expect(relativeWhen('2026-11-12T10:00:00Z', Date.parse('2026-11-12T10:02:30Z'))).toBe('2 minutes ago')
+    expect(relativeWhen('2026-11-12T10:00:30Z', Date.parse('2026-11-12T10:00:00Z'))).toBe('in under a minute')
   })
 })

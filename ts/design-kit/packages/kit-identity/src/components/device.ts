@@ -11,7 +11,7 @@ export function deviceLabel(userAgent: string | undefined): string {
   return name ?? os ?? 'Unknown device'
 }
 
-/** "3 minutes ago" / "in 2 days"; null when the input is not a date. */
+/** "3 minutes ago" / "in 2 days" / "in under a minute"; null when the input is not a date. */
 export function relativeWhen(iso: string, now: number): string | null {
   const at = Date.parse(iso)
   if (Number.isNaN(at)) return null
@@ -20,5 +20,5 @@ export function relativeWhen(iso: string, now: number): string | null {
     const count = Math.floor(Math.abs(delta) / size)
     if (count >= 1) return delta < 0 ? `${count} ${unit}${count === 1 ? '' : 's'} ago` : `in ${count} ${unit}${count === 1 ? '' : 's'}`
   }
-  return 'just now'
+  return delta > 0 ? 'in under a minute' : 'just now'
 }
