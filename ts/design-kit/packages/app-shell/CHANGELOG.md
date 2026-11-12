@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0
+
+- Renders `menu.item` and `command` (SF-3d): the command palette (`CommandPalette` on the kit's `SearchPalette`, Ctrl/Cmd+K), `RowActions` and
+  `ContextActions` (on `OverflowMenu`, for `row.actions` and `menu:<subject-kind>`) and the `toolbar.primary` toolbar (`PrimaryToolbar`).
+  Every entry runs through the action gateway (`entryCall` builds the call); confirmation stays the gateway's decision.
+- `ShellModel.menus` (`MenuModel`: `palette`, `rowActions`, `toolbar`, `context`); `menu.item` and `command` join `KNOWN_KINDS`, with region
+  constants `REGION_COMMAND_PALETTE`, `REGION_ROW_ACTIONS`, `REGION_TOOLBAR_PRIMARY`, `REGION_MENU_PREFIX`. Ordering is `order`, module, key;
+  high-risk entries last behind a divider.
+- An entry with no label, an unknown region, `when` outside its `menu:<kind>` region, a `navigate` path no surface owns, or an `openRegion`
+  that is not a docked region/tab is skipped and listed (`invalid-action`). Without `actions` the menus do not render and Diagnostics says so.
+
 ## 0.9.0
 
 - Consumes the Substrate 76666fd frontend manifest (SF-11). **Breaking:** the `dockAttributes` prop and `BuildOptions.dockAttributes`

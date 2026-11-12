@@ -41,7 +41,9 @@ describe('the substrate 76666fd manifest', () => {
       openState: 'open', exclusive: true, sizes: { options: ['sm', 'md', 'lg'], default: 'md' }, dismissKey: 'Esc', mobile: 'bottom-sheet', anchor: 'bottom',
       heightPx: { min: 120, default: 240, max: 640 },
     })
-    expect(m.diagnostics.filter(d => d.code !== 'unknown-kind')).toEqual([])
+    // the fixture declares no surface at /plugins and no logs tab: both entries are skipped and listed, not followed
+    expect(m.diagnostics.map(d => [d.code, d.key])).toEqual([['invalid-action', 'open-plugins'], ['invalid-action', 'show-log']])
+    expect(m.menus.palette.map(e => e.item.key)).toEqual(['restart'])
   })
 
   it('keeps the new item fields and feeds originless bindings to the generator input', () => {

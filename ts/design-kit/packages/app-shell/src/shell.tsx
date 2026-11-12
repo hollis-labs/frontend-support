@@ -15,6 +15,7 @@ import { buildShellModel, effectiveRegion, type AdminManifestInput, type NavLink
 import { useOverlayStack, restoreFocus, type OverlayStack } from './overlays'
 import { createActionGateway, type ActionGateway, type ActionGatewayOptions, type CatalogHandlers } from './actions'
 import { ActionConfirmDialog, ActionNotice } from './actions-ui'
+import { CommandPalette, EMPTY_MENUS, MenuContext, PrimaryToolbar, entryCall, type MenuRuntime } from './menu-ui'
 import { DockResizeHandle, DockTabStrip, type DockTab } from './dock-ui'
 import { dismissMatches, useDockState, type DockSize } from './docks'
 import { createShellPluginHost, refusalDiagnostics, type ShellPluginHost } from './plugin-host'
@@ -266,7 +267,12 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
   const loadedBindings = useVersionedStore(bindings)
   const resolveRenderer = useMemo(() => createRendererSelector(loadedBindings), [loadedBindings])
   const snapshot = useSyncExternalStore(host.runtime.subscribe, host.runtime.getSnapshot, host.runtime.getServerSnapshot)
-  const diagnostics = useMemo(() => [...model.diagnostics, ...bindingDiagnostics(loadedBindings), ...refusalDiagnostics(snapshot.refusals), ...overflow], [model.diagnostics, loadedBindings, snapshot.refusals, overflow])
+  const menuCount = model.menus.palette.length + model.menus.rowActions.length + model.menus.toolbar.length + Object.values(model.menus.context).reduce((n, l) => n + l.length, 0)
+  const diagnostics = useMemo(() => [
+    ...model.diagnostics,
+    ...(menuCount && !actions ? [{ code: 'host-refused' as const, message: 'Menu and command contributions are not shown: pass `actions` to ManifestShell so every action goes through the action gateway.' }] : []),
+    ...bindingDiagnostics(loadedBindings), ...refusalDiagnostics(snapshot.refusals), ...overflow,
+  ], [model.diagnostics, menuCount, actions, loadedBindings, snapshot.refusals, overflow])
   const dockRegions = useMemo(() => model.docks.map(d => ({ region: d.region.name, attributes: d.attributes, tabs: d.tabs.map(t => t.key) })), [model.docks])
   const docks = useDockState(manifest.app, dockRegions, dockStorage)
 
@@ -328,6 +334,30 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
     self.current = created
     return created
   }, [actions])
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const menuRuntime = useMemo<MenuRuntime | null>(() => {
+    if (!gateway) return null
+    const routeKeyOf = (path: string) => live.current.model.surfaces.find(s => s.path === path)?.item.key
+    return {
+      menus: model.menus,
+      icon: name => { const C = name ? icons[name] : undefined; return C ? <C aria-hidden className="size-4" /> : null },
+      run: async (entry, subject, trigger) => {
+        await gateway.handleCall(
+          { surfaceId: `menu:${entry.item.module}.${entry.item.key}`, functionCallId: `${entry.item.module}.${entry.item.key}.${Date.now()}`, callFunction: entryCall(entry, subject, routeKeyOf) },
+          { trigger: trigger ?? document.activeElement },
+        )
+      },
+    }
+  }, [gateway, model.menus, icons])
+  const hasPalette = !!menuRuntime && model.menus.palette.length > 0
+  useEffect(() => {
+    if (!hasPalette) return
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o) }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [hasPalette])
   const ctx = useMemo<Ctx>(() => ({ gateway, overlays, narrow, apiBase, views, icons }), [gateway, overlays, narrow, apiBase, views, icons])
 
   // Esc (or a region's own dismissKey) closes whichever overlay or docked region opened last.
@@ -359,11 +389,17 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
 
   return (
     <ShellContext.Provider value={ctx}>
+      <MenuContext.Provider value={menuRuntime ?? { menus: EMPTY_MENUS, run: async () => {}, icon: () => null }}>
       <KitAppShell
         isNarrow={narrow}
         nav={<NavTree nodes={model.navPrimary} footer={model.navFooter} path={path} onNavigate={onNavigate} tail={diagButton} />}
-        header={model.slots.length ? (
+        header={model.slots.length || hasPalette || (menuRuntime && model.menus.toolbar.length) ? (
           <div data-region="slots" className="flex items-center gap-2 border-b border-border-subtle p-2">
+            {hasPalette ? (
+              <button type="button" aria-label="Command palette" aria-haspopup="dialog" onClick={() => setPaletteOpen(true)} className="flex items-center gap-1 rounded-md px-2 py-1 text-control text-fg-muted hover:text-fg">
+                Commands <kbd className="text-caption">Ctrl K</kbd>
+              </button>
+            ) : null}
             {model.slots.map(s => {
               const target = s.opens ? tabItem(s.opens) : undefined
               return (
@@ -374,6 +410,7 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
                 ><Icon name={s.icon} />{s.label || s.key}</button>
               )
             })}
+            {menuRuntime ? <div className="ml-auto"><PrimaryToolbar /></div> : null}
           </div>
         ) : undefined}
         aside={model.panels.length ? <Panels /> : undefined}
@@ -414,6 +451,8 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       ) : null}
       {gateway ? <><ActionConfirmDialog gateway={gateway} /><ActionNotice gateway={gateway} onReview={actions?.onReview} /></> : null}
       {diag ? <DockSheet id={diag.id} title={diag.title} onClose={() => overlays.close(diag.id)}><DiagnosticsList diagnostics={diagnostics} /></DockSheet> : null}
+          {hasPalette ? <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} /> : null}
+      </MenuContext.Provider>
     </ShellContext.Provider>
   )
 }
