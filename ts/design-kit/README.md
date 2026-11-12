@@ -28,6 +28,7 @@ available just relocates the drift somewhere harder to see.
 | `packages/kit-dashboard` | the dashboard idiom — forked whole from `@hollis-labs/sysop-ui` 0.9.0 | MIT |
 | `packages/kit-chat` | chat input + stream, and the interactive card set | MIT AND Apache-2.0 |
 | `packages/kit-account` | controlled local-first account surfaces; private `0.0.0`, unpublished | MIT |
+| `packages/kit-identity` | setup, sign-in, password, API-key, pairing-code and sessions screens, plus a typed client, for apps on the Substrate identity module; unreleased `0.1.0` | MIT |
 | `packages/kit-settings` | controlled schema-driven settings forms, provenance and a setup wizard; release version `0.2.0` | MIT |
 | `packages/plugin-host-ui` | host importmap entries, Vite provisioning and owned stylesheet leases; `./vite` only | MIT |
 | `packages/kit-observe` | controlled read-only health, stats, sample series and diagnostics; release version `0.1.1` | MIT |

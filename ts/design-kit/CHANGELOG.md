@@ -10,6 +10,18 @@ anything specific to it.
 
 ---
 
+## Unreleased — kit-identity 0.1.0 (new), kit-account (next minor)
+
+CW-20261112-0080. Not published; the owner publishes. `kit-identity` is new and versions on its own; it is added to
+`release-design-kit`'s `PACKAGES` and depends on `kit-account`.
+
+- **kit-identity 0.1.0**: `IdentityGate` (boot, first-run setup and sign-in outside the shell), in-shell pages
+  (`AccountSecurityPage`, `ApiKeysPage`, `PairingCodesPage`, `SessionsPage`, `SignOutPage`/`SignOutButton`), the route table
+  `IDENTITY_ROUTES`, and `@hollis-labs/kit-identity/client` (`createIdentityClient`, `IdentityProvider`, `useIdentity`).
+  See its README.
+- **kit-account** (unreleased, additive): `NewTokenDisclosure` gains optional `title`, `description` and `copiedMessage`.
+  `kit-identity` uses them for pairing codes, so release `kit-account` before `kit-identity`.
+
 ## Unreleased — design-app-runtime 0.6.0, kit-chat 0.7.0, kit-dashboard 0.6.1
 
 Version-bump release for changes that merged without a number change (CW-20261112-0014). Not yet

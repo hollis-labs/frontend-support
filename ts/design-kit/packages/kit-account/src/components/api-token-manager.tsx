@@ -56,6 +56,8 @@ export interface ApiTokenManagerProps {
   readonly onRevoke: (id: string) => void
   readonly revoking?: boolean
   readonly revokeError?: ReactNode
+  /** Rendered inside the create dialog under the scope list, for hosts with free-form scopes (for example an "add a scope" field). */
+  readonly scopeSlot?: ReactNode
 }
 
 const STATUS_LABEL: Record<ApiTokenStatus, string> = { active: 'Active', expiring: 'Expiring', revoked: 'Revoked', expired: 'Expired' }
@@ -85,7 +87,7 @@ function activity(token: ApiTokenRecord, now: number): string {
   return parts.join(' · ')
 }
 
-export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, onCreate, canCreate, createDeniedReason, createOpen, onCreateOpenChange, now, creating = false, loading = false, error, revokeTargetId, onRevokeTargetChange, onRevoke, revoking = false, revokeError }: ApiTokenManagerProps) {
+export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, onCreate, canCreate, createDeniedReason, createOpen, onCreateOpenChange, now, creating = false, loading = false, error, revokeTargetId, onRevokeTargetChange, onRevoke, revoking = false, revokeError, scopeSlot }: ApiTokenManagerProps) {
   const id = useId()
   const [mounted] = useState(() => Date.now())
   const at = now ?? mounted
@@ -141,6 +143,7 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
             </div>
           ))}
         </fieldset>
+        {scopeSlot}
         <p className="text-caption text-fg-muted">Choose at least one available scope. The host enforces access permissions.</p>
         {!validScopes && draft.scopes.length > 0 ? <div role="alert" className="flex flex-col items-start gap-2 text-control text-danger">
           <span>Some selected scopes are unavailable. Choose current scopes.</span>
