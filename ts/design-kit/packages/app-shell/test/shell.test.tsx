@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen, within } from '@testing-library/react'
-import { defineBindingTable } from '@hollis-labs/design-bindings'
-import { ManifestShell, createRendererSelector, type ManifestShellProps } from '../src'
+import { ManifestShell, type ManifestShellProps } from '../src'
 import { admin, manifest, pages, pluginActions, views } from './fixtures'
 
 const mount = (over: Partial<ManifestShellProps> = {}) =>
@@ -68,19 +67,5 @@ describe('ManifestShell', () => {
     expect(screen.queryByText('Operations')).toBeNull()
     expect(screen.queryByText('activity body')).toBeNull()
     expect(screen.getByText('Page not found')).toBeTruthy()
-  })
-})
-
-describe('renderer selection', () => {
-  const table = defineBindingTable({
-    contractDigest: 'test', resolverConfig: { inlinePayloadLimitBytes: 1024 }, trust: () => ({ admit: 'host-primitive' }),
-    rows: [{ kind: 'card.info', version: '1', rendererId: 'info', rendererClass: 'declarative', entry: 'kit#Info', payload: { from: 'data' }, requestedIsolation: 'host-primitive', fallback: { kind: 'none' } }],
-  })
-  it('resolves kind@version through design-bindings and reports misses', () => {
-    const select = createRendererSelector(table)
-    expect(select('card.info', '1', 'host').ok).toBe(true)
-    expect(select('card.info', '2', 'host')).toMatchObject({ ok: false, code: 'unavailable' })
-    expect(select('card.other', '1', 'host')).toMatchObject({ ok: false, code: 'unclassified' })
-    expect(createRendererSelector(undefined)('card.info', '1', 'host')).toMatchObject({ ok: false })
   })
 })

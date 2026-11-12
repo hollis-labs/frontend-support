@@ -7,6 +7,7 @@ const sibling = (p: string) => path.resolve(__dirname, '..', p)
 export default defineConfig({
   resolve: {
     alias: {
+      '@hollis-labs/design-app-runtime': sibling('design-app-runtime/src/index.ts'),
       '@hollis-labs/design-bindings': sibling('design-bindings/src/index.ts'),
       '@hollis-labs/design-components': sibling('design-components/src/index.ts'),
       '@hollis-labs/design-tokens': sibling('design-tokens/src/index.ts'),

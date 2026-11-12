@@ -6,6 +6,8 @@
  * build writes `frontend.manifest.json` and the app build imports it; nothing is fetched.
  */
 
+import type { BindingDemand } from '@hollis-labs/design-bindings'
+
 export const SUPPORTED_MANIFEST_VERSION = 0
 
 export const KNOWN_KINDS = ['nav.item', 'nav.group', 'settings.region', 'surface', 'panel', 'dock.tab', 'widget', 'slot'] as const
@@ -61,6 +63,8 @@ export interface FrontendManifest {
   kits?: ManifestKit[]
   routes?: unknown[]
   contributions?: unknown[]
+  /** Binding-table input: the kinds this app draws, for the generator. */
+  bindings?: BindingDemand[]
 }
 
 export type DiagnosticCode =
@@ -78,6 +82,8 @@ export type DiagnosticCode =
   | 'overlay-depth'
   | 'invalid-dock-attributes'
   | 'host-refused'
+  | 'unresolved-binding'
+  | 'malformed-binding-table'
 
 export interface ShellDiagnostic {
   code: DiagnosticCode
