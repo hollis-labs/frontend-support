@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0
+
+- Panel preferences and the agent/user dismiss machine (SF-3 PR1): `createPanelPrefs({ storage, panels })`, a framework-agnostic
+  observable store over an injected `LayoutStorage` (no zustand, no app stores). It holds order, enabled, default panel,
+  dismissals and who opened each panel, and persists them under a `schemaVersion` (an invalid or older payload falls back to empty
+  with a `panels` diagnostic; storage failures never break the store).
+- Four states per panel (`closed`, `user_opened`, `agent_opened`, `user_dismissed`): an agent `open` is ignored while the user has
+  dismissed the panel; a user `open` always wins and clears the dismissal. `clearDismissed` resets one or all (new conversational trigger).
+- A plugin panel cannot take a built-in's id or another plugin's id (refused with a diagnostic); built-ins default enabled, plugins disabled.
+
 ## 0.5.0 — BREAKING (CW-20261102-0053)
 
 - Binding-table consumer (SF-4): `loadBindingTable` validates a table from design-bindings' `generateBindingTable` (format,
