@@ -10,19 +10,26 @@ anything specific to it.
 
 ---
 
-## Unreleased — design-app-runtime: versioned store (additive)
+## Unreleased — design-app-runtime 0.6.0, kit-chat 0.7.0, kit-dashboard 0.6.1
 
-`design-app-runtime` adds `createVersionedStore` / `useVersionedStore`, a generic versioned value store
-for runtime-swappable design-bindings tables. Additive; no new dependency (CW-20261105-0005).
+Version-bump release for changes that merged without a number change (CW-20261112-0014). Not yet
+published; the owner publishes. Only packages with unreleased changes since their npm version move,
+so the six core packages are not at one number for this release (as with 0.5.1/0.6.0 before it).
 
-## Unreleased — design-bindings 0.2.0 (BREAKING), kit-cards 0.2.0
+- **design-app-runtime 0.6.0** (minor): adds `createVersionedStore` / `useVersionedStore`, a generic
+  versioned value store for runtime-swappable design-bindings tables. Additive; no new dependency
+  (CW-20261105-0005). The change merged under the unchanged 0.5.0, so npm 0.5.0 lacks it.
+- **kit-chat 0.7.0** (minor): requires `design-bindings` `^0.2.0` and `kit-cards` `^0.2.0`. npm
+  kit-chat 0.6.0 ranges `design-bindings ^0.1.0` and `kit-cards ^0.1.0`. On 0.x a caret does not
+  reach 0.2, so those ranges cannot resolve the breaking 0.2.0 releases that kit-chat is built and
+  tested against. No kit-chat source change.
+- **kit-dashboard 0.6.1** (patch): its `design-app-runtime` range moves to `^0.6.0`, because `^0.5.0`
+  excludes 0.6.0 and would install a second copy of the runtime. No source change.
 
-`design-bindings` 0.2.0 is a clean break: isolation-only trust vocabulary (Tangent ADR 0009;
-`TrustClass`, `isolationFor`, `trustClassPermits` removed), resolution by `kind@version`
-(unknown version of a known kind is `unavailable`), and `resolve(table, kind, { version, origin })`
-with agent-origin content barred from `main-origin`. `kit-cards` 0.2.0 follows. `kit-chat`
-changes only its `design-bindings` range (`^0.2.0`) and takes the new number at the next core
-release. See each package's `CHANGELOG.md` (CW-20261105-0004).
+`design-bindings` 0.2.0 (BREAKING; isolation-only trust vocabulary, resolution by `kind@version`,
+origin-barred agent content; Tangent ADR 0009) and `kit-cards` 0.2.0 are already on npm
+(CW-20261105-0004). `app-shell` 0.2.0–0.4.0 are on main but not on npm (0.1.0 is); they are not part
+of this change and are not to be published here.
 
 ---
 

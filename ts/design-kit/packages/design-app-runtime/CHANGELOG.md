@@ -1,6 +1,8 @@
 # @hollis-labs/design-app-runtime
 
-## Unreleased — CW-20261010-0072, CW-20261105-0005
+## 0.6.0 — CW-20261010-0072, CW-20261105-0005
+
+Minor: the versioned store merged under the unchanged 0.5.0 number and so is not in the published 0.5.0.
 
 - Add generic `createVersionedStore` and `useVersionedStore` (additive): an immutable value with `version()` and `subscribe`, for runtime-swappable design-bindings tables. No new dependency; does not import design-bindings.
 
