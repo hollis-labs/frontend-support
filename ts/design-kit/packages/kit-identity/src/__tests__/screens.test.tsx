@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ApiKeysPage, AccountSecurityPage, IDENTITY_PAGES, IDENTITY_ROUTES, IdentityGate, PairingCodesPage } from '../index'
 import { IdentityProvider } from '../client'
+import { deviceLabel, relativeWhen } from '../components/device'
 import { fakeFetch } from './fake'
 
 // jsdom 25 lacks PointerEvent; Base UI forwards checkbox activation with one.
@@ -117,16 +118,16 @@ describe('ApiKeysPage', () => {
 
   it('shows the empty state for a null list', async () => {
     mount(keys(null), <ApiKeysPage />)
-    expect(await screen.findByText('No API tokens.')).toBeTruthy()
+    expect(await screen.findByText('No access keys.')).toBeTruthy()
   })
 
   it('discloses the key once and leaves no value in the DOM after dismiss', async () => {
     const fake = mount({ ...keys([]), 'POST /api/identity/keys': { status: 201, body: { key: SECRET, credential: { id: 'k1', name: 'ci', scopes: ['app.read'], created_at: '2026-11-12T00:00:00Z' } } } }, <ApiKeysPage scopeSuggestions={['app.read']} />)
-    await screen.findByText('No API tokens.')
-    fireEvent.click(screen.getByRole('button', { name: 'Create token' }))
-    fireEvent.change(await screen.findByLabelText('Token name'), { target: { value: 'ci' } })
+    await screen.findByText('No access keys.')
+    fireEvent.click(screen.getByRole('button', { name: 'Create key' }))
+    fireEvent.change(await screen.findByLabelText('Key name'), { target: { value: 'ci' } })
     fireEvent.click(screen.getByRole('checkbox', { name: 'app.read' }))
-    fireEvent.click(screen.getAllByRole('button', { name: 'Create token' }).at(-1)!)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Create key' }).at(-1)!)
     expect(await screen.findByText(SECRET)).toBeTruthy()
     expect(fake.calls.find((c) => c.method === 'POST')!.body).toEqual({ name: 'ci', scopes: ['app.read'], ttl_hours: 2160 })
     fireEvent.click(screen.getByRole('button', { name: 'Done' }))
@@ -136,33 +137,45 @@ describe('ApiKeysPage', () => {
 
   it('lets an owner with no suggestions type a scope into the create dialog and creates with it', async () => {
     const fake = mount({ ...keys([]), 'POST /api/identity/keys': { status: 201, body: { key: SECRET, credential: { id: 'k1', name: 'ci', scopes: ['app.read'], created_at: '2026-11-12T00:00:00Z' } } } }, <ApiKeysPage />)
-    await screen.findByText('No API tokens.')
-    fireEvent.click(screen.getByRole('button', { name: 'Create token' }))
-    fireEvent.change(await screen.findByLabelText('Token name'), { target: { value: 'ci' } })
+    await screen.findByText('No access keys.')
+    fireEvent.click(screen.getByRole('button', { name: 'Create key' }))
+    fireEvent.change(await screen.findByLabelText('Key name'), { target: { value: 'ci' } })
     fireEvent.change(screen.getByLabelText('Add a scope'), { target: { value: 'app.read' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add' }))
     expect((screen.getByRole('checkbox', { name: 'app.read' }) as HTMLInputElement).getAttribute('aria-checked')).toBe('true')
-    fireEvent.click(screen.getAllByRole('button', { name: 'Create token' }).at(-1)!)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Create key' }).at(-1)!)
     await screen.findByText(SECRET)
     expect((fake.calls.find((c) => c.method === 'POST')!.body as { scopes: string[] }).scopes).toEqual(['app.read'])
   })
 
   it('a 403 on create becomes the denied state', async () => {
     mount({ ...keys([]), 'POST /api/identity/keys': { status: 403, body: { code: 'scope_required', message: 'required scope' } } }, <ApiKeysPage scopeSuggestions={['app.read']} />)
-    await screen.findByText('No API tokens.')
-    fireEvent.click(screen.getByRole('button', { name: 'Create token' }))
-    fireEvent.change(await screen.findByLabelText('Token name'), { target: { value: 'ci' } })
+    await screen.findByText('No access keys.')
+    fireEvent.click(screen.getByRole('button', { name: 'Create key' }))
+    fireEvent.change(await screen.findByLabelText('Key name'), { target: { value: 'ci' } })
     fireEvent.click(screen.getByRole('checkbox', { name: 'app.read' }))
-    fireEvent.click(screen.getAllByRole('button', { name: 'Create token' }).at(-1)!)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Create key' }).at(-1)!)
     expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeTruthy()
+  })
+
+  it('a failed create keeps the dialog open and announces the error inside it', async () => {
+    mount({ ...keys([]), 'POST /api/identity/keys': { status: 500, body: { code: 'internal', message: 'could not create the key' } } }, <ApiKeysPage scopeSuggestions={['app.read']} />)
+    await screen.findByText('No access keys.')
+    fireEvent.click(screen.getByRole('button', { name: 'Create key' }))
+    fireEvent.change(await screen.findByLabelText('Key name'), { target: { value: 'ci' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'app.read' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Create key' }).at(-1)!)
+    const alert = await screen.findByRole('alert')
+    expect(alert.textContent).toContain('could not create the key')
+    expect(screen.getByLabelText('Key name')).toBeTruthy()
   })
 
   it('revokes with a confirm and refreshes the list', async () => {
     const row = { id: 'k1', name: 'ci', scopes: ['app.read'], created_at: '2026-11-12T00:00:00Z' }
     const fake = mount({ ...signedIn, 'GET /api/identity/keys': [{ status: 200, body: { keys: [row] } }, { status: 200, body: { keys: null } }], 'DELETE /api/identity/keys/k1': { status: 204 } }, <ApiKeysPage />)
     fireEvent.click(await screen.findByRole('button', { name: 'Revoke ci' }))
-    fireEvent.click(await screen.findByRole('button', { name: 'Revoke token' }))
-    expect(await screen.findByText('No API tokens.')).toBeTruthy()
+    fireEvent.click(await screen.findByRole('button', { name: 'Revoke key' }))
+    expect(await screen.findByText('No access keys.')).toBeTruthy()
     expect(fake.calls.some((c) => c.method === 'DELETE')).toBe(true)
   })
 })
@@ -207,5 +220,16 @@ describe('identity badge', () => {
     const { Probe } = await import('./probe')
     mount({ 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/sessions': { status: 200, body: { sessions: [] } } }, <Probe />)
     expect((await screen.findByTestId('badge')).textContent).toBe('unknown')
+  })
+})
+
+describe('device label', () => {
+  it('shortens a User-Agent and falls back to Unknown device', () => {
+    expect(deviceLabel('Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/156.0.0.0 Safari/537.36')).toBe('Chrome on Linux')
+    expect(deviceLabel('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15')).toBe('Safari on macOS')
+    expect(deviceLabel('Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0')).toBe('Firefox on Windows')
+    expect(deviceLabel('')).toBe('Unknown device')
+    expect(deviceLabel(undefined)).toBe('Unknown device')
+    expect(relativeWhen('2026-11-12T10:00:00Z', Date.parse('2026-11-12T10:02:30Z'))).toBe('2 minutes ago')
   })
 })

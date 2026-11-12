@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ApiTokenManager, EMPTY_API_TOKEN_DRAFT, NewTokenDisclosure, SignInRequired } from '@hollis-labs/kit-account'
-import type { ApiTokenDraft } from '@hollis-labs/kit-account'
+import type { ApiTokenDraft, ApiTokenLabels } from '@hollis-labs/kit-account'
 import { Button } from '@hollis-labs/design-components'
 import { useIdentity } from '../client/identity-context'
 import { errorMessage, isDenied } from '../client/errors'
@@ -8,6 +8,20 @@ import { ScopeAdder } from './scopes'
 import { TTL_HOURS, toTokenRecord } from './token-record'
 import { useScopeOptions } from './use-scope-options'
 import { useLoad } from './use-load'
+
+const KEY_LABELS: ApiTokenLabels = {
+  title: 'Access keys',
+  createLabel: 'Create key',
+  creatingLabel: 'Creating key…',
+  dialogTitle: 'Create access key',
+  dialogDescription: 'The key is shown once after it is created.',
+  nameLabel: 'Key name',
+  emptyLabel: 'No access keys.',
+  loadingLabel: 'Loading keys…',
+  revokeConfirmLabel: 'Revoke key',
+  createDeniedLabel: 'You do not have permission to create access keys.',
+  revokeDeniedLabel: 'You do not have permission to revoke this key.',
+}
 
 export interface ApiKeysPageProps {
   /** Extra scope names to offer next to the caller's own (the server publishes no catalogue). */
@@ -49,9 +63,8 @@ export function ApiKeysPage({ scopeSuggestions, now }: ApiKeysPageProps) {
     } catch (failure) {
       if (isDenied(failure)) setDenied(true)
       else {
-        // The manager has no in-dialog error slot: close it so the message shows, draft retained.
+        // Dialog stays open with the draft; the message shows inside it.
         setCreateError(errorMessage(failure))
-        setCreateOpen(false)
       }
     } finally {
       setCreating(false)
@@ -81,12 +94,12 @@ export function ApiKeysPage({ scopeSuggestions, now }: ApiKeysPageProps) {
     if (secret === null) return
     navigator.clipboard.writeText(secret).then(() => setCopied(true), () => setCopied(false))
   }
-  const error = keys.error ?? createError
+  const error = keys.error
   return (
     <div className="flex min-w-0 flex-col gap-4">
       <ApiTokenManager tokens={(keys.data ?? []).map((credential) => toTokenRecord(credential, at))} scopeOptions={scopes.options}
         draft={draft} onDraftChange={setDraft} onCreate={(value) => void create(value)} canCreate createOpen={createOpen} onCreateOpenChange={(open) => { setCreateOpen(open); if (open) setCreateError(null) }}
-        now={now} scopeSlot={<ScopeAdder onAdd={addScope} disabled={creating} />} creating={creating} loading={keys.loading} error={error}
+        now={now} labels={KEY_LABELS} createError={createError} scopeSlot={<ScopeAdder onAdd={addScope} disabled={creating} />} creating={creating} loading={keys.loading} error={error}
         revokeTargetId={revokeTarget} onRevokeTargetChange={(id) => { setRevokeTarget(id); setRevokeError(null) }} onRevoke={(id) => void revoke(id)} revoking={revoking} revokeError={revokeError} />
       {keys.error ? <Button type="button" variant="outline" size="sm" className="self-start" onClick={keys.reload}>Try again</Button> : null}
       <NewTokenDisclosure value={secret} onDismiss={dismiss} onCopy={copy} copied={copied} />

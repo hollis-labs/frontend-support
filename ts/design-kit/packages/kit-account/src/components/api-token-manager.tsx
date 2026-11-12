@@ -3,7 +3,7 @@ import { relativeTime } from './token-time'
 import { API_TOKEN_EXPIRIES, API_TOKEN_STATUSES } from './api-token-constants'
 import type { ApiTokenExpiry, ApiTokenStatus } from './api-token-constants'
 import type { ReactNode } from 'react'
-import { Button, Checkbox, ConfirmDialog, FormDialog, Input, Pill } from '@hollis-labs/design-components'
+import { Button, Callout, Checkbox, ConfirmDialog, FormDialog, Input, Pill } from '@hollis-labs/design-components'
 
 /** Display metadata only. Never put the token value/prefix/hash in this model. */
 export interface ApiTokenRecord {
@@ -34,6 +34,32 @@ export interface ApiTokenScope {
   readonly description?: ReactNode
 }
 
+/** Wording overrides so a host can say "key" (or anything else) instead of "token". Every field is optional. */
+export interface ApiTokenLabels {
+  /** Section heading. Default "API tokens". */
+  readonly title?: string
+  /** Create button. Default "Create token". */
+  readonly createLabel?: string
+  /** Create button while submitting. Default "Creating token…". */
+  readonly creatingLabel?: string
+  /** Create dialog title. Default "Create API token". */
+  readonly dialogTitle?: string
+  /** Create dialog description. Default "The token is shown once after it is created." */
+  readonly dialogDescription?: string
+  /** Name field label. Default "Token name". */
+  readonly nameLabel?: string
+  /** Empty state. Default "No API tokens." */
+  readonly emptyLabel?: string
+  /** Loading text. Default "Loading tokens…". */
+  readonly loadingLabel?: string
+  /** Revoke confirm button. Default "Revoke token". */
+  readonly revokeConfirmLabel?: string
+  /** Shown while creation is not allowed and no `createDeniedReason` is given. */
+  readonly createDeniedLabel?: string
+  /** Shown beside a revoke the caller may not perform when the record has no reason. */
+  readonly revokeDeniedLabel?: string
+}
+
 export interface ApiTokenManagerProps {
   readonly tokens: readonly ApiTokenRecord[]
   readonly scopeOptions: readonly ApiTokenScope[]
@@ -58,6 +84,10 @@ export interface ApiTokenManagerProps {
   readonly revokeError?: ReactNode
   /** Rendered inside the create dialog under the scope list, for hosts with free-form scopes (for example an "add a scope" field). */
   readonly scopeSlot?: ReactNode
+  /** Wording overrides; defaults keep the "token" vocabulary. */
+  readonly labels?: ApiTokenLabels
+  /** Sanitized create failure, announced inside the create dialog so the draft stays on screen. */
+  readonly createError?: ReactNode
 }
 
 const STATUS_LABEL: Record<ApiTokenStatus, string> = { active: 'Active', expiring: 'Expiring', revoked: 'Revoked', expired: 'Expired' }
@@ -87,8 +117,9 @@ function activity(token: ApiTokenRecord, now: number): string {
   return parts.join(' · ')
 }
 
-export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, onCreate, canCreate, createDeniedReason, createOpen, onCreateOpenChange, now, creating = false, loading = false, error, revokeTargetId, onRevokeTargetChange, onRevoke, revoking = false, revokeError, scopeSlot }: ApiTokenManagerProps) {
+export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, onCreate, canCreate, createDeniedReason, createOpen, onCreateOpenChange, now, creating = false, loading = false, error, revokeTargetId, onRevokeTargetChange, onRevoke, revoking = false, revokeError, scopeSlot, labels, createError }: ApiTokenManagerProps) {
   const id = useId()
+  const text = { title: 'API tokens', createLabel: 'Create token', creatingLabel: 'Creating token…', dialogTitle: 'Create API token', dialogDescription: 'The token is shown once after it is created.', nameLabel: 'Token name', emptyLabel: 'No API tokens.', loadingLabel: 'Loading tokens…', revokeConfirmLabel: 'Revoke token', createDeniedLabel: 'You do not have permission to create API tokens.', revokeDeniedLabel: 'You do not have permission to revoke this token.', ...labels }
   const [mounted] = useState(() => Date.now())
   const at = now ?? mounted
   const target = tokens.find((token) => token.id === revokeTargetId && isRevocable(token) && token.canRevoke)
@@ -99,11 +130,11 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
   return (
     <section aria-labelledby={`${id}-title`} aria-busy={loading} className="flex min-w-0 flex-col gap-4 rounded-panel border border-border bg-bg-elevated p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id={`${id}-title`} className="text-control font-semibold text-fg">API tokens</h2>
-        <Button type="button" size="sm" disabled={blocked} aria-describedby={canCreate ? undefined : `${id}-create-denied`} onClick={() => onCreateOpenChange(true)}>Create token</Button>
+        <h2 id={`${id}-title`} className="text-control font-semibold text-fg">{text.title}</h2>
+        <Button type="button" size="sm" disabled={blocked} aria-describedby={canCreate ? undefined : `${id}-create-denied`} onClick={() => onCreateOpenChange(true)}>{text.createLabel}</Button>
       </div>
-      {!canCreate ? <p id={`${id}-create-denied`} className="text-caption text-fg-muted">{createDeniedReason ?? 'You do not have permission to create API tokens.'}</p> : null}
-      {loading ? <div role="status" className="text-control text-fg-muted">Loading tokens…</div> : null}
+      {!canCreate ? <p id={`${id}-create-denied`} className="text-caption text-fg-muted">{createDeniedReason ?? text.createDeniedLabel}</p> : null}
+      {loading ? <div role="status" className="text-control text-fg-muted">{text.loadingLabel}</div> : null}
       {error ? <div role="alert" className="text-control text-danger">{error}</div> : null}
       <ul className="flex min-w-0 flex-col gap-3">
         {tokens.map((token, index) => {
@@ -115,7 +146,7 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
               <div className="min-w-0 [overflow-wrap:anywhere]">
                 <div className="text-control text-fg">{token.name}</div>
                 <div className="text-caption text-fg-muted">{activity(token, at)}</div>
-                {denied ? <div id={deniedId} className="text-caption text-fg-muted">{token.revokeDeniedReason ?? 'You do not have permission to revoke this token.'}</div> : null}
+                {denied ? <div id={deniedId} className="text-caption text-fg-muted">{token.revokeDeniedReason ?? text.revokeDeniedLabel}</div> : null}
                 {token.detail ? <div className="text-caption text-fg-muted">{token.detail}</div> : null}
               </div>
               <div className="flex shrink-0 items-center gap-2">
@@ -126,10 +157,11 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
           )
         })}
       </ul>
-      {!loading && !error && tokens.length === 0 ? <p className="text-control text-fg-muted">No API tokens.</p> : null}
-      <FormDialog open={createOpen && canCreate} onClose={() => onCreateOpenChange(false)} title="Create API token" description="The token is shown once after it is created." submitLabel={creating ? 'Creating token…' : 'Create token'} submitting={creating} submitDisabled={!canSubmit}
+      {!loading && !error && tokens.length === 0 ? <p className="text-control text-fg-muted">{text.emptyLabel}</p> : null}
+      <FormDialog open={createOpen && canCreate} onClose={() => onCreateOpenChange(false)} title={text.dialogTitle} description={text.dialogDescription} submitLabel={creating ? text.creatingLabel : text.createLabel} submitting={creating} submitDisabled={!canSubmit}
         onSubmit={() => { if (canSubmit) onCreate(draft) }}>
-        <label htmlFor={`${id}-name`} className="block text-label text-fg-secondary">Token name</label>
+        {createError ? <Callout tone="danger">{createError}</Callout> : null}
+        <label htmlFor={`${id}-name`} className="block text-label text-fg-secondary">{text.nameLabel}</label>
         <Input id={`${id}-name`} value={draft.name} onChange={(event) => onDraftChange({ ...draft, name: event.target.value })} required disabled={blocked} autoComplete="off" className="text-control md:text-control text-fg" />
         <fieldset disabled={blocked} className="flex flex-col gap-2">
           <legend className="mb-2 text-label text-fg-secondary">Scopes</legend>
@@ -157,7 +189,7 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
       </FormDialog>
       <ConfirmDialog open={target !== undefined} onOpenChange={(open) => { if (!open && !revoking) onRevokeTargetChange(null) }} title={`Revoke \u201c${target?.name ?? ''}\u201d?`}
         description={<span className="block [overflow-wrap:anywhere]">Anything using this key stops working immediately. This cannot be undone.{revokeError ? <span role="alert" className="mt-2 block text-danger">{revokeError}</span> : null}</span>}
-        confirmLabel="Revoke token" busy={loading || revoking} onConfirm={() => { if (target && !loading && !revoking) onRevoke(target.id) }} />
+        confirmLabel={text.revokeConfirmLabel} busy={loading || revoking} onConfirm={() => { if (target && !loading && !revoking) onRevoke(target.id) }} />
     </section>
   )
 }

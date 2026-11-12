@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import { Input } from '@hollis-labs/design-components'
+import { Callout, Input } from '@hollis-labs/design-components'
 
 export interface FieldProps {
   readonly label: string
@@ -27,8 +27,10 @@ export function Field({ label, value, onChange, type = 'text', autoComplete, hin
 }
 
 export function FormMessage({ tone, children }: { readonly tone: 'error' | 'notice' | 'success'; readonly children: React.ReactNode }) {
+  // Errors use the danger Callout: danger token, icon, border and role="alert".
+  if (tone === 'error') return <Callout tone="danger">{children}</Callout>
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className={tone === 'error' ? 'text-control text-danger' : tone === 'success' ? 'text-control text-success' : 'text-control text-fg-secondary'}>
+    <div role="status" className={tone === 'success' ? 'text-control text-success' : 'text-control text-fg-secondary'}>
       {children}
     </div>
   )

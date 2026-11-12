@@ -5,15 +5,14 @@ import { useIdentity } from '../client/identity-context'
 import { errorMessage } from '../client/errors'
 import type { IdentitySession } from '../client/types'
 import { FormMessage } from './field'
+import { deviceLabel, relativeWhen } from './device'
 import { useLoad } from './use-load'
 
-function when(iso: string): string {
-  const at = new Date(iso)
-  return Number.isNaN(at.getTime()) ? 'unknown' : at.toLocaleString()
-}
-
 /** Active sessions for the signed-in person. The current session is marked and ends through sign out, not here. */
-export function SessionsPage() {
+export function SessionsPage({ now }: { readonly now?: number } = {}) {
+  const [mounted] = useState(() => Date.now())
+  const at = now ?? mounted
+  const when = (iso: string) => relativeWhen(iso, at) ?? 'unknown'
   const { client } = useIdentity()
   const sessions = useLoad(() => client.listSessions())
   const [target, setTarget] = useState<IdentitySession | null>(null)
@@ -45,11 +44,11 @@ export function SessionsPage() {
         {rows.map((session) => (
           <li key={session.id} className="flex min-w-0 flex-col gap-2 border-b border-divider pb-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="min-w-0 [overflow-wrap:anywhere]">
-              <div className="text-control text-fg">{session.user_agent || 'Unknown device'}</div>
+              <div className="text-control text-fg"><span title={session.user_agent || undefined}>{deviceLabel(session.user_agent)}</span></div>
               <div className="text-caption text-fg-muted">Started {when(session.created_at)} · Last seen {when(session.last_seen_at)} · Expires {when(session.expires_at)}</div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {session.current ? <Pill tone="success">This session</Pill> : <Button type="button" variant="ghost" size="sm" aria-label={`Sign out session ${session.user_agent || session.id}`} onClick={() => { setError(null); setTarget(session) }}>Sign out…</Button>}
+              {session.current ? <Pill tone="success">This session</Pill> : <Button type="button" variant="ghost" size="sm" aria-label={`Sign out session on ${deviceLabel(session.user_agent)}`} onClick={() => { setError(null); setTarget(session) }}>Sign out…</Button>}
             </div>
           </li>
         ))}

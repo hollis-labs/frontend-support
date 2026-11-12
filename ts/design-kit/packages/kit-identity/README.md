@@ -59,5 +59,5 @@ sessions item only once a pinned version ships it. Sign out is an action: put `S
 - Pairing codes have no list or revoke route, so that page is an explanation and one action.
 - An empty key list is `{"keys":null}`, and revoked keys disappear from the list. Status therefore comes from `expires_at`
   alone (active / expiring within 7 days / expired).
-- `kit-account`'s `ApiTokenManager` has no in-dialog error slot, so a failed create closes the dialog and shows the message
-  above the list with the draft kept; wording still says "token" where the page says "key".
+- Key wording comes from `kit-account`'s `ApiTokenManager` `labels` prop (and a failed create shows in the dialog through
+  `createError`), so `@hollis-labs/kit-account` with those props must be released before this package.
