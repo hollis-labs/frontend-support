@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0
+
+- `WidgetCard` and the widgets.grid edit mode (SF-3 PR3; lifted copy-from-only from Nanite's `Widget`, `widget-order` helpers and the right rail's
+  drag-reorder, with tokens and kit steps in place of raw values, text glyphs, and native drag and drop instead of dnd-kit).
+- `WidgetCard`: collapsible card whose open state is remembered through the injected `LayoutStorage` (one `app-shell:widget-card:<app>:<id>` key).
+- `WidgetGrid`: an "Edit widgets" mode with drag-reorder, accessible Move up / Move down buttons, Hide / Show and Reset layout. Order and
+  visibility persist through plugin-host-ui's `createPluginLayoutStore` (no second persistence scheme); hidden widgets stay listed while editing.
+  A saved id that no widget answers to renders a diagnostic card instead of crashing.
+- `buildWidgetOrder`, `filterVisibleWidgets`, `moveWidget`, `reorderWidget`: pure helpers over ids.
+- `ManifestShell` gains `widgetStorage?: LayoutStorage`; the dashboard layout now renders `WidgetGrid`. Without it order and visibility last the session.
+
 ## 0.7.0
 
 - Bottom dock resize and `DockTabStrip` (SF-3 PR2; lifted copy-from-only from Nanite's chat drawer, with kit tokens and steps in place
