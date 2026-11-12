@@ -1,18 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button, ConfirmDialog } from '@hollis-labs/design-components'
-import { ApiTokenManager, ConnectedAccounts, NewTokenDisclosure } from '@hollis-labs/kit-account'
+import { ApiTokenManager, ConnectedAccounts, EMPTY_API_TOKEN_DRAFT, NewTokenDisclosure } from '@hollis-labs/kit-account'
 import type { ApiTokenDraft, ApiTokenRecord, ConnectedAccount } from '@hollis-labs/kit-account'
 
 // All data is synthetic. Operations simulate host providers, not a kit transport.
 function AccessHost({ session }: { readonly session: number }) {
   const [tokens, setTokens] = useState<readonly ApiTokenRecord[]>([
-    { id: 'seed', name: 'Existing automation', scopes: ['read'], status: 'active', canRevoke: true },
-    { id: 'unknown', name: 'Unsupported state', scopes: ['read'], status: 'future-state', canRevoke: true },
+    { id: 'seed', name: 'Existing automation', scopes: ['read'], status: 'active', createdAt: '2026-10-31T09:00:00Z', lastUsedAt: '2026-11-12T10:00:00Z', canRevoke: true },
+    { id: 'unknown', name: 'Unsupported state', scopes: ['read'], status: 'future-state' as ApiTokenRecord['status'], createdAt: '2026-08-01T09:00:00Z', canRevoke: true },
   ])
-  const [draft, setDraft] = useState<ApiTokenDraft>({ name: '', scopes: [] })
+  const [draft, setDraft] = useState<ApiTokenDraft>(EMPTY_API_TOKEN_DRAFT)
   const [secret, setSecret] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [creating, setCreating] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
   const [revoking, setRevoking] = useState(false)
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null)
   const [createError, setCreateError] = useState('')
@@ -45,10 +46,11 @@ function AccessHost({ session }: { readonly session: number }) {
     setCreating(false)
     if (failCreate) { setCreateError('Fixture creation failed; draft retained.'); return }
     serial.current += 1
-    setTokens((rows) => [...rows, { id: `created-${serial.current}`, name: value.name, scopes: value.scopes, status: 'active', canRevoke: true }])
+    setTokens((rows) => [...rows, { id: `created-${serial.current}`, name: value.name, scopes: value.scopes, status: 'active', createdAt: new Date().toISOString(), canRevoke: true }])
     // Intentionally fake; no real API credential is embedded or requested.
     setSecret('fixture-only-not-a-valid-credential-'.repeat(8))
-    setDraft({ name: '', scopes: [] })
+    setDraft(EMPTY_API_TOKEN_DRAFT)
+    setCreateOpen(false)
   })
   const revoke = (id: string) => later('revoke', () => { setRevoking(true); setRevokeError('') }, () => {
     setRevoking(false)
@@ -82,7 +84,7 @@ function AccessHost({ session }: { readonly session: number }) {
       <NewTokenDisclosure value={secret} onDismiss={() => { setSecret(null); setCopied(false) }} copied={copied} onCopy={() => {
         if (secret !== null) void navigator.clipboard.writeText(secret).then(() => setCopied(true)).catch(() => setCreateError('Copy unavailable; select the token manually.'))
       }} />
-      <ApiTokenManager tokens={tokens} scopeOptions={[{ id: 'read', label: 'Read' }, { id: 'write', label: 'Write' }]} draft={draft} onDraftChange={setDraft} onCreate={create} canCreate creating={creating} error={createError}
+      <ApiTokenManager tokens={tokens} scopeOptions={[{ id: 'read', label: 'Read' }, { id: 'write', label: 'Write' }]} draft={draft} onDraftChange={setDraft} onCreate={create} canCreate createOpen={createOpen} onCreateOpenChange={setCreateOpen} creating={creating} error={createError}
         revokeTargetId={revokeTarget} onRevokeTargetChange={(id) => { setRevokeTarget(id); setRevokeError('') }} onRevoke={revoke} revoking={revoking} revokeError={revokeError} />
       <ConnectedAccounts accounts={accounts} onConnect={connect} onDisconnect={setDisconnectTarget} error={connectionError} />
       <ConfirmDialog open={disconnectTarget !== null} onOpenChange={(open) => { if (!open && !disconnecting) setDisconnectTarget(null) }} title="Disconnect provider?" description="Host-owned confirmation before disconnecting." confirmLabel="Disconnect provider" onConfirm={disconnect} busy={disconnecting} />

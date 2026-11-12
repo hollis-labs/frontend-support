@@ -72,18 +72,28 @@ Missing scopes remain blocked until the user explicitly clears unavailable ones;
 the kit never silently broadens or substitutes a scope. The host/backend enforces
 per-caller permissions; UI availability is not authorization.
 
-Each token record supplies `canRevoke`. Only known `active` records with that
-capability offer revocation. `revokeTargetId` / `onRevokeTargetChange` control the
-confirmation dialog; `onRevoke(id)` fires only after confirmation. `revoking` and
-`revokeError` come from the host. A failed operation stays open and does not mark
-the token revoked. Unknown status strings remain visible with no revoke action.
-The list does not accept or render token values, prefixes or hashes.
+Each record carries `createdAt`, optional `expiresAt` / `lastUsedAt` (ISO 8601) and a
+`status` from the closed set `active | expiring | revoked | expired`; the row's second
+line shows scopes, created and last-used (or "Never used"). Any other status renders as
+"Unknown" with no action, and its raw value is never shown. Only `active` and `expiring`
+records with `canRevoke` offer revocation; when `canRevoke` is false the Revoke button
+stays, disabled, with the record's `revokeDeniedReason` (or default text) beside it.
+`revokeTargetId` / `onRevokeTargetChange` control the confirmation dialog; `onRevoke(id)`
+fires only after confirmation. `revoking` and `revokeError` come from the host. A failed
+operation stays open and does not mark the token revoked. The list does not accept or
+render token values, prefixes or hashes.
 
-`NewTokenDisclosure` is separate from the list. Its `value: string | null` is
+Creation lives in a dialog controlled with `createOpen` / `onCreateOpenChange`. The draft
+is `{ name, scopes, expiry }`; start from `EMPTY_API_TOKEN_DRAFT` (90 days). `expiry` is
+`30d | 90d | 1y | never`; `never` is allowed but labelled discouraged. When `canCreate`
+is false the Create button is disabled and `createDeniedReason` explains why. The host
+turns `expiry` into an `expiresAt`; the kit sends no dates.
+
+`NewTokenDisclosure` is a dialog separate from the list. Its `value: string | null` is
 **only the transient create response**, rendered as text, with no internal secret
 state, uncontrolled input, storage, URL, analytics or logging. It emits parameterless
 copy/dismiss intents. Copy is optional and explicit; the host owns clipboard errors
-and supplies `copied` only after success. No token is automatically copied.
+and supplies `copied` only after success, which is announced politely (never the value). No token is automatically copied.
 
 The host MUST clear `value` on dismissal, context changes and teardown, invalidate
 pending create responses from an old context, and never persist/re-query/replay the
@@ -107,7 +117,8 @@ belongs in `ConnectedAccount` props. The fixture demonstrates host confirmation.
   onCopy={copyIssuedValue} copied={copied} />
 <ApiTokenManager tokens={tokenMetadata} scopeOptions={availableScopes}
   draft={tokenDraft} onDraftChange={setTokenDraft} onCreate={createToken}
-  canCreate={canCreate} creating={creating} error={safeCreateError}
+  createOpen={createOpen} onCreateOpenChange={setCreateOpen}
+  canCreate={canCreate} createDeniedReason={whyNot} creating={creating} error={safeCreateError}
   revokeTargetId={revokeTarget} onRevokeTargetChange={setRevokeTarget}
   onRevoke={revokeToken} revoking={revoking} revokeError={safeRevokeError} />
 <ConnectedAccounts accounts={providerMetadata} onConnect={connectProvider}
