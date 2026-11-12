@@ -1,0 +1,29 @@
+/*
+ * Demo stylesheet. Pulls in the canonical theme (which itself imports
+ * Tailwind), then points Tailwind's content scanner at both the kit source
+ * and the demo files so utility classes in either are generated.
+ */
+@import "../src/styles/theme.css";
+
+@source "../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx,html}";
+
+/* AND THE EXTRACTED BASE, WHICH IS NOT OPTIONAL — the demo renders components
+ * from `@hollis-labs/design-components` on nearly every view, and Tailwind
+ * generates a utility only for a class it has SEEN. Before this line it saw
+ * neither: `text-fg-secondary`, `text-fg-faint`, `bg-surface`, `text-info` and
+ * `text-primary` appear only in that package, and all five produced ZERO
+ * utilities in the compiled demo CSS. The base components have been rendering
+ * substantially unstyled here since the extraction moved them out of `../src`,
+ * where these globs still point.
+ *
+ * Checked by grepping the built stylesheet for each class rather than by reading
+ * the config, because the config looked fine. */
+@source "../../design-components/src/**/*.{ts,tsx}";
+
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+@source "../../kit-chat/src/**/*.{ts,tsx}";

@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@import "@hollis-labs/design-tokens/design-tokens.css";
+@import "../src/styles/source.css";
+@source "../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx,html}";

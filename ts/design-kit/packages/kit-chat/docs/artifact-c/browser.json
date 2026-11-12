@@ -1,0 +1,176 @@
+{
+  "themes": [
+    "nanite-default",
+    "dir-a",
+    "dir-b",
+    "dir-d",
+    "dir-e",
+    "dir-f",
+    "sysop-p4-white",
+    "sysop-green-phosphor",
+    "sysop-amber-phosphor",
+    "sysop-hi-contrast"
+  ],
+  "screenshots": 21,
+  "palette": [
+    {
+      "theme": "nanite-default",
+      "mode": "light",
+      "color": "rgb(24, 25, 27)",
+      "background": "rgb(221, 224, 227)",
+      "headerBackground": "rgb(208, 212, 216)"
+    },
+    {
+      "theme": "nanite-default",
+      "mode": "dark",
+      "color": "rgb(232, 234, 237)",
+      "background": "rgb(37, 40, 44)",
+      "headerBackground": "rgb(52, 56, 61)"
+    },
+    {
+      "theme": "dir-a",
+      "mode": "light",
+      "color": "rgb(24, 24, 27)",
+      "background": "rgb(231, 231, 228)",
+      "headerBackground": "rgb(220, 220, 216)"
+    },
+    {
+      "theme": "dir-a",
+      "mode": "dark",
+      "color": "rgb(244, 244, 245)",
+      "background": "rgb(39, 39, 42)",
+      "headerBackground": "rgb(52, 52, 58)"
+    },
+    {
+      "theme": "dir-b",
+      "mode": "light",
+      "color": "rgb(31, 26, 20)",
+      "background": "rgb(228, 221, 208)",
+      "headerBackground": "rgb(216, 208, 192)"
+    },
+    {
+      "theme": "dir-b",
+      "mode": "dark",
+      "color": "rgb(240, 234, 224)",
+      "background": "rgb(42, 36, 30)",
+      "headerBackground": "rgb(58, 50, 42)"
+    },
+    {
+      "theme": "dir-d",
+      "mode": "light",
+      "color": "rgb(26, 14, 46)",
+      "background": "rgb(221, 210, 232)",
+      "headerBackground": "rgb(205, 192, 220)"
+    },
+    {
+      "theme": "dir-d",
+      "mode": "dark",
+      "color": "rgb(240, 232, 255)",
+      "background": "rgb(42, 33, 72)",
+      "headerBackground": "rgb(56, 44, 94)"
+    },
+    {
+      "theme": "dir-e",
+      "mode": "light",
+      "color": "rgb(10, 26, 36)",
+      "background": "rgb(223, 216, 192)",
+      "headerBackground": "rgb(207, 198, 168)"
+    },
+    {
+      "theme": "dir-e",
+      "mode": "dark",
+      "color": "rgb(200, 224, 240)",
+      "background": "rgb(20, 37, 61)",
+      "headerBackground": "rgb(26, 48, 80)"
+    },
+    {
+      "theme": "dir-f",
+      "mode": "light",
+      "color": "rgb(10, 10, 10)",
+      "background": "rgb(212, 212, 212)",
+      "headerBackground": "rgb(196, 196, 196)"
+    },
+    {
+      "theme": "dir-f",
+      "mode": "dark",
+      "color": "rgb(240, 240, 240)",
+      "background": "rgb(36, 36, 36)",
+      "headerBackground": "rgb(46, 46, 46)"
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "light",
+      "color": "rgb(24, 24, 27)",
+      "background": "rgb(241, 241, 243)",
+      "headerBackground": "rgb(228, 228, 231)"
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "dark",
+      "color": "rgb(244, 244, 245)",
+      "background": "rgb(24, 24, 27)",
+      "headerBackground": "rgb(24, 24, 27)"
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "light",
+      "color": "rgb(18, 59, 34)",
+      "background": "rgb(229, 241, 232)",
+      "headerBackground": "rgb(213, 233, 219)"
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "dark",
+      "color": "rgb(0, 255, 102)",
+      "background": "rgb(18, 26, 20)",
+      "headerBackground": "rgb(22, 34, 25)"
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "light",
+      "color": "rgb(73, 48, 0)",
+      "background": "rgb(245, 237, 215)",
+      "headerBackground": "rgb(238, 225, 189)"
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "dark",
+      "color": "rgb(255, 176, 0)",
+      "background": "rgb(28, 22, 14)",
+      "headerBackground": "rgb(36, 28, 17)"
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "light",
+      "color": "rgb(0, 0, 0)",
+      "background": "rgb(244, 244, 244)",
+      "headerBackground": "rgb(232, 232, 232)"
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "dark",
+      "color": "rgb(255, 255, 255)",
+      "background": "rgb(18, 18, 18)",
+      "headerBackground": "rgb(24, 24, 24)"
+    }
+  ],
+  "compactAndExpanded": true,
+  "labelsIndependentOfTooltip": true,
+  "nativeButtons": true,
+  "noNestedButtons": true,
+  "keyboardEnterSpaceActions": true,
+  "disabledInert": true,
+  "keyboardTabPane": true,
+  "boundedNativeScroll": {
+    "height": 384,
+    "scrollHeight": 1496,
+    "overflow": "auto"
+  },
+  "headerStationary": true,
+  "inertText": true,
+  "touchActions": true,
+  "hostCloseReopen": true,
+  "mobileNoOverflow": true,
+  "externalRequests": [],
+  "pageErrors": []
+}

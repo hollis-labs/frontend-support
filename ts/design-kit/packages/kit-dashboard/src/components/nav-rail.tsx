@@ -1,0 +1,104 @@
+import type { ReactNode } from 'react'
+
+export interface NavRailItem {
+  /** Stable key. */
+  key: string
+  /** Tooltip + accessible label. */
+  label: string
+  /** Icon node (e.g. a lucide icon at `h-4 w-4`). */
+  icon: ReactNode
+  /** Whether this item is the current route. */
+  active?: boolean
+  /** Render as a link to this href… */
+  href?: string
+  /** …or as a button invoking this handler. One of `href`/`onSelect`. */
+  onSelect?: () => void
+  /** Pin to the bottom of the rail (e.g. Settings). */
+  footer?: boolean
+}
+
+interface NavRailProps {
+  items: NavRailItem[]
+  /** Accessible name when several application navigations coexist. */
+  ariaLabel?: string
+  /** Brand mark shown at the top (e.g. an icon). */
+  logo?: ReactNode
+  /** Tooltip for the brand mark. */
+  logoLabel?: string
+  /**
+   * Custom node(s) pinned to the bottom of the rail, above any `footer` items
+   * — e.g. a `ThemeSwitcher`. Style triggers as `h-9 w-9` to match the rail.
+   */
+  footerExtra?: ReactNode
+}
+
+const ITEM_BASE =
+  'flex h-9 w-9 items-center justify-center rounded-md transition-colors text-text-subtle hover:bg-panel-hover hover:text-foreground'
+
+function NavRailButton({ item }: { item: NavRailItem }) {
+  const className = `${ITEM_BASE} ${item.active ? 'bg-panel-hover text-foreground' : ''}`
+  const common = {
+    className,
+    title: item.label,
+    'aria-label': item.label,
+    'aria-current': item.active ? ('page' as const) : undefined,
+  }
+
+  if (item.href !== undefined) {
+    return (
+      <a href={item.href} {...common} onClick={(event) => {
+        if (item.onSelect && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
+          event.preventDefault()
+          item.onSelect()
+        }
+      }}>
+        {item.icon}
+      </a>
+    )
+  }
+
+  return (
+    <button type="button" onClick={item.onSelect} {...common}>
+      {item.icon}
+    </button>
+  )
+}
+
+/**
+ * Vertical icon nav rail — the left edge of the Sysop shell. Router-agnostic:
+ * pass `href` for link items or `onSelect` for handler items, and compute
+ * `active` from your router. Items flagged `footer` pin to the bottom.
+ */
+export function NavRail({ items, logo, logoLabel = 'Home', ariaLabel = 'Application navigation', footerExtra }: NavRailProps) {
+  const primary = items.filter((i) => !i.footer)
+  const footer = items.filter((i) => i.footer)
+
+  return (
+    <nav aria-label={ariaLabel} className="flex w-14 shrink-0 flex-col items-center gap-2 border-r border-border-subtle bg-panel py-4">
+      {logo ? (
+        <>
+          <div
+            className="mb-2 flex h-9 w-9 items-center justify-center rounded-md border border-border-subtle bg-panel-hover text-text-soft"
+            title={logoLabel}
+          >
+            {logo}
+          </div>
+          <div className="mb-1 h-px w-8 bg-border-subtle" />
+        </>
+      ) : null}
+
+      {primary.map((item) => (
+        <NavRailButton key={item.key} item={item} />
+      ))}
+
+      {(footerExtra || footer.length > 0) && (
+        <div className="mt-auto flex flex-col items-center gap-2">
+          {footerExtra}
+          {footer.map((item) => (
+            <NavRailButton key={item.key} item={item} />
+          ))}
+        </div>
+      )}
+    </nav>
+  )
+}

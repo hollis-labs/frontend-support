@@ -1,0 +1,13 @@
+{
+  "packedKitChat": true,
+  "packedDesignComponents": true,
+  "packedDesignBindings": true,
+  "registryDesignTokens": "0.3.0",
+  "workspaceLinks": false,
+  "streamdownInstalled": false,
+  "productionBuild": true,
+  "chromiumRender": true,
+  "licensePackedFullTermsOnce": true,
+  "designComponentsReleasePrerequisite": "needs next design-components release (unreleased): existing Collapsible/HoverCard chat exports",
+  "pageErrors": []
+}

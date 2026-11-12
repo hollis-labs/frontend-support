@@ -1,0 +1,81 @@
+# Manual npm release for the ts/design-kit packages. Never runs on push or tag.
+# Publishing needs approval of the `npm-release` environment, and reads NPM_TOKEN
+# from a secret reference only. Packages publish in dependency order; a version
+# that is already on npm is skipped.
+name: release-design-kit
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Run npm publish --dry-run instead of publishing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-design-kit
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish design-kit packages
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+      id-token: write # npm provenance
+    env:
+      PACKAGES: >-
+        design-tokens design-bindings
+        eslint-config-design design-components design-app-runtime
+        kit-cards kit-account kit-code kit-voice kit-workflow
+        kit-chat
+        kit-dashboard kit-observe kit-settings kit-admin plugin-host-ui
+        app-shell
+    defaults:
+      run:
+        working-directory: ts/design-kit
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: install
+        run: npm ci
+
+      # Workspace order is alphabetical, so a root `npm run build` builds
+      # design-components before design-tokens and fails. Build in dependency order.
+      - name: build in dependency order
+        run: |
+          set -euo pipefail
+          for p in $PACKAGES; do
+            npm run build -w "@hollis-labs/$p" --if-present
+          done
+
+      - name: publish in dependency order
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          for p in $PACKAGES; do
+            dir="packages/$p"
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "skip $name@$version (already on npm)"
+              continue
+            fi
+            echo "publish $name@$version"
+            if [ "$DRY_RUN" = "true" ]; then
+              (cd "$dir" && npm publish --provenance --access public --dry-run)
+            else
+              (cd "$dir" && npm publish --provenance --access public)
+            fi
+          done

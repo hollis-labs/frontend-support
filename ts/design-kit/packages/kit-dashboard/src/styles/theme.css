@@ -1,0 +1,1235 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* `@import "shadcn/tailwind.css"` WAS HERE AND IT MADE THIS FILE UNUSABLE WHEN
+ * PUBLISHED. `shadcn` is a devDependency — correctly, it is a 5.9 MB CLI with 33
+ * dependencies and no runtime role — so a consumer who wrote the one line this
+ * package's README tells them to write got
+ *
+ *     Can't resolve 'shadcn/tailwind.css'
+ *
+ * and no stylesheet at all. Removed by CW-20260910-0131 at publish, after measuring
+ * what the import actually contributed: of its 629 lines, this repo used the nine
+ * `data-*` custom variants and `no-scrollbar`, and nothing else — `scroll-fade*`,
+ * `shimmer*` and the accordion keyframes are zero uses across both packages.
+ *
+ * Neither of the two we used needs it:
+ *
+ *   - `no-scrollbar` is defined in this file, below, and by `design-components` for
+ *     its own consumers.
+ *   - The nine `data-*` variants are Tailwind v4 BUILT-INS. Tailwind's bare `data-x:`
+ *     variant compiles to `[data-x]`, and Base UI's convention is attribute
+ *     PRESENCE — its own declaration files read "Present when the dialog is open"
+ *     for `data-open`, and it never sets a data attribute to the string `false`
+ *     (checked across the installed package). shadcn's richer definition adds
+ *     Radix's `[data-state="open"]` form and a `:not([data-open="false"])` guard,
+ *     and a Base UI tree needs neither.
+ *
+ * REMOVING IT ALSO CLOSED A GAP BETWEEN WHAT WE TEST AND WHAT WE SHIP. With the
+ * import, this repo's own builds resolved those variants through shadcn's
+ * zero-specificity `:where()` definitions while every consumer resolved them
+ * through Tailwind's `[data-open]`. Two different selectors, one of them only ever
+ * exercised here. Now both are the same one.
+ *
+ * If a future component needs `scroll-fade` or `shimmer`, take the definition — not
+ * the import. */
+@import "@hollis-labs/design-tokens/design-tokens.css";
+@import "./legacy-themes.css";
+
+/* THE TWO LINES BELOW ARE WHY THE COMPONENTS HAVE COLOUR. Tailwind v4 emits a
+ * utility only for a class string it has SEEN, and it does not scan `node_modules`.
+ * Both this package's class strings and those of `@hollis-labs/design-components` —
+ * which the kit renders on nearly every page — ship inside `dist`. Without these,
+ * the components render MOSTLY UNSTYLED and nothing errors.
+ *
+ * Each file declares `@source` against its own layout, because `@source` resolves
+ * relative to the CSS file that declares it. So a consumer importing this one
+ * stylesheet gets both packages scanned and writes no globs of their own. */
+@import "@hollis-labs/design-components/source.css";
+@import "./source.css";
+
+@theme {
+  /* Dense record titles retain the Operations reference's restrained tracking. */
+  --tracking-dash-record-title: 0.02em;
+  --tracking-dash-record-date: 0.12em;
+  --tracking-dash-status: 0.14em;
+}
+
+/* Palette values come only from design-tokens, including generated legacy-ID
+ * aliases. The dashboard layer derives workflow tones and keeps compatibility
+ * utility names; it does not redefine the base --hl-* contract. */
+
+/* ─────────────── DERIVED STATUS LABEL COLOURS — a THEME-layer job ───────────
+ *
+ * `lib/status.ts` used to carry these inline, as
+ * `text-[color-mix(in_oklab,var(--color-status-done)_60%,var(--color-text))]`,
+ * once per status. That is a colour literal AND an arbitrary value, so both
+ * design rules reported all twelve — 24 findings from one pattern in one file.
+ *
+ * THE COMPONENT WAS DOING THEME-LAYER WORK. Deriving one colour from two others
+ * is definitionally what this layer is for: it is the only layer permitted to
+ * name a colour, and so the only one permitted to compute one. The rule was not
+ * wrong and the file was not unlucky — the expression was in the wrong place.
+ *
+ * WHY THE MIX EXISTS AT ALL, so nobody replaces it with a flat shade: the label
+ * is derived toward the palette's own text colour rather than toward white,
+ * which is what keeps the two phosphor palettes coherent — green mixes toward
+ * green, amber toward amber. A static lighter token per status would need
+ * 12 x 4 hand-picked values and would be wrong again the moment a fifth palette
+ * lands.
+ *
+ * `archived` mixes at 55% rather than 60%. That was an inline inconsistency; it
+ * is now this declaration's ratio, which is where a difference like that can be
+ * seen and changed.
+ *
+ * THE BUILD ADDS A FALLBACK — DO NOT DELETE IT AS NOISE. lightningcss compiles
+ * each of these to the unmixed status colour first, then overrides it inside
+ * `@supports (color: color-mix(...))`. So an engine without `color-mix` gets the
+ * status colour rather than nothing. That is strictly better than the inline form
+ * behaved, and nobody asked for it; it will look like duplication in the built CSS
+ * and it is not.
+ *
+ * Declare derivations on :root and each [data-theme] boundary: inherited custom
+ * properties otherwise retain their ancestor's resolved inputs. Palette aliases
+ * and workflow labels therefore follow a nested theme as well as the root.
+ * ------------------------------------------------------------------------- */
+:root, [data-theme] {
+  --theme-color-status-backlog-label:
+    color-mix(in oklab, var(--theme-color-status-backlog) 60%, var(--theme-color-text));
+  --theme-color-status-todo-label:
+    color-mix(in oklab, var(--theme-color-status-todo) 60%, var(--theme-color-text));
+  --theme-color-status-queued-label:
+    color-mix(in oklab, var(--theme-color-status-queued) 60%, var(--theme-color-text));
+  --theme-color-status-doing-label:
+    color-mix(in oklab, var(--theme-color-status-doing) 60%, var(--theme-color-text));
+  --theme-color-status-review-label:
+    color-mix(in oklab, var(--theme-color-status-review) 60%, var(--theme-color-text));
+  --theme-color-status-done-label:
+    color-mix(in oklab, var(--theme-color-status-done) 60%, var(--theme-color-text));
+  --theme-color-status-blocked-label:
+    color-mix(in oklab, var(--theme-color-status-blocked) 60%, var(--theme-color-text));
+  --theme-color-status-paused-label:
+    color-mix(in oklab, var(--theme-color-status-paused) 60%, var(--theme-color-text));
+  --theme-color-status-archived-label:
+    color-mix(in oklab, var(--theme-color-status-archived) 55%, var(--theme-color-text));
+  --theme-color-status-inbox-label:
+    color-mix(in oklab, var(--theme-color-status-inbox) 60%, var(--theme-color-text));
+  --theme-color-status-routed-label:
+    color-mix(in oklab, var(--theme-color-status-routed) 60%, var(--theme-color-text));
+  --theme-color-status-indexed-label:
+    color-mix(in oklab, var(--theme-color-status-indexed) 60%, var(--theme-color-text));
+}
+
+/* Priority chip fills — derived, for the same reason the status labels are.
+ * `priority-badge` mixed the status colour 22% into the page background inline,
+ * so the chip reads as a dark solid block. Computing a colour from two others is
+ * theme-layer work; the component names the result. Ratio unchanged. */
+:root, [data-theme] {
+  --theme-color-priority-p1-bg:
+    color-mix(in oklab, var(--theme-color-status-blocked) 22%, var(--theme-color-bg));
+  --theme-color-priority-p2-bg:
+    color-mix(in oklab, var(--theme-color-status-queued) 22%, var(--theme-color-bg));
+}
+
+/* Every palette, including the legacy aliases, consumes the same contract.
+ * These compatibility roles introduce no palette literals. */
+:root, [data-theme] {
+  --theme-color-bg: var(--hl-bg);
+  --theme-color-panel: var(--hl-bg);
+  --theme-color-panel-2: var(--hl-bg-elevated);
+  --theme-color-panel-overlay: var(--hl-surface);
+  --theme-color-panel-overlay-strong: var(--hl-surface-active);
+  --theme-color-panel-hover: var(--hl-surface-hover);
+  --theme-color-panel-hover-soft: var(--hl-surface);
+  --theme-color-border: var(--hl-border);
+  --theme-color-border-soft: var(--hl-border-subtle);
+  --theme-color-border-strong: var(--hl-border);
+  --theme-color-text: var(--hl-fg);
+  --theme-color-text-muted: var(--hl-fg-secondary);
+  --theme-color-text-soft: var(--hl-fg-muted);
+  --theme-color-text-subtle: var(--hl-fg-faint);
+  --theme-color-accent: var(--hl-primary);
+  --theme-color-accent-foreground: var(--hl-primary-fg);
+  --theme-color-danger: var(--hl-danger);
+  --theme-color-danger-soft: var(--hl-danger);
+  --theme-color-warning: var(--hl-warning);
+  --theme-color-ring: var(--hl-ring);
+  --theme-color-ring-soft: var(--hl-ring);
+  --theme-color-status-backlog: var(--hl-fg-muted);
+  --theme-color-status-todo: var(--hl-fg-faint);
+  --theme-color-status-queued: var(--hl-warning);
+  --theme-color-status-doing: var(--hl-info);
+  /* Review is a workflow state, independent of a monochrome brand accent.
+   * Derive its violet family from semantic cool/warm colors so phosphor and
+   * light palettes retain their own inputs. */
+  --theme-color-status-review: color-mix(in oklch, var(--hl-info) 65%, var(--hl-danger));
+  --theme-color-status-done: var(--hl-success);
+  --theme-color-status-blocked: var(--hl-danger);
+  --theme-color-status-paused: var(--hl-warning);
+  --theme-color-status-archived: var(--hl-fg-muted);
+  --theme-color-status-inbox: var(--hl-warning);
+  --theme-color-status-routed: var(--hl-info);
+  --theme-color-status-indexed: var(--hl-success);
+  --theme-color-overlay: rgb(0 0 0 / 70%);
+  --theme-color-shadow: rgb(0 0 0 / 10%);
+  --theme-color-shadow-strong: rgb(0 0 0 / 20%);
+}
+
+@theme inline {
+  /* System font — no Geist */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-heading: var(--font-sans);
+
+  /* Semantic tokens */
+  --color-panel: var(--theme-color-panel);
+  --color-panel-2: var(--theme-color-panel-2);
+  --color-panel-overlay: var(--theme-color-panel-overlay);
+  --color-panel-overlay-strong: var(--theme-color-panel-overlay-strong);
+  --color-panel-hover: var(--theme-color-panel-hover);
+  --color-panel-hover-soft: var(--theme-color-panel-hover-soft);
+  --color-border-soft: var(--theme-color-border-soft);
+  --color-border-strong: var(--theme-color-border-strong);
+  --color-text: var(--theme-color-text);
+  --color-text-muted: var(--theme-color-text-muted);
+  --color-text-soft: var(--theme-color-text-soft);
+  --color-text-subtle: var(--theme-color-text-subtle);
+  --color-danger-soft: var(--theme-color-danger-soft);
+  --color-overlay: var(--theme-color-overlay);
+  --color-shadow: var(--theme-color-shadow);
+  --color-shadow-strong: var(--theme-color-shadow-strong);
+
+  /* Keep the dashboard's established shadcn treatment across modern themes.
+   * Inputs remain contract-backed; legacy palettes adopt canonical values. */
+  --color-input: var(--theme-color-border);
+  --color-secondary: var(--theme-color-panel-2);
+  --color-muted: var(--theme-color-panel-2);
+  --color-muted-foreground: var(--theme-color-text-subtle);
+  --color-accent: var(--theme-color-panel-2);
+  --color-accent-foreground: var(--theme-color-text);
+
+  /* sidebar tokens */
+  --color-sidebar: var(--theme-color-panel);
+  --color-sidebar-foreground: var(--theme-color-text);
+  --color-sidebar-primary: var(--theme-color-accent);
+  --color-sidebar-primary-foreground: var(--theme-color-accent-foreground);
+  --color-sidebar-accent: var(--theme-color-panel-2);
+  --color-sidebar-accent-foreground: var(--theme-color-text);
+  --color-sidebar-border: var(--theme-color-border);
+  --color-sidebar-ring: var(--theme-color-ring);
+
+  /* Per-status tokens */
+  /* Dashboard workflow utilities; old names below remain compatibility aliases. */
+  --color-dash-status-backlog: var(--theme-color-status-backlog);
+  --color-dash-status-todo: var(--theme-color-status-todo);
+  --color-dash-status-queued: var(--theme-color-status-queued);
+  --color-dash-status-doing: var(--theme-color-status-doing);
+  --color-dash-status-review: var(--theme-color-status-review);
+  --color-dash-status-done: var(--theme-color-status-done);
+  --color-dash-status-blocked: var(--theme-color-status-blocked);
+  --color-dash-status-paused: var(--theme-color-status-paused);
+  --color-dash-status-archived: var(--theme-color-status-archived);
+  --color-dash-status-inbox: var(--theme-color-status-inbox);
+  --color-dash-status-routed: var(--theme-color-status-routed);
+  --color-dash-status-indexed: var(--theme-color-status-indexed);
+  --color-dash-status-backlog-label: var(--theme-color-status-backlog-label);
+  --color-dash-status-todo-label: var(--theme-color-status-todo-label);
+  --color-dash-status-queued-label: var(--theme-color-status-queued-label);
+  --color-dash-status-doing-label: var(--theme-color-status-doing-label);
+  --color-dash-status-review-label: var(--theme-color-status-review-label);
+  --color-dash-status-done-label: var(--theme-color-status-done-label);
+  --color-dash-status-blocked-label: var(--theme-color-status-blocked-label);
+  --color-dash-status-paused-label: var(--theme-color-status-paused-label);
+  --color-dash-status-archived-label: var(--theme-color-status-archived-label);
+  --color-dash-status-inbox-label: var(--theme-color-status-inbox-label);
+  --color-dash-status-routed-label: var(--theme-color-status-routed-label);
+  --color-dash-status-indexed-label: var(--theme-color-status-indexed-label);
+
+  --color-status-backlog: var(--theme-color-status-backlog);
+  --color-status-todo: var(--theme-color-status-todo);
+  --color-status-queued: var(--theme-color-status-queued);
+  --color-status-doing: var(--theme-color-status-doing);
+  --color-status-review: var(--theme-color-status-review);
+  --color-status-done: var(--theme-color-status-done);
+  --color-status-blocked: var(--theme-color-status-blocked);
+  --color-status-paused: var(--theme-color-status-paused);
+  --color-status-archived: var(--theme-color-status-archived);
+  --color-status-inbox: var(--theme-color-status-inbox);
+  --color-status-routed: var(--theme-color-status-routed);
+  --color-status-indexed: var(--theme-color-status-indexed);
+
+  /* Derived label steps — see the block above. */
+  --color-status-backlog-label: var(--theme-color-status-backlog-label);
+  --color-status-todo-label: var(--theme-color-status-todo-label);
+  --color-status-queued-label: var(--theme-color-status-queued-label);
+  --color-status-doing-label: var(--theme-color-status-doing-label);
+  --color-status-review-label: var(--theme-color-status-review-label);
+  --color-status-done-label: var(--theme-color-status-done-label);
+  --color-status-blocked-label: var(--theme-color-status-blocked-label);
+  --color-status-paused-label: var(--theme-color-status-paused-label);
+  --color-status-archived-label: var(--theme-color-status-archived-label);
+  --color-status-inbox-label: var(--theme-color-status-inbox-label);
+  --color-status-routed-label: var(--theme-color-status-routed-label);
+  --color-status-indexed-label: var(--theme-color-status-indexed-label);
+
+  /* Dashboard priority fills; legacy names remain compatibility aliases. */
+  --color-dash-priority-p1-bg: var(--theme-color-priority-p1-bg);
+  --color-dash-priority-p2-bg: var(--theme-color-priority-p2-bg);
+  --color-priority-p1-bg: var(--theme-color-priority-p1-bg);
+  --color-priority-p2-bg: var(--theme-color-priority-p2-bg);
+
+  /* radius */
+  --radius: 0.375rem;
+  --radius-sm: calc(var(--radius) * 0.75);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border-subtle);
+    outline-color: var(--theme-color-ring-soft);
+    /* Hide scrollbars app-wide — regions still scroll, the bar is just
+       never painted. Firefox / legacy-Edge. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  /* WebKit / Blink — Chrome, Safari, Electron, Wails. */
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    letter-spacing: 0;
+    margin: 0;
+  }
+
+  /* Document-shell lock. The Sysop shell (NavRail + PageHeader) is fixed
+     chrome; scrolling happens inside page regions, never on <body>. Without
+     this, the document grows past the viewport and the whole shell scrolls.
+     Every consuming app was re-deriving this reset by hand — it belongs here.
+     Assumes the SPA mounts into `#root` (the Hollis Labs app convention). */
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body,
+  #root {
+    overflow: hidden;
+  }
+
+  table, code, pre {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    letter-spacing: 0;
+  }
+
+
+}
+
+@layer components {
+  .hud-panel {
+    @apply rounded-md border bg-panel;
+    border-color: var(--color-border);
+  }
+
+  .hud-input {
+    @apply w-full rounded-md border bg-panel px-3 py-2 text-[13px] leading-4 text-foreground outline-none transition;
+    border-color: var(--color-border);
+  }
+  .hud-input:focus {
+    background: var(--dash-control-active-bg);
+  }
+
+  .hud-button {
+    @apply rounded-md border bg-panel px-3 py-2 text-[13px] leading-4 text-foreground transition hover:bg-panel-hover disabled:cursor-not-allowed disabled:opacity-60;
+    border-color: var(--color-border);
+  }
+
+  .hud-label {
+    @apply text-[11px] uppercase tracking-label text-text-subtle;
+  }
+
+  .hud-skeleton {
+    @apply animate-pulse rounded bg-panel-hover;
+  }
+
+  .hud-table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .hud-table thead tr {
+    @apply border-b border-border bg-panel-hover text-left text-[11px] uppercase tracking-label text-text-subtle;
+  }
+
+  .hud-table tbody tr {
+    @apply border-b border-border-soft;
+  }
+
+  .hud-table-container {
+    @apply overflow-x-auto;
+  }
+
+  .hud-table td,
+  .hud-table-container td,
+  table td {
+    @apply whitespace-nowrap;
+  }
+
+  /* Explicit per-region opt-in. Contract colors follow the active palette and
+     light/dark mode; no app-specific chat/provider escape-hatch names. */
+  .show-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-fg-muted) transparent;
+    -ms-overflow-style: auto;
+  }
+
+  .show-scrollbar::-webkit-scrollbar {
+    display: block;
+    width: calc(var(--spacing) * 1.5);
+    height: calc(var(--spacing) * 1.5);
+  }
+
+  .show-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .show-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--color-fg-muted);
+    border-radius: var(--radius-sm);
+  }
+
+  .show-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--color-fg);
+  }
+
+  /* Explicit suppression takes precedence when both classes are present. */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  .hud-modal-overlay {
+    @apply fixed inset-0 z-50 grid place-items-center bg-overlay p-4;
+  }
+
+  .hud-modal {
+    @apply w-full max-w-[26rem] rounded-md border bg-panel p-4;
+    border-color: var(--color-border);
+  }
+}
+
+/* Indeterminate ProgressBar — a one-third-width fill sweeping across the
+   track. Defined here so the kit's ProgressBar can reference it by name. */
+@keyframes sysop-progress-indeterminate {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+/* Dashboard typography contract. Compact roles and document geometry are the
+ * default; no route, provider or JavaScript hook enables them. The scalable
+ * typography variant also supports nested surfaces and sibling previews. */
+
+:root, [data-dashboard-typography="compact"] {
+  --dash-record-line-height: calc(var(--spacing) * 4);
+  --dash-table-heading-line-height: 1.5;
+  --dash-menu-size: 14px;
+  --dash-menu-line-height: calc(var(--spacing) * 5);
+  --dash-record-title-size: 13px;
+  --dash-record-metadata-size: 10px;
+  --dash-record-label-size: 11px;
+  --dash-page-heading-size: 11px;
+  --dash-header-action-size: 12.8px;
+  --dash-summary-label-size: 11px;
+  --dash-summary-value-size: 13px;
+  --dash-summary-tracking: 0.16em;
+  --dash-filter-caption-size: 10px;
+  --dash-filter-chip-leading: calc(4 / 3);
+  --dash-filter-search-size: 11px;
+  --dash-shortcut-size: 9px;
+}
+[data-dashboard-typography="scalable"] {
+  --dash-record-title-size: var(--text-control);
+  --dash-record-metadata-size: var(--text-caption);
+  --dash-record-label-size: var(--text-label);
+  --dash-record-line-height: calc(var(--spacing) * 4);
+  --dash-table-heading-line-height: 1.5;
+  --dash-menu-size: var(--text-sm);
+  --dash-menu-line-height: calc(var(--spacing) * 5);
+  --dash-page-heading-size: var(--text-label);
+  --dash-header-action-size: var(--text-control);
+  --dash-summary-label-size: var(--text-label);
+  --dash-summary-value-size: var(--text-control);
+  --dash-summary-tracking: var(--tracking-label);
+  --dash-filter-caption-size: var(--text-caption);
+  --dash-filter-chip-leading: initial;
+  --dash-filter-search-size: var(--text-label);
+  --dash-shortcut-size: var(--text-micro);
+}
+
+@layer utilities {
+  .dash-record-body, .dash-record-title {
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-title-size);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--dash-record-line-height);
+    letter-spacing: var(--tracking-normal);
+  }
+  .dash-record-title {
+    letter-spacing: var(--tracking-dash-record-title);
+  }
+  .dash-record-metadata {
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-metadata-size);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--dash-record-line-height);
+    letter-spacing: var(--tracking-normal);
+  }
+  /* Inline metadata controls participate in the record's typography. A base
+   * CopyableId or Badge may otherwise impose its own scalable caption size. */
+  .dash-record-metadata :where(button, code, [data-slot="badge"]) {
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: inherit;
+    line-height: inherit;
+  }
+  .dash-table-heading {
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-metadata-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--dash-table-heading-line-height);
+    letter-spacing: var(--tracking-eyebrow);
+  }
+  .dash-record-number, .dash-record-date, .dash-record-status {
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-label-size);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--dash-record-line-height);
+    letter-spacing: var(--tracking-normal);
+  }
+  .dash-record-date {
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-dash-record-date);
+  }
+  .dash-record-status {
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-dash-status);
+  }
+  .dash-record-priority {
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-metadata-size);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--dash-record-line-height);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .dash-menu, .dash-menu [role="menuitem"] {
+    font-family: var(--font-sans);
+    font-size: var(--dash-menu-size);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--dash-menu-line-height);
+    letter-spacing: var(--tracking-normal);
+  }
+}
+
+@layer utilities {
+  .dash-page-heading {
+    font-size: var(--dash-page-heading-size);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.5;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .dash-header-action {
+    font-size: var(--dash-header-action-size);
+    line-height: 1.5;
+  }
+  .dash-summary-label {
+    font-size: var(--dash-summary-label-size);
+    font-weight: var(--font-weight-normal);
+    line-height: 1;
+    letter-spacing: var(--dash-summary-tracking);
+    text-transform: uppercase;
+  }
+  .dash-summary-value {
+    font-family: var(--font-mono);
+    font-size: var(--dash-summary-value-size);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .dash-filter-caption, .dash-filter-chip {
+    font-size: var(--dash-filter-caption-size);
+  }
+  .dash-filter-chip {
+    line-height: var(--dash-filter-chip-leading, inherit);
+  }
+  .dash-filter-search {
+    font-size: var(--dash-filter-search-size);
+  }
+  .dash-shortcut {
+    font-family: var(--font-mono);
+    font-size: var(--dash-shortcut-size);
+    line-height: 1.5;
+    letter-spacing: var(--tracking-wider);
+  }
+}
+
+
+/* Dashboard is an opinionated application theme. Import it once at the app
+ * root: native markup, shared primitives and portalled content share these
+ * defaults. A consumer changes theme roles here, never route-specific copies.
+ * Content sections are flat; raised cards are an explicit surface variant. */
+:root, [data-dashboard-typography="compact"] {
+  --dash-body-size: 13px;
+  --dash-body-leading: 1.5;
+  --dash-support-size: 11px;
+  --dash-section-size: 11px;
+  --dash-control-size: 12px;
+  --dash-page-padding: calc(var(--spacing) * 4);
+  --dash-section-gap: calc(var(--spacing) * 4);
+  --dash-header-padding-inline: calc(var(--spacing) * 4);
+  --dash-header-padding-block: calc(var(--spacing) * 2.5);
+  --dash-surface-bg: var(--color-bg);
+  --dash-surface-border-width: 0px;
+  --dash-surface-radius: 0px;
+}
+
+@layer base {
+  body {
+    font-size: var(--dash-body-size);
+    line-height: var(--dash-body-leading);
+  }
+  h1, h2, h3 {
+    font-size: var(--dash-section-size);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.5;
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  h1 { font-size: var(--dash-page-heading-size); }
+  table { font-size: var(--dash-record-title-size); }
+  th {
+    font-size: var(--dash-record-metadata-size);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+  }
+  td { line-height: var(--dash-record-line-height); }
+  /* Defaults yield to Input/SearchInput utilities, including transparent,
+   * borderless inner inputs. Parallax previously overrode these unlayered. */
+  select, input:not([type="checkbox"]):not([type="radio"]), textarea {
+    color: var(--color-fg);
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing) calc(var(--spacing) * 2.5);
+    font-size: var(--dash-control-size);
+    line-height: calc(var(--spacing) * 4);
+  }
+}
+
+@layer utilities {
+  .dash-page-header {
+    padding: var(--dash-header-padding-block) var(--dash-header-padding-inline);
+  }
+  .dash-page-content { padding: var(--dash-page-padding); }
+  .dash-section-stack { gap: var(--dash-section-gap); }
+  .dash-form-stack {
+    display: grid;
+    gap: var(--dash-section-gap);
+    padding: var(--dash-page-padding);
+    min-width: 0;
+  }
+  .dash-form-stack > button { justify-self: start; }
+  .dash-panel {
+    gap: 0;
+    padding-block: 0;
+  }
+  .dash-section-heading {
+    font-size: var(--dash-section-size);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  .dash-support { font-size: var(--dash-support-size); }
+  /* Style the shared primitive's public slots in this idiom, not the neutral
+   * design-components package. Menus/dialogs keep their elevated surfaces. */
+  [data-slot="card"] {
+    background: var(--dash-surface-bg);
+    border-width: var(--dash-surface-border-width);
+    border-radius: var(--dash-surface-radius);
+    box-shadow: none;
+    font-size: var(--dash-body-size);
+  }
+  [data-slot="card"][data-dashboard-surface="raised"] {
+    background: var(--color-bg-elevated);
+    border-width: 1px;
+    border-radius: var(--radius-md);
+  }
+  [data-slot="card-title"] {
+    font-size: var(--dash-section-size);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+  }
+  [data-slot="card-description"] { font-size: var(--dash-support-size); }
+}
+
+
+/* Shared controls: native selects and popover selectors use the same idiom.
+ * Keep the native select's form, keyboard, ref and change-event behavior. */
+:root, [data-theme] {
+  --dash-control-height: calc(var(--spacing) * 8);
+  --dash-control-padding: calc(var(--spacing) * 2.5);
+  --dash-control-bg: var(--hl-bg);
+  --dash-control-active-bg: var(--hl-surface-hover);
+  --dash-search-bg: var(--hl-bg-elevated);
+  --dash-search-active-bg: color-mix(in oklab, var(--hl-bg-elevated) 75%, var(--hl-bg));
+  --dash-menu-divider: var(--hl-border-subtle);
+  --dash-toolbar-gap: calc(var(--spacing) * 3);
+  --dash-field-gap: calc(var(--spacing) * 2);
+  --dash-selection-bg: var(--hl-surface-hover);
+}
+
+@layer components {
+  .dash-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--dash-toolbar-gap);
+    min-width: 0;
+  }
+  .dash-field {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--dash-field-gap);
+    min-width: 0;
+    max-width: 100%;
+  }
+  .dash-field-label {
+    flex-shrink: 0;
+    font-size: var(--dash-support-size);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-fg-faint);
+  }
+  .dash-field[data-orientation="stacked"] {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dash-field > :is(select, input) { min-width: 0; max-width: 100%; }
+  .dash-table-note {
+    padding: calc(var(--spacing) * 3);
+    font-size: var(--dash-support-size);
+    font-weight: var(--font-weight-normal);
+    line-height: var(--dash-body-leading);
+    text-align: start;
+    color: var(--color-fg-faint);
+    overflow-wrap: anywhere;
+  }
+  .dash-selectable-row {
+    display: grid;
+    gap: calc(var(--spacing) * 2);
+    padding: calc(var(--spacing) * 3);
+    text-align: start;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--dash-control-bg);
+  }
+  .dash-selectable-row:is(:hover, :focus-visible, [aria-pressed="true"], [aria-selected="true"]) {
+    background: var(--dash-selection-bg);
+  }
+  select:not([multiple]), .dash-dropdown-trigger {
+    height: var(--dash-control-height);
+    min-width: 0;
+    max-width: 100%;
+    padding: 0 var(--dash-control-padding);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--dash-control-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    font-size: var(--dash-control-size);
+    font-weight: var(--font-weight-medium);
+    line-height: calc(var(--spacing) * 4);
+    letter-spacing: var(--tracking-normal);
+    text-transform: none;
+  }
+  .dash-dropdown-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: calc(var(--spacing) * 1.5);
+  }
+  /* Fallback arrow also has a fixed inset and never overlaps a long label. */
+  select:not([multiple]) {
+    appearance: none;
+    padding-inline-end: calc(var(--spacing) * 7);
+    background-image: linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position: right calc(var(--spacing) * 3 + 3px) center,
+      right calc(var(--spacing) * 3) center;
+    background-size: 3px 3px;
+    background-repeat: no-repeat;
+  }
+  select:disabled { opacity: 0.5; }
+  .dash-dropdown-trigger:hover, select:not(:disabled):hover {
+    background-color: var(--dash-control-active-bg);
+  }
+}
+
+/* Use the browser's customizable native picker where available. Else retain
+ * the same closed control and the platform's native option list. */
+@supports (appearance: base-select) {
+  @layer components {
+    select:not([multiple]), select:not([multiple])::picker(select) {
+      appearance: base-select;
+    }
+    select:not([multiple]) {
+      display: inline-flex;
+      align-items: center;
+      gap: calc(var(--spacing) * 2);
+      padding-inline-end: var(--dash-control-padding);
+      background-image: none;
+    }
+    select::picker-icon {
+      content: '';
+      flex-shrink: 0;
+      width: calc(var(--spacing) * 1.5);
+      height: calc(var(--spacing) * 1.5);
+      margin-inline-start: auto;
+      margin-inline-end: var(--spacing);
+      margin-block-start: calc(var(--spacing) * -0.5);
+      border-inline-end: 1px solid currentColor;
+      border-block-end: 1px solid currentColor;
+      transform: rotate(45deg);
+      color: var(--color-fg-faint);
+    }
+    select::picker(select) {
+      margin-block: var(--spacing);
+      padding: var(--spacing);
+      max-height: min(60vh, 24rem);
+      overflow: auto;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-popover);
+      color: var(--color-fg);
+      box-shadow: var(--shadow-md);
+      font-family: var(--font-sans);
+      font-size: var(--dash-menu-size);
+    }
+    select option {
+      display: flex;
+      align-items: center;
+      gap: calc(var(--spacing) * 2);
+      min-height: calc(var(--spacing) * 8);
+      padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 2);
+      border-radius: 0;
+      font-weight: var(--font-weight-normal);
+    }
+    select option + option { border-top: 1px solid var(--dash-menu-divider); }
+    select option::checkmark { order: 1; margin-inline-start: auto; }
+    select option:is(:hover, :focus, :checked) {
+      background: var(--dash-control-active-bg);
+    }
+  }
+}
+
+@layer utilities {
+  [data-slot="button"]:not(.dash-header-action), [data-slot="select-trigger"] {
+    font-size: var(--dash-control-size);
+  }
+  /* The adapter owns the legacy SearchInput's outer field, without changing
+   * its debounce/focus behavior or giving the inner input a second surface. */
+  .dash-search-adapter > div, .dash-search-field {
+    min-height: calc(var(--spacing) * 8);
+    display: flex;
+    align-items: center;
+    gap: calc(var(--spacing) * 2);
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--spacing) var(--dash-control-padding);
+    background: var(--dash-search-bg);
+  }
+  .dash-search-adapter > div:focus-within, .dash-search-field:focus-within {
+    background: var(--dash-search-active-bg);
+  }
+  .dash-search-adapter kbd { font-size: var(--dash-shortcut-size); }
+  .dash-search-adapter input, .dash-search-field input,
+  [data-slot="input-group"] > input {
+    flex: 1;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    font-size: var(--dash-control-size);
+    line-height: calc(var(--spacing) * 4);
+  }
+  .dash-dropdown-menu {
+    display: flex;
+    flex-direction: column;
+    max-height: min(24rem, var(--available-height));
+    overflow: hidden;
+  }
+  .dash-dropdown-menu [data-slot="command"] {
+    min-height: 0;
+    max-height: inherit;
+    height: auto;
+    flex: 1;
+  }
+  .dash-dropdown-menu [data-slot="scroll-area"] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .dash-dropdown-menu [data-slot="scroll-area-viewport"] { min-height: 0; flex: 1; }
+  [data-slot="input-group"] > [data-slot="command-input"] {
+    font-size: var(--dash-filter-search-size);
+  }
+  [data-slot="command-item"], [data-slot="select-item"],
+  [data-slot="combobox-item"] {
+    border-radius: 0;
+    padding-block: calc(var(--spacing) * 1.5);
+    font-size: var(--dash-menu-size);
+    line-height: var(--dash-menu-line-height);
+  }
+  [data-slot="command-item"] + [data-slot="command-item"],
+  [data-slot="select-item"] + [data-slot="select-item"],
+  [data-slot="combobox-item"] + [data-slot="combobox-item"],
+  [data-slot="dropdown-menu-item"] + [data-slot="dropdown-menu-item"] {
+    border-top: 1px solid var(--dash-menu-divider);
+  }
+  [data-slot="select-content"], [data-slot="popover-content"],
+  [data-slot="dropdown-menu-content"], [data-slot="dropdown-menu-sub-content"] {
+    border: 1px solid var(--color-border);
+  }
+}
+
+/* Dashboard focus policy: rings are off, including inherited Tailwind rings
+ * and programmatic heading focus. This deliberate theme-level priority keeps
+ * old component utilities from bringing them back. Do not remove focus itself:
+ * keyboard users retain background/selection feedback and focus return. */
+*, *::before, *::after {
+  --tw-ring-shadow: 0 0 transparent !important;
+  --tw-ring-offset-shadow: 0 0 transparent !important;
+  --tw-inset-ring-shadow: 0 0 transparent !important;
+}
+:focus, :focus-visible, :focus-within {
+  outline: none !important;
+}
+:where(button, a, select, input, textarea, [role="option"], [role="menuitem"]):focus-visible {
+  background-color: var(--dash-control-active-bg);
+  color: var(--color-fg);
+}
+:where(input, textarea, select, button, [data-slot="input-group"]):is(:focus, :focus-visible, :focus-within):not([aria-invalid="true"]) {
+  border-color: var(--color-border) !important;
+}
+/* A composed input's focus belongs to the outer field, not its inner editor. */
+.dash-search-adapter input:focus, .dash-search-field input:focus,
+[data-slot="input-group"] > input:focus {
+  background: transparent;
+}
+
+/* Configuration and inspection copy uses the same compact typography contract
+ * as records. These size-only roles let consumers retain semantic markup and
+ * font family without falling back to the core root-relative text scale. */
+:root, [data-dashboard-typography="compact"] {
+  --dash-detail-title-size: 18px;
+  --dash-metric-value-size: 20px;
+}
+[data-dashboard-typography="scalable"] {
+  --dash-control-size: 0.75rem;
+  --dash-body-size: var(--text-control);
+  --dash-support-size: var(--text-label);
+  --dash-section-size: var(--text-label);
+  --dash-detail-title-size: var(--text-lg);
+  --dash-metric-value-size: var(--text-xl);
+}
+@layer utilities {
+  .dash-body { font-size: var(--dash-body-size); line-height: var(--dash-body-leading); }
+  .dash-label,
+  [data-slot="button"].dash-label {
+    font-size: var(--dash-record-label-size);
+    line-height: 1.5;
+  }
+  .dash-caption { font-size: var(--dash-record-metadata-size); }
+  .dash-detail-title { font-size: var(--dash-detail-title-size); }
+  .dash-metric-value { font-size: var(--dash-metric-value-size); }
+  .dash-control,
+  [data-slot="input"].dash-control,
+  [data-slot="textarea"].dash-control { font-size: var(--dash-control-size); }
+}
+
+/* Identity artwork keeps the configuration reference's compact dimensions.
+ * Activity avatars retain their existing spacing-based sizes. */
+:root, [data-dashboard-typography="compact"] {
+  --dash-identity-small-size: 28px;
+  --dash-identity-definition-size: 36px;
+  --dash-identity-large-size: 64px;
+}
+[data-dashboard-typography="scalable"] {
+  --dash-identity-small-size: calc(var(--spacing) * 7);
+  --dash-identity-definition-size: calc(var(--spacing) * 9);
+  --dash-identity-large-size: calc(var(--spacing) * 16);
+}
+@layer utilities {
+  .dash-identity-small { width: var(--dash-identity-small-size); height: var(--dash-identity-small-size); }
+  .dash-identity-definition { width: var(--dash-identity-definition-size); height: var(--dash-identity-definition-size); }
+  .dash-identity-large { width: var(--dash-identity-large-size); height: var(--dash-identity-large-size); }
+}
+
+/* Importing the dashboard theme establishes the reviewed geometry for every
+ * route and portal, before React mounts. The reference attribute remains a
+ * compatible explicit choice, but is no longer required. Browser zoom and the
+ * root font size are untouched. */
+:root {
+  --spacing: 4px;
+  --container-3xs: 256px;
+  --container-2xs: 288px;
+  --container-xs: 320px;
+  --container-sm: 384px;
+  --container-md: 448px;
+  --container-lg: 512px;
+  --container-xl: 576px;
+  --container-2xl: 672px;
+  --container-3xl: 768px;
+  --container-4xl: 896px;
+  --container-5xl: 1024px;
+  --container-6xl: 1152px;
+  --container-7xl: 1280px;
+}
+/* Deliberate application-level alternative, never a route switch. Keep the
+ * previous root-relative geometry available to consumers that need it. */
+:root[data-dashboard-scale="root-relative"] {
+  --spacing: 0.25rem;
+  --container-3xs: 16rem;
+  --container-2xs: 18rem;
+  --container-xs: 20rem;
+  --container-sm: 24rem;
+  --container-md: 28rem;
+  --container-lg: 32rem;
+  --container-xl: 36rem;
+  --container-2xl: 42rem;
+  --container-3xl: 48rem;
+  --container-4xl: 56rem;
+  --container-5xl: 64rem;
+  --container-6xl: 72rem;
+  --container-7xl: 80rem;
+}
+:root[data-dashboard-scale="root-relative"],
+:root[data-dashboard-scale="root-relative"] [data-dashboard-typography="compact"] {
+  --dash-control-size: 0.75rem;
+  --dash-header-action-size: 0.8rem;
+  --dash-menu-size: var(--text-sm);
+}
+
+/* Optional warm-yellow action/attention palette, shared by configuration views.
+ * Keep the semantic roles together so controls, tags and tinted notices agree. */
+[data-dashboard-accent="yellow"] {
+  --dash-accent-color: var(--color-amber-300);
+  --dash-accent-hover: var(--color-amber-200);
+  --dash-accent-foreground: var(--color-zinc-950);
+  /* Tailwind inline utilities consume contract slots directly; CSS consumers
+   * use the aliases below. Both must resolve at this accent boundary. */
+  --hl-primary: var(--dash-accent-color);
+  --hl-primary-hover: var(--dash-accent-hover);
+  --hl-primary-active: var(--dash-accent-color);
+  --hl-primary-muted: color-mix(in oklab, var(--dash-accent-color) 12%, transparent);
+  --hl-primary-fg: var(--dash-accent-foreground);
+  --hl-warning: var(--dash-accent-color);
+  --hl-warning-muted: color-mix(in oklab, var(--dash-accent-color) 12%, transparent);
+  --hl-warning-fg: var(--dash-accent-foreground);
+  --hl-ring: var(--dash-accent-color);
+  --color-primary: var(--dash-accent-color);
+  --color-primary-hover: var(--dash-accent-hover);
+  --color-primary-active: var(--dash-accent-color);
+  --color-primary-muted: color-mix(in oklab, var(--dash-accent-color) 12%, transparent);
+  --color-primary-fg: var(--dash-accent-foreground);
+  --color-primary-foreground: var(--dash-accent-foreground);
+  --color-warning: var(--dash-accent-color);
+  --color-warning-muted: color-mix(in oklab, var(--dash-accent-color) 12%, transparent);
+  --color-warning-fg: var(--dash-accent-foreground);
+  --color-ring: var(--dash-accent-color);
+  --theme-color-accent: var(--dash-accent-color);
+  --theme-color-accent-foreground: var(--dash-accent-foreground);
+  --theme-color-warning: var(--dash-accent-color);
+  --theme-color-ring: var(--dash-accent-color);
+  --theme-color-ring-soft: var(--dash-accent-color);
+}
+:root[data-mode="light"] [data-dashboard-accent="yellow"],
+[data-dashboard-accent="yellow"][data-mode="light"] {
+  --dash-accent-color: var(--color-amber-800);
+  --dash-accent-hover: var(--color-amber-900);
+  --dash-accent-foreground: var(--color-white);
+}
+
+/* Compact navigation and record lists share the Operations typography contract. */
+:root, [data-theme] {
+  --dash-record-status-column: calc(var(--spacing) * 38);
+  --dash-record-trailing-column: calc(var(--spacing) * 16);
+  --dash-rank-color: var(--color-amber-400);
+  --dash-rank-bg: color-mix(in oklab, var(--dash-rank-color) 22%, var(--color-bg));
+}
+:root[data-mode="light"], [data-theme][data-mode="light"] {
+  --dash-rank-color: var(--color-amber-700);
+}
+@layer utilities {
+  .dash-view-tabs > [role="tab"] {
+    flex: none;
+    height: auto;
+    padding: calc(var(--spacing) * 0.5) calc(var(--spacing) * 2);
+    border-radius: var(--radius-control);
+    font-size: var(--dash-filter-caption-size);
+    font-weight: var(--font-weight-medium);
+    line-height: var(--dash-filter-chip-leading);
+    letter-spacing: var(--tracking-wider);
+    text-transform: uppercase;
+    box-shadow: none;
+  }
+  .dash-view-tabs > [role="tab"]:not([data-active]) {
+    border-color: var(--color-border);
+    background: color-mix(in oklab, var(--color-panel-2) 50%, transparent);
+    color: var(--color-fg-muted);
+  }
+  .dash-view-tabs > [role="tab"]::after { display: none; }
+  .dash-record-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--dash-record-status-column) var(--dash-record-trailing-column);
+    align-items: center;
+    column-gap: calc(var(--spacing) * 3);
+    width: 100%;
+    min-width: 0;
+    padding: calc(var(--spacing) * 1.5) calc(var(--spacing) * 4);
+    text-align: left;
+  }
+  .dash-record-list-row { position: relative; border-bottom: 1px solid var(--color-border-soft); }
+  .dash-record-list-row:hover { background: var(--color-panel-hover-soft); }
+  .dash-record-list-header { min-height: calc(var(--spacing) * 7); border-bottom: 1px solid var(--color-border-soft); }
+  .dash-record-section-header {
+    display: flex;
+    min-height: calc(var(--spacing) * 8);
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--spacing) calc(var(--spacing) * 3);
+    border-bottom: 1px solid var(--color-border-soft);
+    background: color-mix(in oklab, var(--color-panel-2) 30%, transparent);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+  }
+  .dash-record-tag { overflow-wrap: anywhere; }
+  [data-slot="record-metadata"] > .dash-record-tag { flex: none; max-width: calc(var(--spacing) * 40); overflow: hidden; text-overflow: ellipsis; }
+  .dash-record-rank { flex: none; white-space: nowrap; color: var(--dash-rank-color); background: var(--dash-rank-bg); }
+  .dash-detail-dialog { font-size: var(--dash-body-size); line-height: var(--dash-body-leading); }
+  .dash-detail-dialog [data-slot="dialog-title"] { font-size: var(--dash-detail-title-size); line-height: 1.5; color: var(--color-fg); }
+  .dash-detail-dialog [data-slot="dialog-description"] { font-size: var(--dash-body-size); line-height: 1.5; }
+  .dash-detail-dialog h3, .dash-detail-dialog label:not(.sr-only) { font-size: var(--dash-record-metadata-size); font-weight: var(--font-weight-medium); line-height: 1.5; letter-spacing: var(--tracking-wider); text-transform: uppercase; color: var(--color-fg-muted); }
+  .dash-detail-dialog [data-slot="input"], .dash-detail-dialog [data-slot="select-trigger"] { height: calc(var(--spacing) * 8); border-radius: var(--radius-control); font-size: var(--dash-control-size); }
+  .dash-detail-dialog textarea { border-radius: var(--radius-control); font-size: var(--dash-control-size); line-height: 1.5; }
+}
+@media (max-width: 639px) {
+  .dash-record-grid { grid-template-columns: minmax(0, 1fr) var(--dash-record-trailing-column); row-gap: var(--spacing); }
+  .dash-record-grid > [data-slot="record-summary"] { grid-column: 1 / -1; }
+  .dash-record-grid [data-slot="record-metadata"] > :first-child { max-width: 60%; overflow: hidden; text-overflow: ellipsis; }
+  .dash-record-list-header { display: none; }
+}
+
+/* View selection uses the same light labels and tinted surfaces as status roles. */
+.dash-view-tabs > [data-dashboard-tone="backlog"] { --dash-view-color: var(--theme-color-status-backlog); --dash-view-label: var(--theme-color-status-backlog-label); }
+.dash-view-tabs > [data-dashboard-tone="todo"] { --dash-view-color: var(--theme-color-status-todo); --dash-view-label: var(--theme-color-status-todo-label); }
+.dash-view-tabs > [data-dashboard-tone="queued"] { --dash-view-color: var(--theme-color-status-queued); --dash-view-label: var(--theme-color-status-queued-label); }
+.dash-view-tabs > [data-dashboard-tone="doing"] { --dash-view-color: var(--theme-color-status-doing); --dash-view-label: var(--theme-color-status-doing-label); }
+.dash-view-tabs > [data-dashboard-tone="review"] { --dash-view-color: var(--theme-color-status-review); --dash-view-label: var(--theme-color-status-review-label); }
+.dash-view-tabs > [data-dashboard-tone="done"] { --dash-view-color: var(--theme-color-status-done); --dash-view-label: var(--theme-color-status-done-label); }
+.dash-view-tabs > [data-dashboard-tone="blocked"] { --dash-view-color: var(--theme-color-status-blocked); --dash-view-label: var(--theme-color-status-blocked-label); }
+.dash-view-tabs > [data-dashboard-tone="paused"] { --dash-view-color: var(--theme-color-status-paused); --dash-view-label: var(--theme-color-status-paused-label); }
+.dash-view-tabs > [data-dashboard-tone="archived"] { --dash-view-color: var(--theme-color-status-archived); --dash-view-label: var(--theme-color-status-archived-label); }
+.dash-view-tabs > [data-dashboard-tone="inbox"] { --dash-view-color: var(--theme-color-status-inbox); --dash-view-label: var(--theme-color-status-inbox-label); }
+.dash-view-tabs > [data-dashboard-tone="routed"] { --dash-view-color: var(--theme-color-status-routed); --dash-view-label: var(--theme-color-status-routed-label); }
+.dash-view-tabs > [data-dashboard-tone="indexed"] { --dash-view-color: var(--theme-color-status-indexed); --dash-view-label: var(--theme-color-status-indexed-label); }
+@layer utilities {
+  .dash-view-tabs > [role="tab"][data-active] {
+    border-color: color-mix(in oklab, var(--dash-view-color) 40%, transparent);
+    background: color-mix(in oklab, var(--dash-view-color) 10%, transparent);
+    color: var(--dash-view-label);
+  }
+}
+
+
+/* A deliberate square surface variant; apply to portal content as well as its
+ * owning surface. No route knowledge is needed by shared controls. */
+[data-dashboard-shape="square"] {
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-control: 0px;
+}
+@layer utilities {
+  .dash-segment-tabs > [data-slot="tabs-trigger"] {
+    flex: none;
+    height: auto;
+    border-radius: 0;
+    border-inline-end: 1px solid var(--color-border);
+    padding: calc(var(--spacing) * 2) calc(var(--spacing) * 4);
+    font-family: var(--font-mono);
+    font-size: var(--dash-record-label-size);
+    line-height: 1.5;
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-fg-muted);
+    box-shadow: none;
+  }
+  .dash-segment-tabs > [data-slot="tabs-trigger"][data-active] {
+    background: var(--color-surface-hover);
+    color: var(--color-primary);
+  }
+  .dash-segment-tabs > [data-slot="tabs-trigger"]::after { display: none; }
+}
+
+/* Square variants include the few legacy utilities with literal radii. */
+[data-dashboard-shape="square"] :is(.dash-record-tag, .dash-filter-chips button) {
+  border-radius: 0;
+}
+/* Categorical chart roles, separate from workflow-state meaning in consumers. */
+@theme {
+  --color-dash-series-1: var(--theme-color-status-done);
+  --color-dash-series-2: var(--dash-series-secondary);
+  --color-dash-series-3: var(--theme-color-status-blocked);
+}
+:root, [data-theme] { --dash-series-secondary: var(--color-violet-400); }
+:root[data-mode="light"], [data-theme][data-mode="light"] {
+  --dash-series-secondary: var(--color-violet-700);
+}
+
+/* Portal roots carry the variant themselves; some base radius utilities are
+ * compiled literals, so tokens alone cannot change those surfaces. */
+[data-dashboard-shape="square"][data-slot="dialog-content"],
+[data-dashboard-shape="square"][data-slot="dropdown-menu-content"],
+[data-dashboard-shape="square"] :is([data-slot="dropdown-menu-item"], [data-slot="button"], [data-slot="input"], [data-slot="textarea"], .dash-selectable-row) {
+  border-radius: 0;
+}

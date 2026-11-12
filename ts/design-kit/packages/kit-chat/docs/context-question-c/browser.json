@@ -1,0 +1,28 @@
+{
+  "themes": [
+    "nanite-default",
+    "dir-a",
+    "dir-b",
+    "dir-d",
+    "dir-e",
+    "dir-f",
+    "sysop-p4-white",
+    "sysop-green-phosphor",
+    "sysop-amber-phosphor",
+    "sysop-hi-contrast"
+  ],
+  "screenshots": 20,
+  "suggestionKeyboard": true,
+  "nativeRadioArrows": true,
+  "nativeCheckboxKeyboard": true,
+  "requiredTextPolicy": true,
+  "realContextKeyboardOpen": true,
+  "contextEscapeFocus": true,
+  "contextTouchOpen": true,
+  "guardedUnknownContext": true,
+  "pendingDuplicateGuard": true,
+  "draftPreserved": true,
+  "freeTextEscaped": true,
+  "externalRequests": [],
+  "pageErrors": []
+}

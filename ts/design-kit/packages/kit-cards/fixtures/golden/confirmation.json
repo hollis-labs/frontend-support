@@ -1,0 +1,12 @@
+{
+  "kind": "confirmation",
+  "version": "1",
+  "data": {
+    "title": "Restart the sample worker?",
+    "description": "In-flight jobs will be requeued.",
+    "actions": [
+      { "id": "restart", "label": "Restart", "primary": true },
+      { "id": "drain", "label": "Drain first" }
+    ]
+  }
+}

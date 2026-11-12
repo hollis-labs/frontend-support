@@ -1,0 +1,22 @@
+/*
+ * REGISTER THIS PACKAGE WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ * You do not normally import this file. `theme.css` imports it for you, and you
+ * cannot use the kit without the theme:
+ *
+ *   @import "@hollis-labs/kit-dashboard/theme.css";
+ *
+ * It exists as its own subpath for the consumer who supplies their own theme values
+ * and therefore never imports ours — they still need the class strings scanned.
+ *
+ * WHAT IT IS FOR. Tailwind v4 emits a utility only for a class string it has SEEN,
+ * and it does not scan `node_modules`. This package's class strings ship inside
+ * `dist`, so without this the components render mostly unstyled and nothing errors —
+ * the defect is in what the build did not produce rather than in what the code says.
+ *
+ * `@source` paths resolve relative to the CSS file that declares them, which is why
+ * this ships as a stylesheet instead of as a glob documented for the consumer to
+ * write: the path is written once, here, against a layout this package controls.
+ */
+
+@source "../../dist/**/*.js";

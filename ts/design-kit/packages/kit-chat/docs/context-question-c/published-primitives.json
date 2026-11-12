@@ -1,0 +1,12 @@
+{
+  "registryVersion": "0.3.0",
+  "exports": [
+    "Button",
+    "Textarea",
+    "Popover",
+    "PopoverContent",
+    "PopoverTrigger",
+    "cn"
+  ],
+  "allPresent": true
+}

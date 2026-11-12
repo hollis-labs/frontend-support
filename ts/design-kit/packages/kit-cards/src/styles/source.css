@@ -1,0 +1,16 @@
+/*
+ * REGISTER THIS PACKAGE WITH A CONSUMING APP'S TAILWIND BUILD. Two lines:
+ *
+ *   @import "@hollis-labs/design-components/source.css";
+ *   @import "@hollis-labs/kit-cards/source.css";        <-- this file
+ *
+ * (after `@import "tailwindcss"` and the design-tokens stylesheet, as in
+ * docs/adopter-path.md). Every consumer imports this file, including kit-chat's
+ * consumers: kit-chat re-exports these cards, so their class strings live in THIS
+ * package's `dist`, not in kit-chat's.
+ *
+ * WITHOUT IT THE CARDS RENDER MOSTLY UNSTYLED AND NOTHING ERRORS. Tailwind v4 emits a
+ * utility only for a class string it has seen and does not scan `node_modules`.
+ */
+
+@source "../../dist/**/*.js";

@@ -1,0 +1,107 @@
+{
+  "contract_version": 1,
+  "app": { "id": "tachyon", "label": "Tachyon" },
+  "revision": "tachyon-example-1",
+  "settings": [
+    {
+      "id": "plugin.observe-ops",
+      "label": "Observation connections",
+      "section": "settings",
+      "scope": { "kind": "plugin", "id": "observe-ops" },
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "nanite_url": {
+            "type": "string",
+            "title": "Nanite API URL",
+            "minLength": 1,
+            "default": "http://127.0.0.1:8090"
+          },
+          "torque_url": {
+            "type": "string",
+            "title": "Torque API URL",
+            "minLength": 1,
+            "default": "http://127.0.0.1:8990"
+          },
+          "tether_url": {
+            "type": "string",
+            "title": "Tether API URL",
+            "minLength": 1,
+            "default": "http://127.0.0.1:8947"
+          }
+        }
+      },
+      "fields": {
+        "nanite_url": {
+          "editable": true, "secret": false,
+          "restart_required": true, "apply_target": "observe-ops"
+        },
+        "torque_url": {
+          "editable": true, "secret": false,
+          "restart_required": true, "apply_target": "observe-ops"
+        },
+        "tether_url": {
+          "editable": true, "secret": false,
+          "restart_required": true, "apply_target": "observe-ops"
+        }
+      },
+      "resolution": {
+        "precedence": ["override", "default"],
+        "write_layer": "override"
+      },
+      "capabilities": {
+        "can_read": true, "can_validate": true,
+        "can_update": true, "can_reset": true
+      },
+      "endpoints": {
+        "read": { "method": "GET", "path": "/admin/settings/plugin.observe-ops" },
+        "validate": { "method": "POST", "path": "/admin/settings/plugin.observe-ops/validate" },
+        "update": { "method": "POST", "path": "/admin/settings/plugin.observe-ops/update" },
+        "reset": { "method": "POST", "path": "/admin/settings/plugin.observe-ops/reset" }
+      }
+    }
+  ],
+  "health": [
+    {
+      "id": "plugins", "label": "Plugin health", "section": "status",
+      "endpoint": { "method": "GET", "path": "/admin/health/plugins" },
+      "poll_interval_ms": 15000, "stale_after_ms": 45000
+    }
+  ],
+  "stats": [
+    {
+      "id": "loaded_plugins", "label": "Loaded plugins", "section": "status",
+      "unit": "count", "kind": "gauge",
+      "endpoint": { "method": "GET", "path": "/admin/stats/loaded_plugins" },
+      "poll_interval_ms": 15000, "stale_after_ms": 45000
+    }
+  ],
+  "series": [],
+  "diagnostics": [
+    {
+      "id": "plugin_state", "label": "Plugin state", "section": "diagnostics",
+      "endpoint": { "method": "GET", "path": "/admin/diagnostics/plugin_state" },
+      "poll_interval_ms": 15000, "stale_after_ms": 45000,
+      "schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object", "additionalProperties": false,
+        "required": ["plugins"],
+        "properties": {
+          "plugins": {
+            "type": "array", "maxItems": 100,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["id", "state"],
+              "properties": {
+                "id": { "type": "string", "maxLength": 128 },
+                "state": { "type": "string", "enum": ["loaded", "unloaded", "unknown"] }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

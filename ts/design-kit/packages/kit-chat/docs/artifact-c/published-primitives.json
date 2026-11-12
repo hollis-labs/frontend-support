@@ -1,0 +1,12 @@
+{
+  "registryVersion": "0.3.0",
+  "exports": [
+    "Button",
+    "Tooltip",
+    "TooltipContent",
+    "TooltipProvider",
+    "TooltipTrigger",
+    "cn"
+  ],
+  "allPresent": true
+}

@@ -1,0 +1,103 @@
+/*
+ * REGISTER `@hollis-labs/kit-chat/markdown` WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ * You need this ONLY if you import `@hollis-labs/kit-chat/markdown`. A consumer using
+ * `ChatStream` with its own rendering never imports this file and never installs
+ * `streamdown` — that separation is the entire reason the markdown renderer is an
+ * optional peer behind a subpath, and it is verified by a build that imports only
+ * `ChatStream` and requires nothing streamdown-shaped.
+ *
+ *   @import "@hollis-labs/kit-chat/markdown.css";
+ *   @import "streamdown/styles.css";              <- streamdown's own keyframes
+ *
+ * WHAT THE LINE BELOW IS FOR. Tailwind emits a utility only for a class string it has
+ * seen and does not scan `node_modules`; streamdown's class strings live in its `dist`.
+ * Without this, markdown renders substantially unstyled and nothing errors — the same
+ * silent failure as our own packages, one dependency deeper.
+ *
+ * WHY WE SHIP IT RATHER THAN QUOTE STREAMDOWN'S INSTRUCTION. Its README asks the
+ * consumer to write `@source "../node_modules/streamdown/dist/*.js"` and to *"adjust
+ * the number of `../` segments based on where your CSS file lives"*. That is a glob
+ * whose correctness depends on the consumer's directory depth, and a wrong one fails
+ * exactly as silently as a missing one. `@source` resolves relative to the file that
+ * declares it, so declaring it HERE fixes the path against a layout this package
+ * controls instead of one it cannot see.
+ *
+ * THE ASSUMPTION, STATED. The path below assumes `streamdown` sits in the same
+ * `node_modules` root as `@hollis-labs`, which is what npm, yarn and pnpm all produce
+ * for a package a consumer installed directly. If your layout differs — a nested
+ * install, a vendored copy — this resolves to nothing, silently, and you should write
+ * streamdown's own `@source` line in your stylesheet instead. Verified against a real
+ * npm install; not verified against every layout, and it cannot be.
+ */
+
+@source "../../../../streamdown/dist/*.js";
+
+/* Renderer-owned styles: Streamdown's internal class merge does not know our
+ * typography tokens. Keep type and color together here, beyond that merge.
+ * Em sizes follow the host's body scale, including dashboard reference sizing. */
+.chat-markdown {
+  font-family: var(--font-sans);
+  font-size: var(--dash-body-size, var(--text-control));
+  line-height: 1.65;
+  color: var(--color-fg-muted);
+  overflow-wrap: anywhere;
+}
+.chat-markdown :is(h1, h2, h3, h4, h5, h6) {
+  color: var(--color-info);
+  font-weight: var(--font-weight-semibold);
+  line-height: 1.4;
+  margin-block: 1.2em .45em;
+}
+.chat-markdown h1 { font-size: 1.25em; }
+.chat-markdown h2 { font-size: 1.15em; }
+.chat-markdown :is(h3, h4, h5, h6) { font-size: 1.05em; }
+.chat-markdown :is(p, ul, ol) { margin-block: .7em; }
+.chat-markdown :is(ul, ol) { padding-left: 1.5em; }
+.chat-markdown ul { list-style: disc; }
+.chat-markdown ol { list-style: decimal; }
+.chat-markdown li { margin-block: .2em; }
+.chat-markdown li::marker { color: var(--color-info); }
+.chat-markdown strong { color: var(--color-fg-secondary); font-weight: var(--font-weight-semibold); }
+.chat-markdown em { color: var(--color-fg-secondary); }
+.chat-markdown a { color: var(--color-info); text-decoration: underline; text-underline-offset: .2em; }
+.chat-markdown blockquote {
+  margin-block: 1em;
+  border-left: 2px solid var(--color-info);
+  background: var(--color-surface);
+  padding: .1em 1em;
+  color: var(--color-fg-muted);
+}
+.chat-markdown code {
+  font-family: var(--font-mono);
+  font-size: .92em;
+  line-height: inherit;
+  color: var(--color-warning);
+}
+.chat-markdown [data-streamdown="inline-code"] {
+  padding: .1em .3em;
+  border-radius: 0;
+  background: var(--color-surface);
+}
+.chat-markdown [data-streamdown="code-block"] {
+  margin-block: 1em;
+  border: 1px solid var(--color-border);
+  border-radius: 0;
+  background: var(--color-surface);
+  color: var(--color-fg-secondary);
+  font-size: 1em;
+}
+.chat-markdown [data-streamdown="code-block-header"] { font-size: .85em; color: var(--color-fg-muted); }
+.chat-markdown pre { margin: 0; padding: .85em 1em; overflow-x: auto; font-size: 1em; line-height: 1.6; }
+.chat-markdown pre code { color: var(--color-fg-secondary); }
+.chat-markdown table { font-size: 1em; }
+.chat-markdown th { background: var(--color-surface); color: var(--color-info); }
+.chat-markdown td { color: var(--color-fg-muted); }
+.chat-markdown :is(th, td) { padding: .4em .7em; border: 1px solid var(--color-border); }
+.chat-markdown hr { margin-block: 1.3em; border-color: var(--color-border); }
+.chat-markdown > :first-child { margin-top: 0; }
+.chat-markdown > :last-child { margin-bottom: 0; }
+.chat-markdown [data-streamdown="code-block-body"] { font-size: inherit; padding: 0; border: 0; border-radius: 0; background: transparent; }
+.chat-markdown [data-streamdown="code-block"] { padding: 0; gap: 0; }
+.chat-markdown [data-streamdown="code-block-header"] { padding: .5em 1em; border-bottom: 1px solid var(--color-border); }
+.chat-markdown :is(th, td) { font-size: inherit; }

@@ -1,0 +1,32 @@
+{
+  "name": "design-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Hollis Labs design-kit — token contract, idiom-free base components, app runtime, and kits.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/design-kit"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "test:run": "npm run test:run --workspaces --if-present",
+    "demo": "npm run demo -w @hollis-labs/kit-dashboard",
+    "demo:build": "npm run demo:build -w @hollis-labs/kit-dashboard"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.2"
+  }
+}

@@ -1,0 +1,13 @@
+/*
+ * The consumer stylesheet, exactly as docs/adopter-path.md prescribes it. The two
+ * `source.css` imports are the point: this demo is the fresh-production-build check
+ * that kit-cards' classes are generated from `dist`, not from a source glob that
+ * would hide a missing import.
+ */
+@import "tailwindcss";
+@import "@hollis-labs/design-tokens/design-tokens.css";
+@import "@hollis-labs/design-components/source.css";
+@import "@hollis-labs/kit-cards/source.css";
+
+/* Paint the canvas so a full-page screenshot is not a card on white. */
+html, body { background: var(--color-bg); }

@@ -1,0 +1,50 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    /*
+     * THE SIBLING `paths` FROM tsconfig.json ARE DELIBERATELY DROPPED HERE, AND
+     * DROPPING THEM IS WHAT MAKES THE PUBLISHED TYPES WORK.
+     *
+     * `vite-plugin-dts` emits declarations against THIS config. A `paths` mapping is
+     * resolved before emit and the RESOLVED path is written into the output, so with
+     * the sibling mappings inherited, three shipped declarations read
+     *
+     *     import { ColumnDef, SortState } from '../../../design-components/src/index.ts'
+     *
+     * — a path that escapes the published package, names a directory a consumer does
+     * not have, points at `src/` which `design-components` does not publish, and
+     * carries a `.ts` extension a consumer's `tsc` rejects. `DataTable`,
+     * `DataTableRow` and `OperationsTablePage` were all affected. The emitted JS was
+     * always correct (`from "@hollis-labs/design-components"`), so this broke types
+     * only — nothing failed locally, and `tsc` said so 65 times in TS6059 while
+     * `vite-plugin-dts` exited 0 anyway. Found and fixed by CW-20260910-0131 at
+     * publish, before first release.
+     *
+     * Resolving through `node_modules` instead makes the emitted specifier the
+     * package name, which is the only form that survives being published.
+     *
+     * WHY NOT FIX IT IN tsconfig.json: those mappings are load-bearing there and the
+     * reasoning above them is right. `npm ci` does not build `design-components`
+     * (it uses `prepack`, not `prepare`, on purpose), so typechecking a fresh clone
+     * has to read sibling SOURCE or it reports TS2307. Typecheck wants source; emit
+     * wants the package name. Two configs, two answers — and the split costs one
+     * ordering requirement, stated next.
+     *
+     * WHAT THIS COSTS: building this package now requires its siblings' `dist` to
+     * exist, so `npm run build -w @hollis-labs/kit-dashboard` on a never-built tree
+     * fails with TS2307 rather than silently emitting broken declarations. The root
+     * `npm run build` satisfies it — npm walks the workspaces in directory order and
+     * every `design-*` package sorts before every `kit-*` one. That is an
+     * alphabetical accident rather than a declared dependency order, and it is the
+     * same accident `npm ci` already rests on; a package named before
+     * `design-components` that depended on it would break both. Failing loudly is
+     * the trade, and it is the right way round.
+     */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/__tests__"]
+}

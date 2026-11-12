@@ -1,0 +1,23 @@
+/* Explicit animation opt-in; names are scoped to kit-workflow. */
+@keyframes hl-workflow-travel {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+@keyframes hl-workflow-dash {
+  from { stroke-dashoffset: calc(var(--spacing) * 2); }
+  to { stroke-dashoffset: 0; }
+}
+.kit-workflow .wf-edge-traveller {
+  display: inline;
+  animation: hl-workflow-travel calc(var(--default-transition-duration) * 12) linear infinite;
+}
+.kit-workflow .react-flow__edge.animated path,
+.kit-workflow .react-flow__connection .animated {
+  animation: hl-workflow-dash calc(var(--default-transition-duration) * 4) linear infinite;
+}
+.kit-workflow .react-flow__edge.animated path.react-flow__edge-interaction { animation: none; }
+@media (prefers-reduced-motion: reduce) {
+  .kit-workflow .wf-edge-traveller { display: none; animation: none; }
+  .kit-workflow .react-flow__edge.animated path,
+  .kit-workflow .react-flow__connection .animated { animation: none; }
+}

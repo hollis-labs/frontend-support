@@ -1,0 +1,11 @@
+@import "../../kit-dashboard/src/styles/theme.css";
+@import "../src/styles/source.css";
+@import "../../kit-settings/src/styles/source.css";
+@import "../../kit-observe/src/styles/source.css";
+@source "../src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx,html}";
+@source "../../design-components/dist/**/*.js";
+@source "../../kit-dashboard/dist/**/*.js";
+html, body, #root { height: 100%; margin: 0; overflow: hidden; }
+/* The outer fixture toolbar consumes space; one existing shell fills the rest. */
+#root > div > div > div { height: 100%; }

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    /*
+     * The sibling `paths` above are dropped for declaration emit, so the emitted
+     * specifier is the package name rather than a resolved relative path that escapes
+     * the published tarball. See the note in tsconfig.json — this is the fix for the
+     * TS6059 class of defect, applied here from the first commit rather than found at
+     * publish. Building this package therefore requires its siblings' `dist` to exist;
+     * the root `npm run build` satisfies that because `design-*` sorts before `kit-*`.
+     */
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/*.test.tsx", "src/__tests__"]
+}

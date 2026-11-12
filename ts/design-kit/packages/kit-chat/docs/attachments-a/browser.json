@@ -1,0 +1,29 @@
+{
+  "border": {
+    "classes": "group relative flex w-full items-center gap-3 rounded-panel border border-border p-3 hover:bg-accent/50",
+    "color": "rgb(37, 40, 44)"
+  },
+  "themes": [
+    "nanite-default",
+    "dir-a",
+    "dir-b",
+    "dir-d",
+    "dir-e",
+    "dir-f",
+    "sysop-p4-white",
+    "sysop-green-phosphor",
+    "sysop-amber-phosphor",
+    "sysop-hi-contrast"
+  ],
+  "screenshots": 20,
+  "keyboardOpenEscapeFocus": true,
+  "clickOpen": true,
+  "tapOpen": true,
+  "realPickerImage": true,
+  "hostRemovalRevokes": true,
+  "localFileDrop": true,
+  "disabledIntake": true,
+  "disabledFileDropCancelled": true,
+  "chatInputTriggerPreserved": true,
+  "pageErrors": []
+}

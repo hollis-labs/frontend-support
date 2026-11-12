@@ -1,0 +1,176 @@
+{
+  "screenshots": 21,
+  "results": [
+    {
+      "theme": "nanite-default",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(87, 93, 100) calc(50% - min(45%, 68px)), rgb(24, 25, 27) 50%, rgb(87, 93, 100) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "nanite-default",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(145, 151, 158) calc(50% - min(45%, 68px)), rgb(232, 234, 237) 50%, rgb(145, 151, 158) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-a",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(96, 96, 102) calc(50% - min(45%, 68px)), rgb(24, 24, 27) 50%, rgb(96, 96, 102) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-a",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(150, 150, 156) calc(50% - min(45%, 68px)), rgb(244, 244, 245) 50%, rgb(150, 150, 156) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-b",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(97, 90, 80) calc(50% - min(45%, 68px)), rgb(31, 26, 20) 50%, rgb(97, 90, 80) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-b",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(155, 147, 135) calc(50% - min(45%, 68px)), rgb(240, 234, 224) 50%, rgb(155, 147, 135) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-d",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(93, 80, 116) calc(50% - min(45%, 68px)), rgb(26, 14, 46) 50%, rgb(93, 80, 116) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-d",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(156, 143, 192) calc(50% - min(45%, 68px)), rgb(240, 232, 255) 50%, rgb(156, 143, 192) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-e",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(67, 90, 104) calc(50% - min(45%, 68px)), rgb(10, 26, 36) 50%, rgb(67, 90, 104) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-e",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(122, 151, 176) calc(50% - min(45%, 68px)), rgb(200, 224, 240) 50%, rgb(122, 151, 176) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-f",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(85, 85, 85) calc(50% - min(45%, 68px)), rgb(10, 10, 10) 50%, rgb(85, 85, 85) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "dir-f",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(148, 148, 148) calc(50% - min(45%, 68px)), rgb(240, 240, 240) 50%, rgb(148, 148, 148) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(82, 82, 91) calc(50% - min(45%, 68px)), rgb(24, 24, 27) 50%, rgb(82, 82, 91) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-p4-white",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(161, 161, 170) calc(50% - min(45%, 68px)), rgb(244, 244, 245) 50%, rgb(161, 161, 170) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(49, 99, 63) calc(50% - min(45%, 68px)), rgb(18, 59, 34) 50%, rgb(49, 99, 63) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-green-phosphor",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(93, 214, 138) calc(50% - min(45%, 68px)), rgb(0, 255, 102) 50%, rgb(93, 214, 138) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(116, 80, 0) calc(50% - min(45%, 68px)), rgb(73, 48, 0) 50%, rgb(116, 80, 0) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-amber-phosphor",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(232, 172, 72) calc(50% - min(45%, 68px)), rgb(255, 176, 0) 50%, rgb(232, 172, 72) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "light",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(34, 34, 34) calc(50% - min(45%, 68px)), rgb(0, 0, 0) 50%, rgb(34, 34, 34) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    },
+    {
+      "theme": "sysop-hi-contrast",
+      "mode": "dark",
+      "animation": "hl-chat-shimmer",
+      "gradient": "linear-gradient(90deg, rgb(235, 235, 235) calc(50% - min(45%, 68px)), rgb(255, 255, 255) 50%, rgb(235, 235, 235) calc(50% + min(45%, 68px)))",
+      "color": "rgba(0, 0, 0, 0)",
+      "width": 283.875
+    }
+  ],
+  "reduced": {
+    "animation": "none",
+    "color": "rgb(235, 235, 235)",
+    "gradient": "none"
+  },
+  "fallback": {
+    "animation": "none",
+    "color": "rgb(235, 235, 235)",
+    "gradient": "none"
+  },
+  "browserErrors": []
+}

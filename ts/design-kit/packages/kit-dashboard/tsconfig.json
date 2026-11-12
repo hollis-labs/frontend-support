@@ -1,0 +1,36 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": ["vite/client", "node"],
+    "baseUrl": ".",
+    /*
+     * SIBLINGS RESOLVE TO SOURCE, NOT TO dist/.
+     *
+     * A workspace package's `types` point at its built output, and after `npm ci`
+     * that output may not exist. design-components uses `prepack` rather than
+     * `prepare` — deliberately, because `prepare` runs during install and npm does
+     * not order workspace installs by dependency, which is what turned CI red on
+     * the design-components PR. So `npm ci` no longer builds it, and the workflow
+     * runs typecheck BEFORE build.
+     *
+     * Without these, `tsc` reports `TS2307: Cannot find module
+     * @hollis-labs/design-components` on any tree that has never built — every CI
+     * run and every fresh clone. Caught on a clean clone before pushing, which is
+     * the check the earlier failure taught us to run.
+     *
+     * Typechecking against source is also the better answer on its own merits:
+     * dist is generated from it, so they agree, and a stale dist would hide a real
+     * error rather than surface one.
+     */
+    "paths": {
+      "@/*": ["./src/*"],
+      "@hollis-labs/design-components": ["../design-components/src/index.ts"],
+      "@hollis-labs/design-app-runtime": ["../design-app-runtime/src/index.ts"],
+      "@hollis-labs/kit-chat": ["../kit-chat/src/index.ts"],
+      "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"]
+    }
+  },
+  "//include": "demo/ IS TYPECHECKED. It was not, and a build is not a substitute: the demo built green while rendering <RowActionMenu>, a component that no longer exists, because rollup does not resolve JSX identifiers. It would have crashed on open. The demo is also this repo's only consumer of all three packages at once, which makes it the one place the split is exercised end to end.",
+  "include": ["src", "demo", "vite.config.ts", "vitest.config.ts"]
+}

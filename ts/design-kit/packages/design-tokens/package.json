@@ -1,0 +1,67 @@
+{
+  "name": "@hollis-labs/design-tokens",
+  "version": "0.5.0",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "description": "The token contract — names and types — plus default values.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/design-kit/packages/design-tokens"
+  },
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "tailwind",
+    "theme",
+    "shadcn"
+  ],
+  "type": "module",
+  "sideEffects": [
+    "*.css"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./design-tokens.css": "./css/design-tokens.css",
+    "./tokens.css": "./css/tokens.css",
+    "./themes.css": "./css/themes.css",
+    "./css/*": "./css/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "css",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "peerDependencies": {
+    "tailwindcss": "^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "generate": "npm run build && node scripts/generate.mjs",
+    "generate:check": "npm run build && node scripts/generate.mjs --check",
+    "test": "npm run build && node --test test/*.test.js",
+    "test:run": "npm run build && node --test test/*.test.js"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/design-tokens#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
+  }
+}

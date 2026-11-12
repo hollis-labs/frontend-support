@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": [
+      "vite/client",
+      "node"
+    ],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@hollis-labs/design-components": [
+        "../design-components/src/index.ts"
+      ],
+      "@hollis-labs/design-tokens": [
+        "../design-tokens/src/index.ts"
+      ],
+      "@hollis-labs/kit-dashboard/charts": [
+        "../kit-dashboard/src/charts.ts"
+      ]
+    }
+  },
+  "include": [
+    "src",
+    "demo",
+    "vite.config.ts",
+    "vitest.config.ts"
+  ]
+}

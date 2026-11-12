@@ -1,0 +1,28 @@
+/**
+ * Vendored from AI Elements (Vercel, Apache-2.0).
+ * Upstream: packages/elements/src/shimmer.tsx
+ * Source:   https://github.com/vercel/ai-elements/blob/6a9d5b1822ffb10bba4bd97175f01edd7d8651cd/packages/elements/src/shimmer.tsx
+ * Version:  ai-elements 1.9.0 @ 6a9d5b1 (2026-08-21); vendored 2026-10-02
+ * Divergences: motion/react sweep replaced by opt-in CSS; token colors/spacing; reduced motion.
+ */
+/* Opt-in: @import "@hollis-labs/kit-chat/keyframes.css".
+ * Component imports install no global keyframes. Without this file Shimmer is
+ * ordinary readable muted text. Colors and highlight scale come from tokens.
+ */
+@keyframes hl-chat-shimmer {
+  from { background-position: 100% center; }
+  to { background-position: 0% center; }
+}
+
+.hl-chat-shimmer {
+  --hl-chat-shimmer-width: min(45%, calc(var(--spacing) * var(--hl-chat-shimmer-spread, 2)));
+  background-image: linear-gradient(90deg, var(--color-fg-muted) calc(50% - var(--hl-chat-shimmer-width)), var(--color-fg) 50%, var(--color-fg-muted) calc(50% + var(--hl-chat-shimmer-width)));
+  background-size: 250% 100%;
+  background-clip: text;
+  color: transparent;
+  animation: hl-chat-shimmer var(--hl-chat-shimmer-duration, 2s) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hl-chat-shimmer { animation: none; background-image: none; color: var(--color-fg-muted); }
+}

@@ -1,0 +1,95 @@
+/* Explicit opt-in. React Flow supplies positioning and interaction structure;
+   this scoped bridge replaces its visual defaults with the token contract. */
+@import "@xyflow/react/dist/base.css";
+@import "./source.css";
+
+.kit-workflow.react-flow {
+  --wf-hairline: calc(var(--spacing) / 4);
+  --xy-background-color: var(--color-bg);
+  --xy-background-pattern-color: var(--color-border);
+  --xy-edge-stroke: var(--color-fg-muted);
+  --xy-edge-stroke-selected: var(--color-ring);
+  --xy-edge-stroke-width: var(--wf-hairline);
+  --xy-connectionline-stroke: var(--color-ring);
+  --xy-connectionline-stroke-width: var(--wf-hairline);
+  --xy-node-color: var(--color-fg);
+  --xy-node-background-color: var(--color-bg-elevated);
+  --xy-node-border: var(--wf-hairline) solid var(--color-border);
+  --xy-node-border-selected: var(--wf-hairline) solid var(--color-ring);
+  --xy-handle-background-color: var(--color-primary);
+  --xy-handle-border-color: var(--color-bg-elevated);
+  --xy-selection-background-color: var(--color-selection);
+  --xy-selection-border: var(--wf-hairline) dotted var(--color-ring);
+  --xy-attribution-background-color: var(--color-bg-elevated);
+  --xy-minimap-background-color: var(--color-bg-elevated);
+  --xy-minimap-mask-background-color: var(--color-selection);
+  --xy-minimap-mask-stroke-color: var(--color-border);
+  --xy-minimap-mask-stroke-width: var(--wf-hairline);
+  --xy-minimap-node-background-color: var(--color-surface-active);
+  --xy-minimap-node-stroke-color: var(--color-border);
+  --xy-minimap-node-stroke-width: var(--wf-hairline);
+  --xy-resize-background-color: var(--color-primary);
+  color: var(--color-fg);
+  font: var(--text-control) var(--font-sans);
+}
+
+.kit-workflow .react-flow__handle {
+  min-width: calc(var(--spacing) * 2);
+  min-height: calc(var(--spacing) * 2);
+  width: calc(var(--spacing) * 2);
+  height: calc(var(--spacing) * 2);
+  border: var(--wf-hairline) solid var(--color-bg-elevated);
+  border-radius: var(--radius-control);
+}
+.kit-workflow .react-flow__node:focus-visible .node-container,
+.kit-workflow .react-flow__node.selected .node-container {
+  outline: var(--wf-hairline) solid var(--color-ring);
+}
+.kit-workflow .react-flow__node-input,
+.kit-workflow .react-flow__node-default,
+.kit-workflow .react-flow__node-output,
+.kit-workflow .react-flow__node-group {
+  padding: calc(var(--spacing) * 3);
+  border-radius: var(--radius-panel);
+  background: var(--color-bg-elevated);
+}
+.kit-workflow .react-flow__edge-text { fill: var(--color-fg); font-size: var(--text-label); }
+.kit-workflow .react-flow__edge-textbg { fill: var(--color-bg-elevated); }
+.kit-workflow .react-flow__panel { margin: calc(var(--spacing) * 4); }
+.kit-workflow .react-flow__panel.top.center,
+.kit-workflow .react-flow__panel.bottom.center { transform: translateX(calc(var(--spacing) * -4)) translateX(-50%); }
+.kit-workflow .react-flow__panel.left.center,
+.kit-workflow .react-flow__panel.right.center { transform: translateY(calc(var(--spacing) * -4)) translateY(-50%); }
+.kit-workflow .react-flow__attribution { margin: 0; padding: var(--spacing); font-size: var(--text-caption); }
+.kit-workflow .react-flow__attribution a { color: var(--color-fg-muted); }
+.kit-workflow .react-flow__controls-button {
+  width: calc(var(--spacing) * 8);
+  height: calc(var(--spacing) * 8);
+  padding: calc(var(--spacing) * 2);
+  border: none;
+  border-radius: var(--radius-control);
+  color: var(--color-fg);
+  background: var(--color-bg-elevated);
+}
+.kit-workflow .react-flow__controls-button:hover { background: var(--color-surface-hover); }
+.kit-workflow .react-flow__controls-button:disabled { color: var(--color-fg-faint); cursor: not-allowed; }
+.kit-workflow .react-flow__controls-button:focus-visible { outline: var(--wf-hairline) solid var(--color-ring); }
+.kit-workflow .react-flow__controls-button svg { max-width: calc(var(--spacing) * 3); max-height: calc(var(--spacing) * 3); }
+.kit-workflow .react-flow__resize-control.handle {
+  width: calc(var(--spacing) * 2);
+  height: calc(var(--spacing) * 2);
+  border: var(--wf-hairline) solid var(--color-bg-elevated);
+  border-radius: var(--radius-control);
+}
+.kit-workflow .react-flow__resize-control.line { border-width: var(--wf-hairline); }
+.kit-workflow .wf-edge-temporary { stroke: var(--color-ring); stroke-dasharray: var(--spacing) var(--spacing); }
+.kit-workflow .wf-connection path,
+.kit-workflow .wf-connection circle { stroke: var(--color-ring); stroke-width: var(--wf-hairline); }
+.kit-workflow .wf-connection circle { fill: var(--color-bg-elevated); r: var(--spacing); }
+.kit-workflow .wf-connection[data-status="invalid"] path,
+.kit-workflow .wf-connection[data-status="invalid"] circle { stroke: var(--color-danger); }
+.kit-workflow .wf-edge-traveller { display: none; fill: var(--color-primary); r: var(--spacing); }
+/* React Flow base.css installs a global dashdraw animation. Keep it inactive
+   here; the separate keyframes.css is the only workflow motion opt-in. */
+.kit-workflow .react-flow__edge.animated path,
+.kit-workflow .react-flow__connection .animated { animation: none; stroke-dasharray: var(--spacing); }

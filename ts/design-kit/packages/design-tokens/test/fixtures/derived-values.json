@@ -1,0 +1,307 @@
+[
+  {
+    "theme": "nanite-default",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#e8eaed",
+      "syntax-string": "color-mix(in oklab, #e8eaed 75%, #8e9298)",
+      "syntax-number": "color-mix(in oklab, #e8eaed 50%, #8e9298)",
+      "syntax-boolean": "color-mix(in oklab, #e8eaed 25%, #8e9298)",
+      "syntax-null": "#8e9298"
+    }
+  },
+  {
+    "theme": "nanite-default",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#18191b",
+      "syntax-string": "color-mix(in oklab, #18191b 75%, #5c6166)",
+      "syntax-number": "color-mix(in oklab, #18191b 50%, #5c6166)",
+      "syntax-boolean": "color-mix(in oklab, #18191b 25%, #5c6166)",
+      "syntax-null": "#5c6166"
+    }
+  },
+  {
+    "theme": "dir-a",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#f4f4f5",
+      "syntax-string": "color-mix(in oklab, #f4f4f5 75%, #919197)",
+      "syntax-number": "color-mix(in oklab, #f4f4f5 50%, #919197)",
+      "syntax-boolean": "color-mix(in oklab, #f4f4f5 25%, #919197)",
+      "syntax-null": "#919197"
+    }
+  },
+  {
+    "theme": "dir-a",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#18181b",
+      "syntax-string": "color-mix(in oklab, #18181b 75%, #646467)",
+      "syntax-number": "color-mix(in oklab, #18181b 50%, #646467)",
+      "syntax-boolean": "color-mix(in oklab, #18181b 25%, #646467)",
+      "syntax-null": "#646467"
+    }
+  },
+  {
+    "theme": "dir-b",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#f0eae0",
+      "syntax-string": "color-mix(in oklab, #f0eae0 75%, #968f85)",
+      "syntax-number": "color-mix(in oklab, #f0eae0 50%, #968f85)",
+      "syntax-boolean": "color-mix(in oklab, #f0eae0 25%, #968f85)",
+      "syntax-null": "#968f85"
+    }
+  },
+  {
+    "theme": "dir-b",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#1f1a14",
+      "syntax-string": "color-mix(in oklab, #1f1a14 75%, #655e55)",
+      "syntax-number": "color-mix(in oklab, #1f1a14 50%, #655e55)",
+      "syntax-boolean": "color-mix(in oklab, #1f1a14 25%, #655e55)",
+      "syntax-null": "#655e55"
+    }
+  },
+  {
+    "theme": "dir-d",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#f0e8ff",
+      "syntax-string": "color-mix(in oklab, #f0e8ff 75%, #968db7)",
+      "syntax-number": "color-mix(in oklab, #f0e8ff 50%, #968db7)",
+      "syntax-boolean": "color-mix(in oklab, #f0e8ff 25%, #968db7)",
+      "syntax-null": "#968db7"
+    }
+  },
+  {
+    "theme": "dir-d",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#1a0e2e",
+      "syntax-string": "color-mix(in oklab, #1a0e2e 75%, #5f5472)",
+      "syntax-number": "color-mix(in oklab, #1a0e2e 50%, #5f5472)",
+      "syntax-boolean": "color-mix(in oklab, #1a0e2e 25%, #5f5472)",
+      "syntax-null": "#5f5472"
+    }
+  },
+  {
+    "theme": "dir-e",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#c8e0f0",
+      "syntax-string": "color-mix(in oklab, #c8e0f0 75%, #7891a9)",
+      "syntax-number": "color-mix(in oklab, #c8e0f0 50%, #7891a9)",
+      "syntax-boolean": "color-mix(in oklab, #c8e0f0 25%, #7891a9)",
+      "syntax-null": "#7891a9"
+    }
+  },
+  {
+    "theme": "dir-e",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#0a1a24",
+      "syntax-string": "color-mix(in oklab, #0a1a24 75%, #4d5e69)",
+      "syntax-number": "color-mix(in oklab, #0a1a24 50%, #4d5e69)",
+      "syntax-boolean": "color-mix(in oklab, #0a1a24 25%, #4d5e69)",
+      "syntax-null": "#4d5e69"
+    }
+  },
+  {
+    "theme": "dir-f",
+    "mode": "dark",
+    "values": {
+      "info-fg": "#000000",
+      "warning-fg": "#000000",
+      "syntax-key": "#f0f0f0",
+      "syntax-string": "color-mix(in oklab, #f0f0f0 75%, #8e8e8e)",
+      "syntax-number": "color-mix(in oklab, #f0f0f0 50%, #8e8e8e)",
+      "syntax-boolean": "color-mix(in oklab, #f0f0f0 25%, #8e8e8e)",
+      "syntax-null": "#8e8e8e"
+    }
+  },
+  {
+    "theme": "dir-f",
+    "mode": "light",
+    "values": {
+      "info-fg": "#ffffff",
+      "warning-fg": "#ffffff",
+      "syntax-key": "#0a0a0a",
+      "syntax-string": "color-mix(in oklab, #0a0a0a 75%, #595959)",
+      "syntax-number": "color-mix(in oklab, #0a0a0a 50%, #595959)",
+      "syntax-boolean": "color-mix(in oklab, #0a0a0a 25%, #595959)",
+      "syntax-null": "#595959"
+    }
+  },
+  {
+    "theme": "sysop-p4-white",
+    "mode": "light",
+    "values": {
+      "syntax-key": "#18181b",
+      "syntax-string": "color-mix(in oklab, #18181b 75%, #52525b)",
+      "syntax-number": "color-mix(in oklab, #18181b 50%, #52525b)",
+      "syntax-boolean": "color-mix(in oklab, #18181b 25%, #52525b)",
+      "syntax-null": "#52525b"
+    }
+  },
+  {
+    "theme": "sysop-p4-white",
+    "mode": "dark",
+    "values": {
+      "surface-active": "rgb(57 57 60)",
+      "primary-hover": "rgb(231 231 234)",
+      "primary-active": "rgb(201 201 203)",
+      "primary-muted": "rgb(228 228 231 / 12%)",
+      "brand-hover": "rgb(231 231 234)",
+      "brand-active": "rgb(201 201 203)",
+      "brand-muted": "rgb(228 228 231 / 12%)",
+      "danger-muted": "color-mix(in srgb, #fb7588 10%, transparent)",
+      "danger-fg": "#000000",
+      "warning-muted": "rgb(245 158 11 / 12%)",
+      "warning-fg": "#000000",
+      "success-muted": "rgb(52 211 153 / 12%)",
+      "success-fg": "#000000",
+      "info-muted": "rgb(96 165 250 / 12%)",
+      "info-fg": "#000000",
+      "syntax-key": "rgb(244 244 245)",
+      "syntax-string": "color-mix(in oklab, rgb(244 244 245) 75%, #83838b)",
+      "syntax-number": "color-mix(in oklab, rgb(244 244 245) 50%, #83838b)",
+      "syntax-boolean": "color-mix(in oklab, rgb(244 244 245) 25%, #83838b)",
+      "syntax-null": "#83838b"
+    }
+  },
+  {
+    "theme": "sysop-green-phosphor",
+    "mode": "light",
+    "values": {
+      "syntax-key": "#123b22",
+      "syntax-string": "color-mix(in oklab, #123b22 75%, #31633f)",
+      "syntax-number": "color-mix(in oklab, #123b22 50%, #31633f)",
+      "syntax-boolean": "color-mix(in oklab, #123b22 25%, #31633f)",
+      "syntax-null": "#31633f"
+    }
+  },
+  {
+    "theme": "sysop-green-phosphor",
+    "mode": "dark",
+    "values": {
+      "surface-active": "rgb(19 67 37)",
+      "primary-hover": "rgb(120 255 180)",
+      "primary-active": "rgb(90 224 150)",
+      "primary-muted": "rgb(102 255 170 / 12%)",
+      "brand-hover": "rgb(120 255 180)",
+      "brand-active": "rgb(90 224 150)",
+      "brand-muted": "rgb(102 255 170 / 12%)",
+      "danger-hover": "rgb(255 193 98)",
+      "danger-muted": "rgb(255 184 77 / 12%)",
+      "danger-fg": "#000000",
+      "warning-muted": "rgb(255 212 102 / 12%)",
+      "warning-fg": "#000000",
+      "success-muted": "rgb(102 255 170 / 12%)",
+      "success-fg": "#000000",
+      "info-muted": "rgb(0 204 85 / 12%)",
+      "info-fg": "#000000",
+      "syntax-key": "rgb(0 255 102)",
+      "syntax-string": "color-mix(in oklab, rgb(0 255 102) 75%, #35955d)",
+      "syntax-number": "color-mix(in oklab, rgb(0 255 102) 50%, #35955d)",
+      "syntax-boolean": "color-mix(in oklab, rgb(0 255 102) 25%, #35955d)",
+      "syntax-null": "#35955d"
+    }
+  },
+  {
+    "theme": "sysop-amber-phosphor",
+    "mode": "light",
+    "values": {
+      "syntax-key": "#493000",
+      "syntax-string": "color-mix(in oklab, #493000 75%, #745000)",
+      "syntax-number": "color-mix(in oklab, #493000 50%, #745000)",
+      "syntax-boolean": "color-mix(in oklab, #493000 25%, #745000)",
+      "syntax-null": "#745000"
+    }
+  },
+  {
+    "theme": "sysop-amber-phosphor",
+    "mode": "dark",
+    "values": {
+      "surface-active": "rgb(69 50 14)",
+      "primary-hover": "rgb(255 214 115)",
+      "primary-active": "rgb(224 183 84)",
+      "primary-muted": "rgb(255 208 96 / 12%)",
+      "brand-hover": "rgb(255 214 115)",
+      "brand-active": "rgb(224 183 84)",
+      "brand-muted": "rgb(255 208 96 / 12%)",
+      "danger-muted": "color-mix(in srgb, #ff7645 10%, transparent)",
+      "danger-fg": "#000000",
+      "warning-muted": "rgb(255 208 96 / 12%)",
+      "warning-fg": "#000000",
+      "success-muted": "rgb(255 208 96 / 12%)",
+      "success-fg": "#000000",
+      "info-muted": "rgb(255 176 0 / 12%)",
+      "info-fg": "#000000",
+      "syntax-key": "rgb(255 176 0)",
+      "syntax-string": "color-mix(in oklab, rgb(255 176 0) 75%, #aa7b1e)",
+      "syntax-number": "color-mix(in oklab, rgb(255 176 0) 50%, #aa7b1e)",
+      "syntax-boolean": "color-mix(in oklab, rgb(255 176 0) 25%, #aa7b1e)",
+      "syntax-null": "#aa7b1e"
+    }
+  },
+  {
+    "theme": "sysop-hi-contrast",
+    "mode": "light",
+    "values": {
+      "syntax-key": "#000000",
+      "syntax-string": "color-mix(in oklab, #000000 75%, #333333)",
+      "syntax-number": "color-mix(in oklab, #000000 50%, #333333)",
+      "syntax-boolean": "color-mix(in oklab, #000000 25%, #333333)",
+      "syntax-null": "#333333"
+    }
+  },
+  {
+    "theme": "sysop-hi-contrast",
+    "mode": "dark",
+    "values": {
+      "surface-active": "rgb(59 59 59)",
+      "primary-hover": "rgb(255 255 31)",
+      "primary-active": "rgb(224 224 0)",
+      "primary-muted": "rgb(255 255 0 / 12%)",
+      "brand-hover": "rgb(255 255 31)",
+      "brand-active": "rgb(224 224 0)",
+      "brand-muted": "rgb(255 255 0 / 12%)",
+      "danger-muted": "color-mix(in srgb, #ff645b 10%, transparent)",
+      "danger-fg": "rgb(0 0 0)",
+      "warning-muted": "rgb(255 255 0 / 12%)",
+      "warning-fg": "rgb(0 0 0)",
+      "success-muted": "rgb(0 255 0 / 12%)",
+      "success-fg": "rgb(0 0 0)",
+      "info-muted": "rgb(0 255 255 / 12%)",
+      "info-fg": "rgb(0 0 0)",
+      "syntax-key": "rgb(255 255 255)",
+      "syntax-string": "rgb(243 243 243)",
+      "syntax-number": "rgb(231 231 231)",
+      "syntax-boolean": "rgb(220 220 220)",
+      "syntax-null": "rgb(208 208 208)"
+    }
+  }
+]

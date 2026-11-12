@@ -1,0 +1,17 @@
+{
+  "kind": "choice",
+  "version": "1",
+  "data": {
+    "questionId": "q-deploy-target",
+    "title": "Which environment should the build go to?",
+    "description": "Pick one.",
+    "options": [
+      { "id": "staging", "label": "Staging", "description": "Safe to roll back" },
+      { "id": "canary", "label": "Canary", "description": "5% of sample traffic" },
+      { "id": "prod", "label": "Production" }
+    ],
+    "multiple": false,
+    "allowOther": true,
+    "value": ["canary"]
+  }
+}

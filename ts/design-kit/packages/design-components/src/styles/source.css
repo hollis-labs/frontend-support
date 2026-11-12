@@ -1,0 +1,106 @@
+/*
+ * REGISTER THIS PACKAGE WITH A CONSUMING APP'S TAILWIND BUILD.
+ *
+ *   @import "tailwindcss";
+ *   @import "@hollis-labs/design-tokens/design-tokens.css";
+ *   @import "@hollis-labs/design-components/source.css";   <-- this file
+ *
+ * It does two things, and a consumer needs both, which is why it is one import
+ * rather than two: it points Tailwind at this package's class strings, and it
+ * defines the handful of variants and utilities those class strings name.
+ *
+ * ================================================================ 1. THE SOURCE
+ *
+ * WITHOUT THIS THE COMPONENTS RENDER, AND THEY RENDER MOSTLY UNSTYLED, AND NOTHING
+ * ERRORS. Tailwind v4 emits a utility only for a class string it has SEEN, and it
+ * does not scan `node_modules`. This package's class strings ship inside `dist`, so
+ * `text-fg-secondary`, `bg-surface`, `text-fg-faint` and `text-primary` simply are
+ * not generated in the consuming app's stylesheet unless something points Tailwind
+ * at them. There is no error to read: the defect is in what the build did not
+ * produce rather than in what the code says.
+ *
+ * This ships as an importable stylesheet rather than as a glob documented for the
+ * consumer to write, because `@source` paths resolve relative to the CSS file that
+ * DECLARES them. So the path below is written once, here, against a layout this
+ * package controls — instead of every consumer hand-writing
+ * `@source "../node_modules/@hollis-labs/design-components/dist/**\/*.js"` against a
+ * layout that changes with hoisting, with a package manager, and inside a monorepo.
+ * A wrong glob fails the same silent way a missing one does.
+ *
+ * Verified 2026-09-11 against tailwindcss 4.3.3: a package-shipped stylesheet's
+ * `@source` resolves against its own location and emits the utilities.
+ *
+ * `dist/**\/*.js` and not `src/`: `src/` is not published (see `files`), and the
+ * build preserves modules rather than minifying, so every class string survives in
+ * `dist` as a plain literal. `.js` excludes the sourcemaps, which would double the
+ * scan for nothing.
+ */
+
+@source "../../dist/**/*.js";
+
+/*
+ * ============================================== 2. THE TWO VARIANTS TAILWIND LACKS
+ *
+ * `data-horizontal:` and `data-vertical:` appear in this package's class strings —
+ * `ui/separator.tsx`, `ui/tabs.tsx`, `ui/scroll-area.tsx` — and Tailwind v4 does NOT
+ * have them. What it has is a bare `data-x:` variant that compiles to `[data-x]`,
+ * and Base UI does not set `data-horizontal`; it sets `data-orientation="horizontal"`
+ * (verified against its own `*DataAttributes.d.ts`, which declares
+ * `orientation = "data-orientation"`). So without these two definitions, Tailwind
+ * emits rules targeting an attribute that is never present, and every orientation
+ * style silently stops applying.
+ *
+ * THE OTHER SEVEN data-* VARIANTS THIS PACKAGE USES NEED NOTHING, and that is worth
+ * stating so nobody adds them "for symmetry": `data-open`, `data-closed`,
+ * `data-checked`, `data-unchecked`, `data-active`, `data-selected` and
+ * `data-disabled` are all bare attributes Base UI sets by PRESENCE — its
+ * declarations read "Present when the dialog is open" — and it never sets a data
+ * attribute to the string `false`. Tailwind's built-in `[data-open]` form is exactly
+ * right for them.
+ *
+ * These two definitions used to arrive via `@import "shadcn/tailwind.css"` inside
+ * `kit-dashboard`'s theme, which is why nothing here ever failed locally: `shadcn` is
+ * installed in this repo as a devDependency, and a consumer does not have it. Of
+ * that file's 629 lines this repo used these two variants and `no-scrollbar`;
+ * `scroll-fade*`, `shimmer*` and the accordion keyframes are zero uses. Taking the
+ * three we need, rather than a 5.9 MB CLI dependency, is CW-20260910-0131's call.
+ *
+ * Derived from shadcn/ui (MIT), narrowed to Base UI: the `[data-state=…]` branch in
+ * the original is Radix's convention and matches nothing in this tree.
+ */
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+/*
+ * ===================================================== 3. THE ONE UTILITY, likewise
+ *
+ * `no-scrollbar` is named by `ui/command.tsx` and is not a Tailwind utility. Same
+ * story as the two variants above: it used to come from `shadcn/tailwind.css`, so a
+ * consumer of this package alone got a visible scrollbar inside every `<Command>`
+ * list and nothing to grep for.
+ *
+ * `kit-dashboard` also declares this class in its own `theme.css`. Two identical
+ * declarations is not a conflict — and the duplicate belongs to that package's theme
+ * layer, which is not ours to edit from here.
+ *
+ * From shadcn/ui (MIT), verbatim.
+ */
+
+@utility no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

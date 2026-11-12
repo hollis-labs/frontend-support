@@ -1,0 +1,12 @@
+{
+  "kind": "review",
+  "version": "1",
+  "data": {
+    "itemId": "rev-2210",
+    "title": "Review the proposed config change",
+    "description": "Sample change to the retry policy.",
+    "format": "code",
+    "before": { "label": "Current", "content": "retries: 3\ntimeout_ms: 2000" },
+    "after": { "label": "Proposed", "content": "retries: 5\ntimeout_ms: 4000\nbackoff: exponential" }
+  }
+}

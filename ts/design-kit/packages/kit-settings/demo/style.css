@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "@hollis-labs/design-tokens/design-tokens.css";
+@import "@hollis-labs/design-components/source.css";
+@import "../src/styles/source.css";
+@source "../src";
+@source "./";
+@layer base {
+  body { @apply bg-bg text-fg; }
+}
