@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- `NewTokenDisclosure` gains optional `title`, `description` and `copiedMessage` (defaults unchanged), so a one-time pairing code can use its own wording. Additive; needed by `@hollis-labs/kit-identity`.
+- `ApiTokenManager` gains optional `scopeSlot`, rendered in the create dialog under the scope list, for hosts whose scopes are free-form. Additive.
+- `ApiTokenManager` gains optional `labels` (`ApiTokenLabels`: title, create/creating/dialog/name/empty/loading/revoke-confirm/denied wording) so a host can say "key" without forking, and optional `createError`, announced inside the create dialog. Defaults unchanged. Additive.
 - `WhoamiBadge` root is now `role="group"` so its "Current identity" label is exposed to assistive technology.
 - `ApiTokenManager` and `ConnectedAccounts` no longer print their empty-state text while a load `error` is shown.
 - Docs: K1.1 audit recorded in `docs/audit.md`; README no longer says "private 0.0.0, not published".

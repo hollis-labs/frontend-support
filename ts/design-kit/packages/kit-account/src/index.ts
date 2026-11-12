@@ -8,7 +8,7 @@ export type { AccountIdentity, WhoamiBadgeProps } from './components/whoami-badg
 
 export { ApiTokenManager } from './components/api-token-manager'
 export { API_TOKEN_EXPIRIES, API_TOKEN_STATUSES, EMPTY_API_TOKEN_DRAFT } from './components/api-token-constants'
-export type { ApiTokenDraft, ApiTokenManagerProps, ApiTokenRecord, ApiTokenScope } from './components/api-token-manager'
+export type { ApiTokenDraft, ApiTokenLabels, ApiTokenManagerProps, ApiTokenRecord, ApiTokenScope } from './components/api-token-manager'
 export type { ApiTokenExpiry, ApiTokenStatus } from './components/api-token-constants'
 export { NewTokenDisclosure } from './components/new-token-disclosure'
 export type { NewTokenDisclosureProps } from './components/new-token-disclosure'

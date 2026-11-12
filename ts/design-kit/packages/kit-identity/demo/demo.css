@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@import "@hollis-labs/design-tokens/design-tokens.css";
+@import "@hollis-labs/design-components/source.css";
+
+@source "../src/**/*.{ts,tsx}";
+@source "./**/*.tsx";
+@source "../../kit-account/src/**/*.{ts,tsx}";
+
+body { background: var(--color-bg, #0b0b0c); }
