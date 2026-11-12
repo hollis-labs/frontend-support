@@ -49,6 +49,13 @@ Controlled components for the six Substrate page types, matching the committed g
 page holds the state and submits through `useActionGateway()` (see `test/fixtures.tsx` for list and detail pages built this
 way). Narrow layout is the host's choice (`narrow`, `orientation="strip"`, `MobileTabBar`).
 
+## Panel preferences (SF-3)
+
+`createPanelPrefs({ storage, panels })` keeps panel order, enabled flags, the default panel and the agent/user dismiss state in an
+observable store (`getSnapshot` / `subscribe`, works with `useSyncExternalStore`), persisted through the host's `LayoutStorage`.
+`open(id, 'agent' | 'user')` follows the rule: an agent open is ignored once the user dismissed the panel; a user open always wins.
+Plugin panels cannot reuse a built-in's or another plugin's id.
+
 ## Not here
 
 Backend action endpoints, auth and key handling, page content, and any app change. The manifest's region

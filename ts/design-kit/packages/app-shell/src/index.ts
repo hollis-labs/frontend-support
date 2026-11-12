@@ -12,3 +12,4 @@ export { ActionConfirmDialog, ActionNotice, useGatewaySnapshot } from './actions
 export { useActionGateway } from './shell'
 export * from './list-patterns'
 export * from './page-patterns'
+export * from './panel-prefs'
