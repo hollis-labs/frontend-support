@@ -14,18 +14,27 @@ import manifest from './frontend.manifest.json'
 
 - Refuses an unknown `manifest_version` with a visible error; there is no fallback shape.
 - Places `nav.item`, `nav.group`, `settings.region`, `surface`, `panel`, `dock.tab`, `widget` and `slot` by region.
-  Docked regions and their anchors come from the manifest's `regions` catalog. At narrow widths (max-width 1023px, or
-  `isNarrow`) docked tabs open as bottom sheets.
+  Docked regions and their anchors come from the manifest's `regions` catalog.
+- Applies the SF-2 dock attributes to docked regions (`dockAttributes`, by region name): `openState`, `exclusive`
+  (opening a tab closes the region's others), `sizes` (token options and default; the user's pick is remembered through
+  `dockStorage`), `dismissKey` (`Esc`) and `mobile` (`bottom-sheet`: at narrow widths, max-width 1023px or `isNarrow`,
+  docked tabs open as bottom sheets). A region with nothing supplied gets the vocabulary defaults; an invalid set is
+  refused with a diagnostic. Docked regions are not in the overlay stack.
+- Registers every placed contribution into a plugin-host-ui `PluginHostRuntime` by kind (registry v2 entries, a slot
+  catalog built from the shell model) and renders `panel`, `dock.tab` and `widget` through the host's own components.
+  What the host refuses is listed in Diagnostics; `onHostDiagnostic` receives everything the host reports. plugin-host-ui
+  reserves the owner `core`, so a contribution whose `module` is `core` is refused.
 - Derives page routes from `surface` items. A route that is a backend path (`/api/`, `/admin/`) or is claimed twice is skipped.
 - Renders `settings.region` from the runtime admin manifest (groups by reference, scope kind `app` only). Until the admin
   manifest is passed, sections show as loading.
 - Selects renderers through `@hollis-labs/design-bindings` (`kind@version`, origin, isolation-only trust); the host owns the table.
-- Owns overlay state (modal, drawer, popover, toast; depth 2). Esc closes the topmost entry and focus returns to its trigger.
+- Owns overlay state (modal, drawer, popover, toast; depth 2). Esc (or a region's `dismissKey`) closes the most recently opened overlay or docked region and focus returns to its trigger.
 - Skips anything it cannot place and lists it in the Diagnostics drawer; the shell still starts.
 - Hosts supply page bodies (`pages`, by surface key) and views (`views`, by `view` name). A failing view is contained by
   plugin-host-ui's render boundary.
 
 ## Not here
 
-The action gateway (risk, confirmation, outcome policy; SF-5b), page content, and any app change. SF-2 dock attributes
-beyond `anchor` (`openState`, `exclusive`, sizes, `dismissKey`) are not in the manifest's region catalog yet and are not applied.
+The action gateway (risk, confirmation, outcome policy; SF-5b), page content, and any app change. The manifest's region
+catalog (`{name, docked, anchor}`) does not yet carry `openState`, `exclusive`, `sizes`, `dismissKey` or `mobile`, so the host
+supplies them through `dockAttributes`; when Substrate adds them, the shell should read them from the catalog instead.

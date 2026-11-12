@@ -8,17 +8,21 @@ import { useCallback, useMemo, useRef, useState } from 'react'
 export type OverlayKind = 'modal' | 'drawer' | 'popover' | 'toast'
 export const MAX_OVERLAY_DEPTH = 2
 
-export interface OverlayEntry { id: string; kind: OverlayKind; title: string; trigger: HTMLElement | null }
+let counter = 0
+/** One ordering across overlays and docked regions, so Esc can find the topmost of either. */
+export const nextOrder = (): number => ++counter
+
+export interface OverlayEntry { id: string; kind: OverlayKind; title: string; trigger: HTMLElement | null; seq: number }
 
 export interface OverlayStack {
   entries: readonly OverlayEntry[]
   /** False (and nothing opens) when the stack is already at depth 2. */
-  open(entry: Omit<OverlayEntry, 'trigger'> & { trigger?: HTMLElement | null }): boolean
+  open(entry: Omit<OverlayEntry, 'trigger' | 'seq'> & { trigger?: HTMLElement | null }): boolean
   close(id: string): void
   closeTop(): boolean
 }
 
-const restoreFocus = (el: HTMLElement | null) => { if (el && el.isConnected) el.focus() }
+export const restoreFocus = (el: HTMLElement | null) => { if (el && el.isConnected) el.focus() }
 
 export function useOverlayStack(onRejected?: (id: string) => void): OverlayStack {
   const [entries, setEntries] = useState<readonly OverlayEntry[]>([])
@@ -30,7 +34,7 @@ export function useOverlayStack(onRejected?: (id: string) => void): OverlayStack
     if (prev.some(e => e.id === entry.id)) return true
     if (entry.kind !== 'toast' && prev.filter(e => e.kind !== 'toast').length >= MAX_OVERLAY_DEPTH) { onRejected?.(entry.id); return false }
     const trigger = entry.trigger ?? (document.activeElement instanceof HTMLElement ? document.activeElement : null)
-    commit([...prev, { ...entry, trigger }])
+    commit([...prev, { ...entry, trigger, seq: nextOrder() }])
     return true
   }, [onRejected])
   const close = useCallback((id: string) => {

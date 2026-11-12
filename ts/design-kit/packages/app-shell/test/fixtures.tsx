@@ -1,7 +1,7 @@
 import type { FrontendManifest, ManifestItem } from '../src'
 import type { PageComponent, ViewComponent } from '../src'
 
-const it = (i: Partial<ManifestItem> & Pick<ManifestItem, 'kind' | 'key'>): ManifestItem => ({ module: 'core', ...i })
+const it = (i: Partial<ManifestItem> & Pick<ManifestItem, 'kind' | 'key'>): ManifestItem => ({ module: 'console', ...i })
 
 /** One contribution of each of the 8 kinds, in the shape `substrate frontend` writes. */
 export const manifest: FrontendManifest = {

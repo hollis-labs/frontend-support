@@ -5,6 +5,7 @@
  * without a DOM. A contribution the shell cannot place is skipped AND listed in
  * `diagnostics`; it is never dropped silently and never throws.
  */
+import { resolveDockAttributes, type DockAttributes, type ResolvedDockAttributes } from './docks'
 import {
   KNOWN_KINDS, REGION_ASIDE_PANELS, REGION_NAV_FOOTER, REGION_NAV_GROUP_PREFIX, REGION_NAV_PRIMARY, REGION_SETTINGS_SECTIONS,
   REGION_SURFACE_PAGE, REGION_WIDGETS_GRID,
@@ -21,7 +22,7 @@ export type NavNode =
   | { type: 'group'; item: ManifestItem; children: NavLink[] }
 
 export interface SurfaceRoute { item: ManifestItem; path: string; layout: SurfaceLayout; title: string }
-export interface DockRegion { region: ManifestRegion; tabs: ManifestItem[] }
+export interface DockRegion { region: ManifestRegion; tabs: ManifestItem[]; attributes: ResolvedDockAttributes }
 export interface SettingsSection { item: ManifestItem; groups: AdminSettingsGroup[]; pending: boolean }
 
 export interface ShellModel {
@@ -42,6 +43,8 @@ export interface BuildOptions {
   admin?: AdminManifestInput
   /** View names the host can render for panel / dock.tab / widget. Omit to skip the check. */
   viewNames?: ReadonlySet<string>
+  /** SF-2 dock attributes by docked region name; the manifest's region catalog carries only the anchor. */
+  dockAttributes?: Readonly<Record<string, DockAttributes>>
 }
 
 const FIXED_REGIONS: Record<string, readonly string[]> = {
@@ -126,8 +129,12 @@ export function buildShellModel(manifest: FrontendManifest, options: BuildOption
   }
 
   // 4. Docks and slots.
+  for (const name of Object.keys(options.dockAttributes ?? {})) {
+    if (catalog.get(name)?.docked !== true) diagnostics.push({ code: 'unknown-region', message: `Dock attributes were given for "${name}", which is not a docked region in the manifest.` })
+  }
   const docks: DockRegion[] = manifest.regions.filter(r => r.docked).map(region => ({
     region, tabs: accepted.filter(i => i.kind === 'dock.tab' && effectiveRegion(i) === region.name),
+    attributes: resolveDockAttributes(region.name, options.dockAttributes?.[region.name], diagnostics),
   }))
   const slots: ManifestItem[] = []
   for (const it of accepted.filter(i => i.kind === 'slot')) {
