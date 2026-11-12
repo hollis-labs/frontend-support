@@ -3,12 +3,12 @@ import {
   type ComponentType, type ReactNode,
 } from 'react'
 import { AppShell as KitAppShell, EmptyState, type IconComponent } from '@hollis-labs/design-components'
-import type { BindingTable } from '@hollis-labs/design-bindings'
+import { createVersionedStore, useVersionedStore } from '@hollis-labs/design-app-runtime'
 import type { HostDiagnostic, LayoutStorage } from '@hollis-labs/plugin-host-ui'
 import {
   PluginDockTabBody, PluginHostProvider, PluginPanelBody, PluginRenderBoundary, WidgetRenderer, usePluginDockTabs, usePluginPanels, usePluginSlots,
 } from '@hollis-labs/plugin-host-ui/react'
-import { createRendererSelector, type RendererSelector } from './bindings'
+import { bindingDiagnostics, createRendererSelector, type BindingStore, type RendererSelector } from './bindings'
 import { parseFrontendManifest, type FrontendManifest, type ManifestItem, type ShellDiagnostic } from './manifest'
 import { buildShellModel, effectiveRegion, type AdminManifestInput, type NavLink, type NavNode, type ShellModel, type SurfaceRoute } from './model'
 import { useOverlayStack, restoreFocus, type OverlayStack } from './overlays'
@@ -38,7 +38,8 @@ export interface ManifestShellProps {
   pages?: Readonly<Record<string, PageComponent>>
   /** Icons by the manifest's kit icon name. */
   icons?: Readonly<Record<string, IconComponent>>
-  bindings?: BindingTable
+  /** The generated binding table's store (`createBindingStore` + `applyBindingTable`); a new table swaps in live. */
+  bindings?: BindingStore
   /** Force the narrow (bottom sheet) presentation; otherwise a (max-width: 1023px) query decides. */
   isNarrow?: boolean
   /** SF-2 attributes (openState, exclusive, sizes, dismissKey, mobile) by docked region name. */
@@ -220,6 +221,7 @@ function DockTab({ region, tab }: { region: string; tab: string }) {
   return view ? <PluginDockTabBody tab={view} /> : <div role="status" className="p-3 text-caption text-fg-muted">View unavailable.</div>
 }
 
+const NO_BINDINGS: BindingStore = createVersionedStore(undefined)
 const NO_VIEWS: Readonly<Record<string, ViewComponent>> = {}
 const NO_PAGES: Readonly<Record<string, PageComponent>> = {}
 const NO_ICONS: Readonly<Record<string, IconComponent>> = {}
@@ -253,13 +255,14 @@ function LoadedShell(props: LoadedProps) {
   )
 }
 
-function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings, isNarrow, dockStorage, manifest, actions }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
+function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings = NO_BINDINGS, isNarrow, dockStorage, manifest, actions }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
   const [overflow, setOverflow] = useState<ShellDiagnostic[]>([])
   const overlays = useOverlayStack(id => setOverflow(d => [...d, { code: 'overlay-depth', message: `Overlay "${id}" was not opened: the stack is at its depth limit.` }]))
   const narrow = useNarrow(isNarrow)
-  const resolveRenderer = useMemo(() => createRendererSelector(bindings), [bindings])
+  const loadedBindings = useVersionedStore(bindings)
+  const resolveRenderer = useMemo(() => createRendererSelector(loadedBindings), [loadedBindings])
   const snapshot = useSyncExternalStore(host.runtime.subscribe, host.runtime.getSnapshot, host.runtime.getServerSnapshot)
-  const diagnostics = useMemo(() => [...model.diagnostics, ...refusalDiagnostics(snapshot.refusals), ...overflow], [model.diagnostics, snapshot.refusals, overflow])
+  const diagnostics = useMemo(() => [...model.diagnostics, ...bindingDiagnostics(loadedBindings), ...refusalDiagnostics(snapshot.refusals), ...overflow], [model.diagnostics, loadedBindings, snapshot.refusals, overflow])
   const dockRegions = useMemo(() => model.docks.map(d => ({ region: d.region.name, attributes: d.attributes, tabs: d.tabs.map(t => t.key) })), [model.docks])
   const docks = useDockState(manifest.app, dockRegions, dockStorage)
 

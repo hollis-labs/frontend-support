@@ -1,5 +1,16 @@
 # @hollis-labs/design-bindings
 
+## 0.3.0 (CW-20261102-0053)
+
+- Binding-table generator (SF-4): `generateBindingTable({ catalog, profile, demand? })` turns a renderer catalog, a host
+  profile and the kinds the Substrate frontend manifest demands into a versioned plain-data table (`GeneratedBindingTable`,
+  keyed `kind@version`, each row carrying the origins it may serve). `serializeBindingTable` writes canonical JSON, so the
+  same inputs yield byte-identical output in any input order; `tableVersionOf` is the content version (`bt1-<fnv1a64>`).
+- A demand the catalog or profile cannot serve becomes an explicit `unresolved` entry (`unknown-kind`, `unknown-version`,
+  `origin-not-permitted`) with its reason; the generator never substitutes a renderer. Density, surfaces, priority and the
+  action schema stay host data keyed by `rendererId` and are not in the table.
+- No change to `defineBindingTable` or `resolve`; additive exports only.
+
 ## 0.2.0 — BREAKING (CW-20261105-0004)
 
 Clean break, no aliases or shims. Breaking changes:

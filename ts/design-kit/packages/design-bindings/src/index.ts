@@ -55,3 +55,16 @@ export { defineBindingTable, constantTrust, bindingKey } from './table.ts'
 
 export type { MissCode, Drawable, Miss, Resolution, ResolveOptions, ParsedEntry } from './resolve.ts'
 export { resolve, safeFallbackOf, parseEntry } from './resolve.ts'
+
+export type {
+  CatalogRow,
+  RendererCatalog,
+  HostProfile,
+  BindingDemand,
+  GeneratedRow,
+  UnresolvedCode,
+  UnresolvedEntry,
+  GeneratedBindingTable,
+  GenerateInput,
+} from './generate.ts'
+export { BINDING_TABLE_FORMAT, generateBindingTable, serializeBindingTable, tableVersionOf } from './generate.ts'

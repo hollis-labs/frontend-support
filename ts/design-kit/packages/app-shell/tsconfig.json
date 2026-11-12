@@ -3,6 +3,7 @@
   "compilerOptions": {
     "types": ["node"],
     "paths": {
+      "@hollis-labs/design-app-runtime": ["../design-app-runtime/src/index.ts"],
       "@hollis-labs/design-bindings": ["../design-bindings/src/index.ts"],
       "@hollis-labs/design-components": ["../design-components/src/index.ts"],
       "@hollis-labs/design-tokens": ["../design-tokens/src/index.ts"],

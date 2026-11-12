@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 — BREAKING (CW-20261102-0053)
+
+- Binding-table consumer (SF-4): `loadBindingTable` validates a table from design-bindings' `generateBindingTable` (format,
+  and its version against its content) and builds the design-bindings table; `createBindingStore` / `applyBindingTable` hold
+  it in the design-app-runtime versioned store (same version is a no-op, a new one swaps in live; a table that fails to load
+  leaves the current one and is reported). New dependency: `@hollis-labs/design-app-runtime`.
+- BREAKING: `ManifestShell`'s `bindings` prop is now that store (was a `BindingTable`), and `createRendererSelector` takes the
+  loaded bindings. The selector answers a miss for an unknown kind or version, and for an origin the profile does not permit;
+  it never falls back to a renderer.
+- Unresolved bindings are shell diagnostics (`unresolved-binding`, `malformed-binding-table`). `FrontendManifest.bindings`
+  types the binding-table input the manifest carries.
+- Fixture proof: a Hadron-shaped profile generates a table that resolves every kind in the SF-6 goldens.
+
 ## 0.4.0
 
 - SF-6 gap components, composed from design-components and tokens only (kit-first lint at error): `SplitPane` (resizable with
