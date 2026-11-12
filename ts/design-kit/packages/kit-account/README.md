@@ -129,6 +129,22 @@ Callbacks report intent and do not await or infer outcomes. The host handles asy
 rejections, serializes rapid mutations, sets busy state and reconciles results.
 Nothing here implements endpoints, a manifest schema, StaticProvider or OAuth.
 
+### Session states and step-up
+
+`SignInRequired` (`reason`: `signed-out | expired | denied`) and `SessionExpired` say what
+happened and render the host's `instruction`; they assume no form, so a one-time link works as
+well as a login page. `onRetry` is optional. `StepUpDialog` takes the gateway's
+`needs_confirmation` fields (`what`, `scope`, `ttlMs`, `who?`) and reports `onConfirm` /
+`onCancel` (button, Esc, close); `status` is `idle | granting | failed`. The host maps the
+gateway snapshot to it, calls `resolveConfirmation(id, 'confirm' | 'cancel')`, and keeps the
+grant, which the kit never sees.
+
+```tsx
+<SignInRequired reason="signed-out" instruction={<p>Open the link we emailed you.</p>} onRetry={recheck} />
+<StepUpDialog open={confirmation !== null} {...confirmation?.confirm} status={granting ? 'granting' : 'idle'}
+  onConfirm={() => gateway.resolveConfirmation(id, 'confirm')} onCancel={() => gateway.resolveConfirmation(id, 'cancel')} />
+```
+
 ## Verification
 
 Sixteen behavior tests cover controlled edits/save intents, busy/read-only/invalid

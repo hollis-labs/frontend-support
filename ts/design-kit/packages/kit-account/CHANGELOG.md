@@ -1,5 +1,18 @@
 # @hollis-labs/kit-account
 
+## 0.3.0
+
+Additive; no existing export changes.
+
+- `SignInRequired` and `SessionExpired`: flow-agnostic states. `reason` is `signed-out | expired | denied`
+  (`SIGN_IN_REASONS`); an unknown reason renders a neutral message and is never echoed. The host supplies `instruction`
+  (a one-time link, a login page or anything else) and the kit renders no form. `onRetry` is optional; `retrying` disables it.
+- `StepUpDialog`: controlled step-up confirmation with the S0.3 Confirm fields (`what`, `scope`, `ttlMs`, `who?`) plus
+  `open`, `onConfirm`, `onCancel`, `status` (`idle | granting | failed`, `STEP_UP_STATUSES`) and a sanitized `error`.
+  Dialog roles, Esc and the close control call `onCancel`, initial focus is Cancel, focus returns to the trigger on close.
+  Holds no state and never sees the grant; the host wires it to the action gateway's `needs_confirmation`
+  (integration-tested against app-shell's `createActionGateway`).
+
 ## 0.2.0
 
 Breaking for `ApiTokenManager` and `NewTokenDisclosure` consumers (pre-1.0 minor); no compatibility shim.
