@@ -271,4 +271,13 @@ describe('ConnectedAccounts', () => {
     rerender(<ConnectedAccounts accounts={[]} onConnect={onConnect} onDisconnect={vi.fn()} loading />)
     expect(screen.queryByText('No connected-account providers.')).toBeNull()
   })
+
+  it('does not claim an empty list while a load error is shown', () => {
+    const { rerender } = render(<ApiTokenManager {...tokenProps()} createOpen={false} tokens={[]} error="Could not load tokens." />)
+    expect(screen.queryByText('No API tokens.')).toBeNull()
+    rerender(<ApiTokenManager {...tokenProps()} createOpen={false} tokens={[]} />)
+    expect(screen.getByText('No API tokens.')).toBeDefined()
+    rerender(<ConnectedAccounts accounts={[]} onConnect={vi.fn()} onDisconnect={vi.fn()} error="Provider unavailable" />)
+    expect(screen.queryByText('No connected-account providers.')).toBeNull()
+  })
 })
