@@ -14,6 +14,7 @@ import { buildShellModel, effectiveRegion, type AdminManifestInput, type NavLink
 import { useOverlayStack, restoreFocus, type OverlayStack } from './overlays'
 import { createActionGateway, type ActionGateway, type ActionGatewayOptions, type CatalogHandlers } from './actions'
 import { ActionConfirmDialog, ActionNotice } from './actions-ui'
+import { DockResizeHandle, DockTabStrip, type DockTab } from './dock-ui'
 import { dismissMatches, useDockState, type DockAttributes, type DockSize } from './docks'
 import { createShellPluginHost, refusalDiagnostics, type ShellPluginHost } from './plugin-host'
 
@@ -133,17 +134,22 @@ function NavTree({ nodes, footer, path, onNavigate, tail }: { nodes: NavNode[]; 
 const DOCK_WIDTH: Record<DockSize, string> = { sm: 'w-80', md: 'w-96', lg: 'w-screen max-w-xl' }
 
 /** A docked region's open tab: a side panel on desktop, a bottom sheet on narrow screens. */
-function DockSheet({ id, title, children, onClose, size, sizes, onSize, presentation }: {
+function DockSheet({ id, title, children, onClose, size, sizes, onSize, presentation, bottom }: {
   id: string; title: string; children: ReactNode; onClose: () => void
   size?: DockSize; sizes?: readonly DockSize[]; onSize?: (s: DockSize) => void; presentation?: 'bottom-sheet' | 'side'
+  /** A bottom-anchored dock on a wide screen: resizable by its top edge, with its region's tab strip. */
+  bottom?: { height: number; min: number; max: number; onResize: (px: number) => void; tabs: readonly DockTab[]; onSelect: (tab: string) => void }
 }) {
   const { narrow } = useShell()
   const sheet = presentation ? presentation === 'bottom-sheet' : narrow
+  const resizable = !sheet && bottom
   return (
     <section
-      role="dialog" aria-label={title} data-dock={id} data-presentation={sheet ? 'bottom-sheet' : 'side'} data-size={sheet ? undefined : size}
-      className={`fixed z-40 flex flex-col border-border-subtle bg-bg-elevated text-fg ${sheet ? 'inset-x-0 bottom-0 max-h-[70%] rounded-t-lg border-t' : `inset-y-0 right-0 border-l ${DOCK_WIDTH[size ?? 'md']}`}`}
+      role="dialog" aria-label={title} data-dock={id} data-presentation={sheet ? 'bottom-sheet' : resizable ? 'bottom' : 'side'} data-size={sheet || resizable ? undefined : size}
+      style={resizable ? { height: bottom.height } : undefined}
+      className={`fixed z-40 flex flex-col border-border-subtle bg-bg-elevated text-fg ${sheet ? 'inset-x-0 bottom-0 max-h-[70%] rounded-t-lg border-t' : resizable ? 'inset-x-0 bottom-0' : `inset-y-0 right-0 border-l ${DOCK_WIDTH[size ?? 'md']}`}`}
     >
+      {resizable ? <DockResizeHandle height={bottom.height} min={bottom.min} max={bottom.max} onResize={bottom.onResize} onCollapse={onClose} onToggle={onClose} /> : null}
       <header className="flex items-center justify-between gap-2 border-b border-border-subtle p-3">
         <h2 className="text-control font-semibold">{title}</h2>
         <div className="flex items-center gap-1">
@@ -154,6 +160,7 @@ function DockSheet({ id, title, children, onClose, size, sizes, onSize, presenta
           <button type="button" onClick={onClose} className="rounded-md px-2 py-1 text-caption text-fg-muted hover:text-fg">Close</button>
         </div>
       </header>
+      {resizable && bottom.tabs.length > 1 ? <DockTabStrip tabs={bottom.tabs} onSelect={bottom.onSelect} /> : null}
       <div className="min-h-0 flex-1 overflow-y-auto p-3">{children}</div>
     </section>
   )
@@ -343,6 +350,7 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
 
   const surface = model.surfaces.find(s => s.path === (path.length > 1 ? path.replace(/\/$/, '') : path))
   const Page = surface ? pages[surface.item.key] : undefined
+  const regionTabs = (region: string) => model.docks.find(d => d.region.name === region)?.tabs ?? []
   const tabItem = (tabKey: string) => model.docks.flatMap(d => d.tabs).find(t => t.key === tabKey)
 
   const diagButton = (
@@ -390,6 +398,11 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
             key={`dock:${o.tab}`} id={`dock:${o.tab}`} title={item?.label || o.tab} onClose={() => docks.close(o.tab)}
             size={docks.size(o.region)} sizes={attrs.sizes.options} onSize={s => docks.setSize(o.region, s)}
             presentation={narrow && attrs.mobile === 'bottom-sheet' ? 'bottom-sheet' : 'side'}
+            bottom={attrs.anchor === 'bottom' ? {
+              height: docks.height(o.region), min: attrs.heightPx.min, max: attrs.heightPx.max, onResize: px => docks.setHeight(o.region, px),
+              tabs: regionTabs(o.region).map(t => ({ id: t.key, label: t.label || t.key, active: t.key === o.tab })),
+              onSelect: key => { if (key !== o.tab) { docks.toggle(o.region, key, o.trigger) } },
+            } : undefined}
           ><DockTab region={o.region} tab={o.tab} /></DockSheet>
         )
       })}
