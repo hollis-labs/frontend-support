@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react'
 import type { IdentityClient } from './client'
 import type { ChangePasswordInput, IdentityProfile, LoginInput, SetupInput } from './types'
 
-export type IdentityStatus = 'booting' | 'boot-error' | 'setup' | 'signed-out' | 'expired' | 'signed-in'
+export type IdentityStatus = 'booting' | 'boot-error' | 'setup' | 'setup-offline' | 'signed-out' | 'expired' | 'signed-in'
 
 /** Structurally the same as kit-account's `AccountIdentity`, so it can go straight into `WhoamiBadge`. */
 export type IdentityBadge =
@@ -26,6 +26,8 @@ export interface IdentityContextValue {
   readonly signIn: (input: LoginInput) => Promise<void>
   readonly signOut: () => Promise<void>
   readonly changePassword: (input: ChangePasswordInput) => Promise<void>
+  /** Move to the no-owner screen (the server refused setup over HTTP). */
+  readonly showSetupOffline: () => void
   /** Move to the sign-in form (for example after a 409 on setup). */
   readonly showSignIn: () => void
 }

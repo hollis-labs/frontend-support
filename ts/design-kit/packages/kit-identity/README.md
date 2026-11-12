@@ -21,11 +21,11 @@ import { IdentityProvider } from '@hollis-labs/kit-identity/client'
 import { IdentityGate, IDENTITY_ROUTES, IDENTITY_PAGES } from '@hollis-labs/kit-identity'
 
 <IdentityProvider>
-  <IdentityGate story={<Logo />}>{/* the app shell, mounted only when signed in */}</IdentityGate>
+  <IdentityGate story={<Logo />} appName="myapp">{/* the app shell, mounted only when signed in */}</IdentityGate>
 </IdentityProvider>
 ```
 
-`IdentityGate` renders boot, first-run setup and sign-in outside the shell (no route, no nav item) and mounts its children
+`IdentityGate` takes `appName` (the host command name shown on the no-owner screen; it reads `<app>` if omitted). It renders boot, first-run setup (or, when the server creates the owner on the host only, a plain no-owner screen) and sign-in outside the shell (no route, no nav item) and mounts its children
 only after a session exists. `IDENTITY_ROUTES` is the in-shell route table (`/identity/account`, `/identity/keys`,
 `/identity/pairing`, `/identity/sessions`, fallback `/identity/sign-out`) with labels and the capability each nav item
 requires (`{app}.admin` for keys and pairing); `IDENTITY_PAGES` maps the same ids to page components. Contribute the

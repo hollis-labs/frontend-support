@@ -60,6 +60,12 @@ export interface SetupInput {
   readonly password: string
 }
 
+/** `GET /api/setup`: whether an owner is needed, and whether the server accepts creating one over HTTP. */
+export interface SetupState {
+  readonly required: boolean
+  readonly overHttp: boolean
+}
+
 export interface LoginInput {
   readonly username: string
   readonly password: string

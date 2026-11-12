@@ -30,8 +30,8 @@ export function IdentityProvider({ options, children }: IdentityProviderProps) {
 
   useEffect(() => {
     let live = true
-    client.setupRequired().then(
-      (required) => (required ? 'setup' : client.hasSession().then((has) => (has ? 'signed-in' : 'signed-out'))),
+    client.setupState().then(
+      (state) => (state.required ? (state.overHttp ? 'setup' : 'setup-offline') : client.hasSession().then((has) => (has ? 'signed-in' : 'signed-out'))),
     ).then(
       (next) => { if (live) { setBootError(null); setStatus(next as IdentityStatus) } },
       (error: unknown) => { if (live) { setBootError(errorMessage(error)); setStatus('boot-error') } },
@@ -50,7 +50,7 @@ export function IdentityProvider({ options, children }: IdentityProviderProps) {
     client,
     retryBoot,
     badge: status === 'booting' ? { state: 'loading' }
-      : status === 'signed-in' && profile ? { state: 'identified', displayName: profile.display_name || profile.username, source: profile.username, assurance: profile.assurance === 'verified' ? 'verified' : 'local' }
+      : status === 'signed-in' && profile ? { state: 'identified', displayName: profile.display_name || profile.username, source: profile.display_name && profile.display_name !== profile.username ? profile.username : undefined, assurance: profile.assurance === 'verified' ? 'verified' : 'local' }
         : { state: 'unknown' },
     setup: async (input) => establish(await client.setup(input)),
     signIn: async (input) => establish(await client.login(input)),
@@ -60,6 +60,7 @@ export function IdentityProvider({ options, children }: IdentityProviderProps) {
       setStatus('signed-out')
     },
     changePassword: (input) => client.changePassword(input),
+    showSetupOffline: () => setStatus('setup-offline'),
     showSignIn: () => setStatus('signed-out'),
   }), [status, profile, bootError, client, retryBoot, establish])
 

@@ -20,7 +20,7 @@ describe('identity client', () => {
 
   it('reports a network failure without throwing a raw error', async () => {
     const fetch = vi.fn().mockRejectedValue(new TypeError('boom http://secret-host')) as unknown as typeof globalThis.fetch
-    const error = await createIdentityClient({ fetch }).setupRequired().catch((e: unknown) => e)
+    const error = await createIdentityClient({ fetch }).setupState().catch((e: unknown) => e)
     expect(error).toMatchObject({ status: 0, code: 'network' })
     expect(errorMessage(error)).not.toContain('secret-host')
   })
@@ -67,10 +67,23 @@ describe('identity client', () => {
     await expect(createIdentityClient({ fetch }).listKeys()).resolves.toEqual([])
   })
 
+  it('reads setup_over_http: false as offline, and an absent field as over HTTP', async () => {
+    const offline = fakeFetch({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: false } } })
+    await expect(createIdentityClient({ fetch: offline.fetch }).setupState()).resolves.toEqual({ required: true, overHttp: false })
+    const legacy = fakeFetch({ 'GET /api/setup': { status: 200, body: { setup_required: true } } })
+    await expect(createIdentityClient({ fetch: legacy.fetch }).setupState()).resolves.toEqual({ required: true, overHttp: true })
+  })
+
+  it('uses a flat body `error` string when there is no `message`', async () => {
+    const { fetch } = fakeFetch({ 'POST /api/identity/keys': { status: 400, body: { error: 'name already in use' } } })
+    const error = await createIdentityClient({ fetch }).createKey({ name: 'x', scopes: [] }).catch((e: unknown) => e)
+    expect(errorMessage(error)).toBe('name already in use')
+  })
+
   it('honours baseUrl, identityBase and path overrides', async () => {
     const { fetch, calls } = fakeFetch({ 'GET https://x.test/auth/setup': { status: 200, body: { setup_required: true } }, 'GET https://x.test/id/keys': { status: 200, body: { keys: [] } } })
     const client = createIdentityClient({ fetch, baseUrl: 'https://x.test', identityBase: '/id', paths: { setup: '/auth/setup' } })
-    await expect(client.setupRequired()).resolves.toBe(true)
+    await expect(client.setupState()).resolves.toEqual({ required: true, overHttp: true })
     await client.listKeys()
     expect(calls).toHaveLength(2)
   })

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { ApiKeysPage, AccountSecurityPage, IDENTITY_PAGES, IDENTITY_ROUTES, IdentityGate, PairingCodesPage } from '../index'
-import { IdentityProvider } from '../client'
+import { IdentityProvider, useIdentity } from '../client'
 import { deviceLabel, relativeWhen } from '../components/device'
 import { fakeFetch } from './fake'
 
@@ -33,6 +33,33 @@ describe('IdentityGate', () => {
     expect(screen.queryByLabelText('Username')).toBeNull()
     expect(await screen.findByRole('heading', { name: 'Set up your account' })).toBeTruthy()
     expect(screen.queryByText('shell')).toBeNull()
+  })
+
+  it('shows a plain no-owner screen with no form when setup_over_http is false', async () => {
+    const { calls } = mount({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: false } } }, <p>shell</p>)
+    expect(await screen.findByRole('heading', { name: 'No owner yet' })).toBeTruthy()
+    expect(document.body.textContent).toContain('identity setup')
+    expect(document.querySelector('form')).toBeNull()
+    expect(screen.queryByRole('button')).toBeNull()
+    expect(screen.queryByText('shell')).toBeNull()
+    expect(calls).toHaveLength(1)
+  })
+
+  it('shows the form when both setup_required and setup_over_http are true', async () => {
+    mount({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: true } } }, <p>shell</p>)
+    expect(await screen.findByRole('heading', { name: 'Set up your account' })).toBeTruthy()
+    expect(screen.getByLabelText('Username')).toBeTruthy()
+  })
+
+  it('treats 403 setup_offline from POST as the same no-owner screen, not an error', async () => {
+    mount({ 'GET /api/setup': { status: 200, body: { setup_required: true } }, 'POST /api/setup': { status: 403, body: { code: 'setup_offline', message: 'run the app identity setup command on the host' } } }, <p>shell</p>)
+    for (const [label, value] of [['Display name', 'Owner'], ['Username', 'owner'], ['Password', 'correct horse battery'], ['Confirm password', 'correct horse battery']] as const) {
+      fireEvent.change(await screen.findByLabelText(label), { target: { value } })
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Create account' }))
+    expect(await screen.findByRole('heading', { name: 'No owner yet' })).toBeTruthy()
+    expect(document.querySelector('form')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
   })
 
   it('blocks setup on a password mismatch and sends no request', async () => {
@@ -194,6 +221,16 @@ describe('PairingCodesPage', () => {
     await waitFor(() => expect(document.body.textContent).not.toContain(CODE))
   })
 
+  it('words the expiry relative to now', async () => {
+    const soon = new Date(Date.now() + 10 * 60_000 + 30_000).toISOString()
+    mount({ ...signedIn, 'POST /api/identity/pairing-codes': { status: 201, body: { code: CODE, expires_at: soon } } }, <PairingCodesPage scopeSuggestions={['app.read']} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Generate pairing code' }))
+    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'phone' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: 'app.read' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Generate code' }))
+    expect(await screen.findByText(/It expires in 10 minutes \(at .+\) and works once\./)).toBeTruthy()
+  })
+
   it('shows the denied state when the server says 403', async () => {
     mount({ ...signedIn, 'POST /api/identity/pairing-codes': { status: 403, body: { code: 'scope_required', message: 'x' } } }, <PairingCodesPage scopeSuggestions={['app.read']} />)
     fireEvent.click(await screen.findByRole('button', { name: 'Generate pairing code' }))
@@ -202,6 +239,27 @@ describe('PairingCodesPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Generate code' }))
     expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeTruthy()
     expect(screen.queryByRole('button', { name: 'Generate pairing code' })).toBeNull()
+  })
+})
+
+describe('identity badge', () => {
+  const Probe = () => <output data-testid="badge">{JSON.stringify(useIdentity().badge)}</output>
+  const badgeFor = async (profile: object) => {
+    mount({
+      'GET /api/setup': { status: 200, body: { setup_required: false } },
+      'GET /api/identity/sessions': { status: 401, body: { code: 'unauthorized', message: 'x' } },
+      'POST /api/login': { status: 200, body: profile },
+    }, <Probe />)
+    await signIn()
+    return JSON.parse((await screen.findByTestId('badge')).textContent ?? '{}')
+  }
+  it('drops the source when it repeats the display name', async () => {
+    const badge = await badgeFor({ ...PROFILE, display_name: 'owner' })
+    expect(badge.displayName).toBe('owner')
+    expect(badge.source).toBeUndefined()
+  })
+  it('keeps the username as source when it differs from the display name', async () => {
+    expect((await badgeFor({ ...PROFILE, display_name: 'Ada L' })).source).toBe('owner')
   })
 })
 
@@ -231,5 +289,6 @@ describe('device label', () => {
     expect(deviceLabel('')).toBe('Unknown device')
     expect(deviceLabel(undefined)).toBe('Unknown device')
     expect(relativeWhen('2026-11-12T10:00:00Z', Date.parse('2026-11-12T10:02:30Z'))).toBe('2 minutes ago')
+    expect(relativeWhen('2026-11-12T10:00:30Z', Date.parse('2026-11-12T10:00:00Z'))).toBe('in under a minute')
   })
 })
