@@ -142,6 +142,15 @@ describe('narrow navigation', () => {
     expect(screen.getByRole('dialog', { name: 'Diagnostics' })).toBeTruthy()
   })
 
+  it.each([390, 1440])('has one main landmark, and the page is its scroll owner, at %ipx', width => {
+    widthQuery(width)
+    mount(big)
+    expect(screen.getAllByRole('main')).toHaveLength(1)
+    const page = document.querySelector<HTMLElement>('[data-region="surface.page"]')!
+    expect(page.closest('main')).not.toBeNull()
+    expect(page.className).toContain('overflow-y-auto')
+  })
+
   it('planNarrowNav keeps the order: first three primary items, then the rest', () => {
     const m = buildShellModel(big, { admin, viewNames: new Set() })
     const plan = planNarrowNav(m.navPrimary, m.navFooter)
