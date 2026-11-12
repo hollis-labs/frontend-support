@@ -98,7 +98,7 @@ export function NarrowNav({ plan, path, tail, renderLink, routeKey }: {
     if (wasOpen.current && !open) moreTab.current?.focus()
     wasOpen.current = open
   }, [open])
-  if (!plan.tabs.length && !plan.more) return null
+  if (!plan.tabs.length && !plan.more && !tail) return null
   const isCurrent = (l: NavLink) => l.path !== null && l.path === path
   const moreLinks = plan.more ? [...plan.more.primary, ...plan.more.groups.flatMap(g => g.links), ...plan.more.footer] : []
   const activeInMore = moreLinks.some(isCurrent)
@@ -116,6 +116,8 @@ export function NarrowNav({ plan, path, tail, renderLink, routeKey }: {
             onClick={() => setOpen(o => !o)}
             className={`flex h-14 min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 text-label ${activeInMore ? 'font-semibold text-fg' : 'text-fg-muted'}`}
           >More</button>
+        ) : tail ? (
+          <div data-nav-diagnostics className="flex min-w-0 flex-1 [&>button]:h-14 [&>button]:min-h-11 [&>button]:w-full [&>button]:text-center [&>button]:text-label">{tail}</div>
         ) : null}
       </nav>
       {open && plan.more ? <MoreSheet plan={plan.more} render={render} tail={tail} onClose={() => setOpen(false)} /> : null}

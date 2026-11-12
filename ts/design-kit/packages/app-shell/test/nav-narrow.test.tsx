@@ -124,10 +124,22 @@ describe('narrow navigation', () => {
     expect(bar.hidden).toBe(false)
   })
 
-  it('renders no nav at all when the app has none', () => {
+  it('keeps Diagnostics reachable as a tab at four or fewer destinations, with no More', () => {
+    widthQuery(390)
+    mount(small)
+    const bar = screen.getByRole('navigation', { name: 'Primary' })
+    expect(screen.queryByRole('button', { name: 'More' })).toBeNull()
+    fireEvent.click(within(bar).getByRole('button', { name: /Diagnostics/ }))
+    expect(screen.getByRole('dialog', { name: 'Diagnostics' })).toBeTruthy()
+  })
+
+  it('keeps Diagnostics reachable when the app has no nav at all', () => {
     widthQuery(390)
     mount(make([...nav('home', 'Home').slice(1)]), '/home')
-    expect(screen.queryByRole('navigation', { name: 'Primary' })).toBeNull()
+    const bar = screen.getByRole('navigation', { name: 'Primary' })
+    expect(tabs()).toEqual([])
+    fireEvent.click(within(bar).getByRole('button', { name: /Diagnostics/ }))
+    expect(screen.getByRole('dialog', { name: 'Diagnostics' })).toBeTruthy()
   })
 
   it('planNarrowNav keeps the order: first three primary items, then the rest', () => {

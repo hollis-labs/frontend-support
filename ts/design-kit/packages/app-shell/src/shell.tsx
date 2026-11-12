@@ -406,7 +406,7 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       <MenuContext.Provider value={menuRuntime ?? { menus: EMPTY_MENUS, run: async () => {}, icon: () => null }}>
       <KitAppShell
         isNarrow={narrow}
-        className={narrow && narrowPlan.tabs.length + (narrowPlan.more ? 1 : 0) > 0 ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]' : undefined}
+        className={narrow ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]' : undefined}
         nav={narrow ? undefined : <NavTree nodes={model.navPrimary} footer={model.navFooter} path={path} onNavigate={onNavigate} tail={diagButton} />}
         header={model.slots.length || hasPalette || (menuRuntime && model.menus.toolbar.length) ? (
           <div data-region="slots" className="flex items-center gap-2 border-b border-border-subtle p-2">
