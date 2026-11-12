@@ -4,6 +4,7 @@ import {
 } from 'react'
 import { AppShell as KitAppShell, EmptyState, type IconComponent } from '@hollis-labs/design-components'
 import { createVersionedStore, useVersionedStore } from '@hollis-labs/design-app-runtime'
+import { WidgetGrid } from './widget-ui'
 import type { HostDiagnostic, LayoutStorage } from '@hollis-labs/plugin-host-ui'
 import {
   PluginDockTabBody, PluginHostProvider, PluginPanelBody, PluginRenderBoundary, WidgetRenderer, usePluginDockTabs, usePluginPanels, usePluginSlots,
@@ -47,6 +48,8 @@ export interface ManifestShellProps {
   dockAttributes?: Readonly<Record<string, DockAttributes>>
   /** Where a user's chosen dock size is remembered. Without it the choice lasts the session. */
   dockStorage?: LayoutStorage
+  /** Where the widget grid's order, hidden widgets and card open state are remembered. Without it they last the session. */
+  widgetStorage?: LayoutStorage
   /**
    * The action gateway (S0.3). Without it the shell has no action policy point and pages cannot call
    * `useActionGateway`. `catalog` overrides or supplies handlers; the shell provides navigate,
@@ -203,14 +206,10 @@ function SettingsSections({ model }: { model: ShellModel }) {
   )
 }
 
-function Widgets() {
-  const widgets = usePluginSlots('widgets.grid').filter(v => v.widget)
-  if (!widgets.length) return null
-  return (
-    <div data-region="widgets.grid" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-      {widgets.map(w => <div key={w.id} className="rounded-lg border border-border-subtle p-3"><WidgetRenderer widget={w} /></div>)}
-    </div>
-  )
+function Widgets({ app, storage, onDiagnostic }: { app: string; storage?: LayoutStorage; onDiagnostic?: (event: HostDiagnostic) => void }) {
+  const slots = usePluginSlots('widgets.grid').filter(v => v.widget)
+  const widgets = slots.map(w => ({ id: w.id, label: w.label, node: <WidgetRenderer widget={w} /> }))
+  return <WidgetGrid app={app} widgets={widgets} storage={storage} onDiagnostic={onDiagnostic} />
 }
 
 function Panels() {
@@ -262,7 +261,7 @@ function LoadedShell(props: LoadedProps) {
   )
 }
 
-function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings = NO_BINDINGS, isNarrow, dockStorage, manifest, actions }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
+function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings = NO_BINDINGS, isNarrow, dockStorage, widgetStorage, manifest, actions, onHostDiagnostic }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
   const [overflow, setOverflow] = useState<ShellDiagnostic[]>([])
   const overlays = useOverlayStack(id => setOverflow(d => [...d, { code: 'overlay-depth', message: `Overlay "${id}" was not opened: the stack is at its depth limit.` }]))
   const narrow = useNarrow(isNarrow)
@@ -384,7 +383,7 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       >
         {surface ? (
           <PageFrame surface={surface}>
-            {surface.layout === 'dashboard' ? <Widgets /> : null}
+            {surface.layout === 'dashboard' ? <Widgets app={manifest.app} storage={widgetStorage} onDiagnostic={onHostDiagnostic} /> : null}
             {surface.layout === 'settings' ? <SettingsSections model={model} /> : null}
             {Page ? <ViewBoundary label={surface.title}><Page surface={surface} apiBase={apiBase} resolveRenderer={resolveRenderer} /></ViewBoundary> : null}
           </PageFrame>
