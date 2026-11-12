@@ -31,7 +31,7 @@ describe('buildShellModel', () => {
     expect(m.slots.map(s => s.key)).toEqual(['inspector-toggle'])
   })
   it('removes everything a module contributed when the module leaves the manifest', () => {
-    const gone = buildShellModel(without(manifest, 'core'), { admin })
+    const gone = buildShellModel(without(manifest, 'console'), { admin })
     expect(gone.navPrimary).toEqual([])
     expect(gone.panels).toEqual([])
     expect(gone.settingsSections).toEqual([])

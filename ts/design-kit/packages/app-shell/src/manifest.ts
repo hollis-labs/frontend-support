@@ -76,6 +76,8 @@ export type DiagnosticCode =
   | 'invalid-route'
   | 'duplicate-route'
   | 'overlay-depth'
+  | 'invalid-dock-attributes'
+  | 'host-refused'
 
 export interface ShellDiagnostic {
   code: DiagnosticCode
