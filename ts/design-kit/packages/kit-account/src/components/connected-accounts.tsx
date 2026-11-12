@@ -51,7 +51,7 @@ export function ConnectedAccounts({ accounts, onConnect, onDisconnect, loading =
           )
         })}
       </ul>
-      {!loading && accounts.length === 0 ? <p className="text-control text-fg-muted">No connected-account providers.</p> : null}
+      {!loading && !error && accounts.length === 0 ? <p className="text-control text-fg-muted">No connected-account providers.</p> : null}
     </section>
   )
 }

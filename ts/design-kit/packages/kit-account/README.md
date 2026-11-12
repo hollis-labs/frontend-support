@@ -1,7 +1,7 @@
 # @hollis-labs/kit-account
 
-Controlled account surfaces for a single-user, local-first app. **Private 0.0.0;
-not published.** This package owns presentation and user intent. The host owns
+Controlled account surfaces for a single-user, local-first app. Published on npm
+as `@hollis-labs/kit-account`; see [CHANGELOG](CHANGELOG.md). This package owns presentation and user intent. The host owns
 identity, drafts, validation, loading, errors, transport and per-app persistence.
 It supplies no login, auth service, browser storage or manifest protocol.
 
@@ -13,7 +13,7 @@ The future adapter belongs outside these components.
 ## Styling and development
 
 Use a workspace build or local packed candidate, paired with design-components
-0.1.1 (its token-aware `cn` is required). A release decision is separate.
+0.1.1 or later (its token-aware `cn` is required). Publishing is the owner's step.
 Tailwind CSS **v4** is a required peer; a peer install does not configure its build.
 
 ```css
@@ -147,7 +147,7 @@ grant, which the kit never sees.
 
 ## Verification
 
-Sixteen behavior tests cover controlled edits/save intents, busy/read-only/invalid
+The behavior tests (see `src/__tests__`) cover controlled edits/save intents, busy/read-only/invalid
 gates, host errors/success and identity assurance states. Packed Vite/Tailwind
 browser checks at 1280/390px cover draft preservation after failure, successful
 host save, preferences, disabled busy fields, unchanged whoami after profile edits,
@@ -156,7 +156,7 @@ The profile fixture is [demo/profile.tsx](demo/profile.tsx), with
 [browser harness](docs/profile-browser.mjs) and committed receipts/screenshots.
 
 The access fixture is [demo/access.tsx](demo/access.tsx), with
-[browser harness](docs/access-browser.mjs). It checks controlled scopes, failure
+[browser harness](docs/access-browser.mjs) (stale since 0.2.0, see [audit](docs/audit.md)). It checks controlled scopes, failure
 without disclosure, one-time create/copy/dismiss, metadata-only lists, zero browser
 storage entries, confirmation/cancel/failed revoke/retry, provider connect failure
 and retry, host-confirmed disconnect, context teardown and unknown-state safety.

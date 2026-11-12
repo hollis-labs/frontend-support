@@ -1,5 +1,11 @@
 # @hollis-labs/kit-account
 
+## Unreleased
+
+- `WhoamiBadge` root is now `role="group"` so its "Current identity" label is exposed to assistive technology.
+- `ApiTokenManager` and `ConnectedAccounts` no longer print their empty-state text while a load `error` is shown.
+- Docs: K1.1 audit recorded in `docs/audit.md`; README no longer says "private 0.0.0, not published".
+
 ## 0.3.0
 
 Additive; no existing export changes.
@@ -32,7 +38,9 @@ Breaking for `ApiTokenManager` and `NewTokenDisclosure` consumers (pre-1.0 minor
   polite live region and the value is never announced. The revoke dialog follows the k-revoke golden wording.
 - New optional `now` prop (epoch ms) for deterministic relative dates.
 
-## Unreleased — private 0.0.0
+## 0.1.0
+
+First published release (npm, `@hollis-labs/kit-account`); earlier entries below were drafted while the package was private 0.0.0.
 
 - Add controlled `ApiTokenManager` with host-advertised scopes/capabilities and
   confirmed revoke, separate one-time `NewTokenDisclosure`, and provider-driven

@@ -16,7 +16,7 @@ export interface WhoamiBadgeProps {
 
 export function WhoamiBadge({ identity, className }: WhoamiBadgeProps) {
   return (
-    <div aria-label="Current identity" className={cn('flex min-w-0 items-center gap-2 text-control text-fg', className)}>
+    <div role="group" aria-label="Current identity" className={cn('flex min-w-0 items-center gap-2 text-control text-fg', className)}>
       <UserRound className="size-4 shrink-0 text-fg-muted" aria-hidden />
       {identity.state === 'identified' ? (
         <>

@@ -124,7 +124,7 @@ export function ApiTokenManager({ tokens, scopeOptions, draft, onDraftChange, on
           )
         })}
       </ul>
-      {!loading && tokens.length === 0 ? <p className="text-control text-fg-muted">No API tokens.</p> : null}
+      {!loading && !error && tokens.length === 0 ? <p className="text-control text-fg-muted">No API tokens.</p> : null}
       <FormDialog open={createOpen && canCreate} onClose={() => onCreateOpenChange(false)} title="Create API token" description="The token is shown once after it is created." submitLabel={creating ? 'Creating token…' : 'Create token'} submitting={creating} submitDisabled={!canSubmit}
         onSubmit={() => { if (canSubmit) onCreate(draft) }}>
         <label htmlFor={`${id}-name`} className="block text-label text-fg-secondary">Token name</label>
