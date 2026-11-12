@@ -18,6 +18,7 @@ import { ActionConfirmDialog, ActionNotice } from './actions-ui'
 import { CommandPalette, EMPTY_MENUS, MenuContext, PrimaryToolbar, entryCall, type MenuRuntime } from './menu-ui'
 import { DockResizeHandle, DockTabStrip, type DockTab } from './dock-ui'
 import { dismissMatches, useDockState, type DockSize } from './docks'
+import { NarrowNav, planNarrowNav } from './nav-ui'
 import { createShellPluginHost, refusalDiagnostics, type ShellPluginHost } from './plugin-host'
 
 /** What a host supplies for a panel, dock.tab or widget: the component its `view` names. */
@@ -96,16 +97,25 @@ function Icon({ name }: { name?: string }) {
   return C ? <C aria-hidden className="size-4" /> : null
 }
 
-function NavEntry({ link, path, onNavigate }: { link: NavLink; path: string; onNavigate: (p: string) => void }) {
+function NavEntry({ link, path, onNavigate, tab, onActivate }: { link: NavLink; path: string; onNavigate: (p: string) => void; tab?: boolean; onActivate?: () => void }) {
   const label = link.item.label || link.item.key
   const current = link.path !== null && link.path === path
+  if (tab) {
+    const cls = `flex h-14 min-h-11 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 px-1 text-label ${current ? 'font-semibold text-fg' : 'text-fg-muted'}`
+    if (link.path === null) return <span data-nav-tab className={cls}><Icon name={link.item.icon} /><span className="max-w-full truncate">{label}</span></span>
+    return (
+      <a href={link.path} data-nav-tab aria-current={current ? 'page' : undefined} onClick={e => { e.preventDefault(); onNavigate(link.path!); onActivate?.() }} className={cls}>
+        <Icon name={link.item.icon} /><span className="max-w-full truncate">{label}</span>
+      </a>
+    )
+  }
   if (link.path === null) return <span className="flex items-center gap-2 px-3 py-1.5 text-control text-fg-muted"><Icon name={link.item.icon} />{label}</span>
   return (
     <a
       href={link.path}
       aria-current={current ? 'page' : undefined}
-      onClick={e => { e.preventDefault(); onNavigate(link.path!) }}
-      className={`flex items-center gap-2 rounded-md px-3 py-1.5 text-control ${current ? 'bg-bg-elevated font-semibold text-fg' : 'text-fg-muted hover:bg-bg-elevated hover:text-fg'}`}
+      onClick={e => { e.preventDefault(); onNavigate(link.path!); onActivate?.() }}
+      className={`flex min-h-11 items-center gap-2 rounded-md px-3 py-1.5 text-control lg:min-h-0 ${current ? 'bg-bg-elevated font-semibold text-fg' : 'text-fg-muted hover:bg-bg-elevated hover:text-fg'}`}
     >
       <Icon name={link.item.icon} />{label}
     </a>
@@ -146,6 +156,8 @@ function DockSheet({ id, title, children, onClose, size, sizes, onSize, presenta
   const sheet = presentation ? presentation === 'bottom-sheet' : narrow
   const resizable = !sheet && bottom
   return (
+    <>
+    {sheet ? <div data-dock-scrim aria-hidden onClick={onClose} className="fixed inset-0 z-40 bg-black/40" /> : null}
     <section
       role="dialog" aria-label={title} data-dock={id} data-presentation={sheet ? 'bottom-sheet' : resizable ? 'bottom' : 'side'} data-size={sheet || resizable ? undefined : size}
       style={resizable ? { height: bottom.height } : undefined}
@@ -165,6 +177,7 @@ function DockSheet({ id, title, children, onClose, size, sizes, onSize, presenta
       {resizable && bottom.tabs.length > 1 ? <DockTabStrip tabs={bottom.tabs} onSelect={bottom.onSelect} /> : null}
       <div className="min-h-0 flex-1 overflow-y-auto p-3">{children}</div>
     </section>
+    </>
   )
 }
 
@@ -181,10 +194,10 @@ export function DiagnosticsList({ diagnostics }: { diagnostics: readonly ShellDi
 
 function PageFrame({ surface, children }: { surface: SurfaceRoute; children: ReactNode }) {
   return (
-    <main data-region="surface.page" data-layout={surface.layout} className="flex min-w-0 flex-1 flex-col gap-4 p-4">
+    <div data-region="surface.page" data-layout={surface.layout} className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
       <h1 className="text-lg font-semibold text-fg">{surface.title}</h1>
       {children}
-    </main>
+    </div>
   )
 }
 
@@ -385,6 +398,7 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       Diagnostics{diagnostics.length ? ` (${diagnostics.length})` : ''}
     </button>
   )
+  const narrowPlan = useMemo(() => planNarrowNav(model.navPrimary, model.navFooter), [model.navPrimary, model.navFooter])
   const diag = overlays.entries.find(e => e.id === 'shell:diagnostics')
 
   return (
@@ -392,7 +406,8 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       <MenuContext.Provider value={menuRuntime ?? { menus: EMPTY_MENUS, run: async () => {}, icon: () => null }}>
       <KitAppShell
         isNarrow={narrow}
-        nav={<NavTree nodes={model.navPrimary} footer={model.navFooter} path={path} onNavigate={onNavigate} tail={diagButton} />}
+        className={narrow ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]' : undefined}
+        nav={narrow ? undefined : <NavTree nodes={model.navPrimary} footer={model.navFooter} path={path} onNavigate={onNavigate} tail={diagButton} />}
         header={model.slots.length || hasPalette || (menuRuntime && model.menus.toolbar.length) ? (
           <div data-region="slots" className="flex items-center gap-2 border-b border-border-subtle p-2">
             {hasPalette ? (
@@ -424,6 +439,12 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
           </PageFrame>
         ) : <EmptyState variant="error" title="Page not found" description={path} />}
       </KitAppShell>
+      {narrow ? (
+        <NarrowNav
+          plan={narrowPlan} path={path} tail={diagButton} routeKey={path}
+          renderLink={(link, { tab }) => <NavEntry key={link.item.key} link={link} path={path} onNavigate={onNavigate} tab={tab} />}
+        />
+      ) : null}
       {docks.open.map(o => {
         const item = tabItem(o.tab)
         const attrs = model.docks.find(d => d.region.name === o.region)!.attributes

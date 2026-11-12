@@ -7,6 +7,8 @@ export { createShellPluginHost, placedItems, refusalDiagnostics } from './plugin
 export type { ShellPluginHost, ShellPluginHostOptions } from './plugin-host'
 export * from './bindings'
 export { ManifestShell, DiagnosticsList } from './shell'
+export { planNarrowNav, PRIMARY_TAB_COUNT, MAX_ALL_TABS } from './nav-ui'
+export type { NarrowNavPlan } from './nav-ui'
 export type { ShellActions, ManifestShellProps, PageProps, PageComponent, ViewComponent } from './shell'
 export * from './actions'
 export { ActionConfirmDialog, ActionNotice, useGatewaySnapshot } from './actions-ui'

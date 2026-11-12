@@ -13,6 +13,7 @@ import manifest from './frontend.manifest.json'
 ## What it does
 
 - Refuses an unknown `manifest_version` with a visible error; there is no fallback shape.
+- Narrow widths (max-width 1023px or `isNarrow`): the nav rail gives way to a bottom tab bar (first three `nav.primary` items, then More with the rest in a sheet).
 - Places `nav.item`, `nav.group`, `settings.region`, `surface`, `panel`, `dock.tab`, `widget` and `slot` by region.
   Docked regions and their anchors come from the manifest's `regions` catalog.
 - Applies the SF-2 dock attributes to docked regions (read from the region catalog, snake_case: `open_state`, `exclusive`, `sizes`, `dismiss_key`, `mobile`, `edge`, `height_px`; the shell works in the camelCase `DockAttributes` form): `openState`, `exclusive`
