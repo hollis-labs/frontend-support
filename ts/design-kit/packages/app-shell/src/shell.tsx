@@ -1,5 +1,5 @@
 import {
-  createContext, useContext, useEffect, useMemo, useState, useSyncExternalStore,
+  createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore,
   type ComponentType, type ReactNode,
 } from 'react'
 import { AppShell as KitAppShell, EmptyState, type IconComponent } from '@hollis-labs/design-components'
@@ -11,7 +11,9 @@ import {
 import { createRendererSelector, type RendererSelector } from './bindings'
 import { parseFrontendManifest, type FrontendManifest, type ManifestItem, type ShellDiagnostic } from './manifest'
 import { buildShellModel, effectiveRegion, type AdminManifestInput, type NavLink, type NavNode, type ShellModel, type SurfaceRoute } from './model'
-import { useOverlayStack, type OverlayStack } from './overlays'
+import { useOverlayStack, restoreFocus, type OverlayStack } from './overlays'
+import { createActionGateway, type ActionGateway, type ActionGatewayOptions, type CatalogHandlers } from './actions'
+import { ActionConfirmDialog, ActionNotice } from './actions-ui'
 import { dismissMatches, useDockState, type DockAttributes, type DockSize } from './docks'
 import { createShellPluginHost, refusalDiagnostics, type ShellPluginHost } from './plugin-host'
 
@@ -43,12 +45,29 @@ export interface ManifestShellProps {
   dockAttributes?: Readonly<Record<string, DockAttributes>>
   /** Where a user's chosen dock size is remembered. Without it the choice lasts the session. */
   dockStorage?: LayoutStorage
+  /**
+   * The action gateway (S0.3). Without it the shell has no action policy point and pages cannot call
+   * `useActionGateway`. `catalog` overrides or supplies handlers; the shell provides navigate,
+   * closeOverlay, openRegion, closeRegion, toast and focus itself, and openOverlay / setData come from the host.
+   */
+  actions?: ShellActions
   /** Everything plugin-host-ui reports while reconciling the registered contributions. */
   onHostDiagnostic?: (event: HostDiagnostic) => void
 }
 
-interface Ctx { overlays: OverlayStack; narrow: boolean; apiBase: string; views: Readonly<Record<string, ViewComponent>>; icons: Readonly<Record<string, IconComponent>> }
+export type ShellActions = Omit<ActionGatewayOptions, 'confirmationHost' | 'onTerminal'> & {
+  /** The host's re-review step for a stale outcome (the review-changes step). */
+  onReview?: (review: { id: string; current: { revision: string } }) => void
+}
+
+interface Ctx { gateway: ActionGateway | null; overlays: OverlayStack; narrow: boolean; apiBase: string; views: Readonly<Record<string, ViewComponent>>; icons: Readonly<Record<string, IconComponent>> }
 const ShellContext = createContext<Ctx | null>(null)
+/** The action gateway, for pages that submit actions. Throws when the host passed no `actions`. */
+export function useActionGateway(): ActionGateway {
+  const g = useShell().gateway
+  if (!g) throw new Error('No action gateway: pass `actions` to ManifestShell')
+  return g
+}
 const useShell = (): Ctx => { const c = useContext(ShellContext); if (!c) throw new Error('Shell context missing'); return c }
 
 const NARROW_QUERY = '(max-width: 1023px)'
@@ -234,16 +253,75 @@ function LoadedShell(props: LoadedProps) {
   )
 }
 
-function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings, isNarrow, dockStorage, manifest }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
+function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, pages = NO_PAGES, icons = NO_ICONS, bindings, isNarrow, dockStorage, manifest, actions }: LoadedProps & { model: ShellModel; host: ShellPluginHost }) {
   const [overflow, setOverflow] = useState<ShellDiagnostic[]>([])
   const overlays = useOverlayStack(id => setOverflow(d => [...d, { code: 'overlay-depth', message: `Overlay "${id}" was not opened: the stack is at its depth limit.` }]))
   const narrow = useNarrow(isNarrow)
   const resolveRenderer = useMemo(() => createRendererSelector(bindings), [bindings])
   const snapshot = useSyncExternalStore(host.runtime.subscribe, host.runtime.getSnapshot, host.runtime.getServerSnapshot)
   const diagnostics = useMemo(() => [...model.diagnostics, ...refusalDiagnostics(snapshot.refusals), ...overflow], [model.diagnostics, snapshot.refusals, overflow])
-  const ctx = useMemo<Ctx>(() => ({ overlays, narrow, apiBase, views, icons }), [overlays, narrow, apiBase, views, icons])
   const dockRegions = useMemo(() => model.docks.map(d => ({ region: d.region.name, attributes: d.attributes, tabs: d.tabs.map(t => t.key) })), [model.docks])
   const docks = useDockState(manifest.app, dockRegions, dockStorage)
+
+  // The gateway outlives renders; it reaches the shell's current capabilities through this ref.
+  const self = useRef<ActionGateway | null>(null)
+  const toastSeq = useRef(0)
+  const [toasts, setToasts] = useState<readonly { id: number; text: string; tone?: string }[]>([])
+  const live = useRef({ overlays, docks, model, onNavigate })
+  useEffect(() => { live.current = { overlays, docks, model, onNavigate } })
+  const gateway = useMemo(() => {
+    if (!actions) return null
+    const { onReview: _onReview, catalog, ...rest } = actions
+    void _onReview
+    const shellCatalog: CatalogHandlers = {
+      navigate: args => {
+        const route = args.route
+        const hit = typeof route === 'string' ? live.current.model.surfaces.find(s => s.item.key === route) : undefined
+        if (!hit) throw new Error('unregistered route')
+        live.current.onNavigate(hit.path)
+      },
+      closeOverlay: () => {
+        const top = [...live.current.overlays.entries].reverse().find(o => o.kind !== 'toast')
+        if (top?.id.startsWith('confirm:')) self.current?.cancel(top.id.slice('confirm:'.length), 'dismissed')
+        else live.current.overlays.closeTop()
+      },
+      openRegion: args => {
+        const { model: m, docks: d } = live.current
+        const dock = m.docks.find(x => x.region.name === args.region)
+        const tab = dock?.tabs.find(t => t.key === (args.tab ?? dock.tabs[0]?.key))
+        if (!dock || !tab) throw new Error('unresolved region')
+        if (!d.isOpen(tab.key)) d.toggle(dock.region.name, tab.key, null)
+      },
+      closeRegion: args => {
+        const { model: m, docks: d } = live.current
+        const dock = m.docks.find(x => x.region.name === args.region)
+        if (!dock) throw new Error('unresolved region')
+        dock.tabs.forEach(t => d.close(t.key))
+      },
+      toast: args => {
+        if (typeof args.message !== 'string') throw new Error('invalid message')
+        const text = args.message
+        setToasts(t => [...t, { id: ++toastSeq.current, text, tone: typeof args.tone === 'string' ? args.tone : undefined }])
+      },
+      focus: args => {
+        const el = typeof args.target === 'string' ? document.querySelector<HTMLElement>(`[data-focus-target="${CSS.escape(args.target)}"]`) : null
+        if (!el) throw new Error('unresolved target')
+        el.focus()
+      },
+    }
+    const created = createActionGateway({
+      ...rest,
+      catalog: { ...shellCatalog, ...catalog },
+      confirmationHost: {
+        open: id => live.current.overlays.open({ id: `confirm:${id}`, kind: 'modal', title: 'Confirm action' }),
+        close: id => live.current.overlays.close(`confirm:${id}`),
+      },
+      onTerminal: ({ trigger }) => restoreFocus(trigger instanceof HTMLElement ? trigger : null),
+    })
+    self.current = created
+    return created
+  }, [actions])
+  const ctx = useMemo<Ctx>(() => ({ gateway, overlays, narrow, apiBase, views, icons }), [gateway, overlays, narrow, apiBase, views, icons])
 
   // Esc (or a region's own dismissKey) closes whichever overlay or docked region opened last.
   useEffect(() => {
@@ -253,11 +331,12 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
       if (!overlay && !dock) return
       e.preventDefault()
       if (dock && (!overlay || dock.seq > overlay.seq)) docks.close(dock.tab)
+      else if (overlay?.id.startsWith('confirm:')) gateway?.cancel(overlay.id.slice('confirm:'.length), 'dismissed')
       else if (overlay) overlays.close(overlay.id)
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
-  }, [overlays, docks, model.docks])
+  }, [overlays, docks, model.docks, gateway])
 
   const surface = model.surfaces.find(s => s.path === (path.length > 1 ? path.replace(/\/$/, '') : path))
   const Page = surface ? pages[surface.item.key] : undefined
@@ -311,6 +390,16 @@ function ShellFrame({ model, host, apiBase, path, onNavigate, views = NO_VIEWS, 
           ><DockTab region={o.region} tab={o.tab} /></DockSheet>
         )
       })}
+      {toasts.length ? (
+        <div role="status" data-region="toasts" className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+          {toasts.map(t => (
+            <p key={t.id} data-tone={t.tone} className="flex items-center gap-2 rounded-lg border border-border-subtle bg-bg-elevated p-3 text-control text-fg">
+              {t.text}<button type="button" aria-label="Dismiss toast" onClick={() => setToasts(all => all.filter(x => x.id !== t.id))} className="text-caption text-fg-muted">×</button>
+            </p>
+          ))}
+        </div>
+      ) : null}
+      {gateway ? <><ActionConfirmDialog gateway={gateway} /><ActionNotice gateway={gateway} onReview={actions?.onReview} /></> : null}
       {diag ? <DockSheet id={diag.id} title={diag.title} onClose={() => overlays.close(diag.id)}><DiagnosticsList diagnostics={diagnostics} /></DockSheet> : null}
     </ShellContext.Provider>
   )

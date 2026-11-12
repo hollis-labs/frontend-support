@@ -6,4 +6,7 @@ export { createShellPluginHost, placedItems, refusalDiagnostics } from './plugin
 export type { ShellPluginHost, ShellPluginHostOptions } from './plugin-host'
 export * from './bindings'
 export { ManifestShell, DiagnosticsList } from './shell'
-export type { ManifestShellProps, PageProps, PageComponent, ViewComponent } from './shell'
+export type { ShellActions, ManifestShellProps, PageProps, PageComponent, ViewComponent } from './shell'
+export * from './actions'
+export { ActionConfirmDialog, ActionNotice, useGatewaySnapshot } from './actions-ui'
+export { useActionGateway } from './shell'
