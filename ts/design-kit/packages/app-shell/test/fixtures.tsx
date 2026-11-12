@@ -11,6 +11,7 @@ const it = (i: Partial<ManifestItem> & Pick<ManifestItem, 'kind' | 'key'>): Mani
 export const manifest: FrontendManifest = {
   manifest_version: 0,
   app: 'hadron',
+  bindings: [],
   regions: [
     { name: 'shell.header', docked: false },
     { name: 'shell.right', docked: true, anchor: 'shell.header' },
@@ -31,6 +32,10 @@ export const manifest: FrontendManifest = {
     it({ kind: 'slot', key: 'inspector-toggle', label: 'Inspector', region: 'shell.header', opens: 'inspector' }),
   ],
 }
+
+/** The manifest with snake_case dock attributes set on one region, as the generator writes them. */
+export const withRegion = (m: FrontendManifest, name: string, attrs: Record<string, unknown>): FrontendManifest =>
+  ({ ...m, regions: m.regions.map(r => (r.name === name ? { ...r, ...attrs } : r)) })
 
 export const admin = { settings: [{ id: 'app.general', label: 'General settings', scope: { kind: 'app' } }] }
 

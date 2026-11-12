@@ -16,7 +16,7 @@ import { useOverlayStack, restoreFocus, type OverlayStack } from './overlays'
 import { createActionGateway, type ActionGateway, type ActionGatewayOptions, type CatalogHandlers } from './actions'
 import { ActionConfirmDialog, ActionNotice } from './actions-ui'
 import { DockResizeHandle, DockTabStrip, type DockTab } from './dock-ui'
-import { dismissMatches, useDockState, type DockAttributes, type DockSize } from './docks'
+import { dismissMatches, useDockState, type DockSize } from './docks'
 import { createShellPluginHost, refusalDiagnostics, type ShellPluginHost } from './plugin-host'
 
 /** What a host supplies for a panel, dock.tab or widget: the component its `view` names. */
@@ -44,8 +44,6 @@ export interface ManifestShellProps {
   bindings?: BindingStore
   /** Force the narrow (bottom sheet) presentation; otherwise a (max-width: 1023px) query decides. */
   isNarrow?: boolean
-  /** SF-2 attributes (openState, exclusive, sizes, dismissKey, mobile) by docked region name. */
-  dockAttributes?: Readonly<Record<string, DockAttributes>>
   /** Where a user's chosen dock size is remembered. Without it the choice lasts the session. */
   dockStorage?: LayoutStorage
   /** Where the widget grid's order, hidden widgets and card open state are remembered. Without it they last the session. */
@@ -248,9 +246,9 @@ export function ManifestShell(props: ManifestShellProps) {
 type LoadedProps = Omit<ManifestShellProps, 'manifest'> & { manifest: FrontendManifest }
 
 function LoadedShell(props: LoadedProps) {
-  const { manifest, admin, apiBase, views = NO_VIEWS, dockAttributes, onHostDiagnostic } = props
+  const { manifest, admin, apiBase, views = NO_VIEWS, onHostDiagnostic } = props
   const viewNames = useMemo(() => new Set(Object.keys(views)), [views])
-  const model = useMemo(() => buildShellModel(manifest, { admin, viewNames, dockAttributes }), [manifest, admin, viewNames, dockAttributes])
+  const model = useMemo(() => buildShellModel(manifest, { admin, viewNames }), [manifest, admin, viewNames])
   // The runtime is not disposed on unmount: it holds no resources of its own (retain/release
   // in PluginHostProvider owns the subscriptions), and a StrictMode remount would find it dead.
   const host = useMemo(() => createShellPluginHost(manifest.app, model, { views, apiBase, onDiagnostic: onHostDiagnostic }), [manifest.app, model, views, apiBase, onHostDiagnostic])

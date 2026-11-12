@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.9.0
+
+- Consumes the Substrate 76666fd frontend manifest (SF-11). **Breaking:** the `dockAttributes` prop and `BuildOptions.dockAttributes`
+  are gone; docked regions carry their attributes natively in the catalog (`open_state`, `exclusive`, `sizes`, `dismiss_key`,
+  `mobile`, `edge`, `height_px`), mapped to `DockAttributes` by `dockAttributesOfRegion` (`edge` becomes the side/bottom `anchor`,
+  since the manifest's `anchor` is the inline region a dock sits under). `ManifestRegion` is `{name, docked, anchor?, ...}`.
+- `FrontendManifest.bindings` is required (`{kind, version}[]`, sorted, unique, may be empty; origin optional, never written); a manifest
+  without it is refused as malformed.
+- `ManifestItem` gains `action {navigate?, openRegion?, tab?, call?, input?}`, `risk`, `order`, `when`, `keywords`, `group`. Types and
+  validation only; `menu.item` and `command` are not rendered (SF-3d).
+- New diagnostics `unknown-field` (a field this shell does not know, at manifest, region, item or action level) and `invalid-action`;
+  neither skips or crashes anything. `manifestFieldDiagnostics` and `actionProblems` are exported.
+
 ## 0.8.0
 
 - `WidgetCard` and the widgets.grid edit mode (SF-3 PR3; lifted copy-from-only from Nanite's `Widget`, `widget-order` helpers and the right rail's

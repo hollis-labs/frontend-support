@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { useState } from 'react'
 import { DockResizeHandle, DockTabStrip, ManifestShell, buildShellModel, type DockTab, type FrontendManifest, type ManifestShellProps } from '../src'
-import { admin, manifest, pages, views } from './fixtures'
+import { admin, manifest, pages, views, withRegion } from './fixtures'
 
 const tab = (key: string, label: string) => ({ module: 'console', kind: 'dock.tab', key, label, view: 'inspector', region: 'shell.right' })
 const bottomManifest: FrontendManifest = {
@@ -10,21 +10,22 @@ const bottomManifest: FrontendManifest = {
   items: [...manifest.items, tab('logs', 'Logs'),
     { module: 'console', kind: 'slot', key: 'logs-toggle', label: 'Logs', region: 'shell.header', opens: 'logs' }],
 }
-const attrs = { 'shell.right': { anchor: 'bottom' as const, heightPx: { min: 100, default: 200, max: 400 } } }
+const bottom = (attrs: Record<string, unknown>) => withRegion(bottomManifest, 'shell.right', attrs)
+const withAttrs = bottom({ edge: 'bottom', height_px: { min: 100, default: 200, max: 400 } })
 const mount = (over: Partial<ManifestShellProps> = {}) =>
-  render(<ManifestShell manifest={bottomManifest} admin={admin} apiBase="/api" path="/" onNavigate={() => {}} views={views} pages={pages} isNarrow={false} dockAttributes={attrs} {...over} />)
+  render(<ManifestShell manifest={withAttrs} admin={admin} apiBase="/api" path="/" onNavigate={() => {}} views={views} pages={pages} isNarrow={false} {...over} />)
 const dlg = (name: string) => screen.getByRole('dialog', { name })
 const handle = () => screen.getByRole('separator')
 const pointer = (el: Element, type: string, clientY: number) => fireEvent(el, Object.assign(new MouseEvent(type, { bubbles: true, clientY }), { pointerId: 1 }))
 
 describe('bottom anchor attributes', () => {
   it('resolves defaults, and a bottom dock is exclusive unless told otherwise', () => {
-    const a = buildShellModel(bottomManifest, { admin, dockAttributes: { 'shell.right': { anchor: 'bottom' } } }).docks[0]!.attributes
+    const a = buildShellModel(bottom({ edge: 'bottom' }), { admin }).docks[0]!.attributes
     expect(a.anchor).toBe('bottom'); expect(a.exclusive).toBe(true); expect(a.heightPx).toEqual({ min: 120, default: 240, max: 640 })
   })
   it('refuses heightPx on a side dock and an inverted range', () => {
-    for (const bad of [{ heightPx: { min: 100, default: 200 } }, { anchor: 'bottom' as const, heightPx: { min: 300, default: 200 } }]) {
-      const m = buildShellModel(bottomManifest, { admin, dockAttributes: { 'shell.right': bad } })
+    for (const bad of [{ height_px: { min: 100, default: 200 } }, { edge: 'bottom', height_px: { min: 300, default: 200 } }]) {
+      const m = buildShellModel(bottom(bad), { admin })
       expect(m.diagnostics.map(d => d.code)).toContain('invalid-dock-attributes')
     }
   })

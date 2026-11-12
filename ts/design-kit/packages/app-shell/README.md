@@ -15,7 +15,7 @@ import manifest from './frontend.manifest.json'
 - Refuses an unknown `manifest_version` with a visible error; there is no fallback shape.
 - Places `nav.item`, `nav.group`, `settings.region`, `surface`, `panel`, `dock.tab`, `widget` and `slot` by region.
   Docked regions and their anchors come from the manifest's `regions` catalog.
-- Applies the SF-2 dock attributes to docked regions (`dockAttributes`, by region name): `openState`, `exclusive`
+- Applies the SF-2 dock attributes to docked regions (read from the region catalog, snake_case: `open_state`, `exclusive`, `sizes`, `dismiss_key`, `mobile`, `edge`, `height_px`; the shell works in the camelCase `DockAttributes` form): `openState`, `exclusive`
   (opening a tab closes the region's others), `sizes` (token options and default; the user's pick is remembered through
   `dockStorage`), `dismissKey` (`Esc`) and `mobile` (`bottom-sheet`: at narrow widths, max-width 1023px or `isNarrow`,
   docked tabs open as bottom sheets). A region with nothing supplied gets the vocabulary defaults; an invalid set is
@@ -58,6 +58,5 @@ Plugin panels cannot reuse a built-in's or another plugin's id.
 
 ## Not here
 
-Backend action endpoints, auth and key handling, page content, and any app change. The manifest's region
-catalog (`{name, docked, anchor}`) does not yet carry `openState`, `exclusive`, `sizes`, `dismissKey` or `mobile`, so the host
-supplies them through `dockAttributes`; when Substrate adds them, the shell should read them from the catalog instead.
+Backend action endpoints, auth and key handling, page content, and any app change. `menu.item` and `command` are parsed and
+validated (`action`, `risk`, `order`, `when`, `keywords`, `group`) but not rendered yet; they are still skipped as unknown kinds.
