@@ -101,6 +101,7 @@ describe('IdentityGate', () => {
     await signIn()
     const alert = await screen.findByRole('alert')
     await waitFor(() => expect(document.activeElement).toBe(alert))
+    expect(alert.className).toContain('focus-visible:ring-ring')
     screen.getByLabelText('Password').focus()
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy())

@@ -9,7 +9,10 @@ import type { LoginInput } from '../client/types'
 export interface SignInScreenProps {
   readonly onSubmit: (input: LoginInput) => void
   readonly busy?: boolean
-  /** Credential or rate-limit message, shown on the form. */
+  /**
+   * Credential or rate-limit message, shown on the form. Focus moves to it when it appears; clear it (`null`) when a new
+   * attempt starts, as `IdentityGate` does, or a repeated failure with the same error keeps it mounted and does not move focus again.
+   */
   readonly error?: ReactNode
   /** Neutral notice, for example "Setup is already complete." */
   readonly notice?: ReactNode

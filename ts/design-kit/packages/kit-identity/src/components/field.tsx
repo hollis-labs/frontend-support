@@ -44,7 +44,7 @@ export function FormMessage({ tone, focus = false, children }: FormMessageProps)
   }, [focus])
   // Errors use the danger Callout: danger token, icon, border and role="alert".
   if (tone === 'error') {
-    const callout = <Callout tone="danger">{children}</Callout>
+    const callout = <Callout tone="danger" className={focus ? 'outline-none focus-visible:ring-2 focus-visible:ring-ring' : undefined}>{children}</Callout>
     return focus ? <div ref={ref} className="contents">{callout}</div> : callout
   }
   return (
