@@ -47,6 +47,10 @@ sessions item only once a pinned version ships it. Sign out is an action: put `S
 - `401 invalid_login` is a credential error and stays on its form (including a wrong current password on
   `PUT /api/password`). Any other 401 means the session ended: the provider moves to the sign-in screen with the
   "Session expired" state.
+- After a failed sign-in, keyboard focus moves to the error (the `role="alert"` element itself, with a focus-visible ring),
+  so keyboard and screen-reader users land on the reason. `IdentityGate` clears the error on each attempt, so focus moves
+  after every failure. An app rendering `SignInScreen` directly must do the same (pass `error={null}` while a new attempt
+  runs); an error left mounted across attempts takes focus only on the first failure.
 - A 403 on keys, pairing codes or sessions renders `SignInRequired reason="denied"` with no create control.
 - One-time values (key, pairing code) live only in component state and are cleared on dismiss, unmount and session change.
   They never reach storage, URL, logs or errors.
