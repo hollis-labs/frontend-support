@@ -36,12 +36,16 @@ export interface FormMessageProps {
 export function FormMessage({ tone, focus = false, children }: FormMessageProps) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    if (focus) ref.current?.focus()
+    // Focus the role="alert" node itself (the Callout takes no ref), so `getByRole('alert')` is the focused element.
+    const alert = focus ? ref.current?.querySelector<HTMLElement>('[role="alert"]') : null
+    if (!alert) return
+    alert.tabIndex = -1
+    alert.focus()
   }, [focus])
   // Errors use the danger Callout: danger token, icon, border and role="alert".
   if (tone === 'error') {
     const callout = <Callout tone="danger">{children}</Callout>
-    return focus ? <div ref={ref} tabIndex={-1} className="outline-none">{callout}</div> : callout
+    return focus ? <div ref={ref} className="contents">{callout}</div> : callout
   }
   return (
     <div role="status" className={tone === 'success' ? 'text-control text-success' : 'text-control text-fg-secondary'}>

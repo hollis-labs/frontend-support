@@ -100,11 +100,11 @@ describe('IdentityGate', () => {
     mount({ 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/profile': signedOut, 'POST /api/login': [failed, failed] }, <p>shell</p>)
     await signIn()
     const alert = await screen.findByRole('alert')
-    await waitFor(() => expect(document.activeElement?.contains(alert)).toBe(true))
+    await waitFor(() => expect(document.activeElement).toBe(alert))
     screen.getByLabelText('Password').focus()
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy())
-    await waitFor(() => expect(document.activeElement?.contains(screen.getByRole('alert'))).toBe(true))
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('alert')))
   })
 
   it('autocomplete attributes suit password managers', async () => {

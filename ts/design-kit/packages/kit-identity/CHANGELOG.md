@@ -2,7 +2,7 @@
 
 ## 0.1.2 (CW-20261113-0029)
 
-- Fix (accessibility): after a failed sign-in, keyboard focus moves to the announced error. Before, the form was disabled
+- Fix (accessibility): after a failed sign-in, keyboard focus moves to the announced error (the `role="alert"` element itself). Before, the form was disabled
   while the request ran and focus fell to the page body. `FormMessage` takes `focus`; `SignInScreen` sets it.
 
 ## 0.1.1 (CW-20261113-0023)
