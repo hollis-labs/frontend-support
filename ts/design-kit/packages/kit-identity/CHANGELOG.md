@@ -3,10 +3,10 @@
 ## 0.1.3 (CW-20261113-0030)
 
 - Fix: a rate-limited answer (429) now says when to try again. The client reads the `Retry-After` header (seconds or an
-  HTTP date) into the new `IdentityError.retryAfter` (seconds), and `errorMessage()` appends "Try again in 30 seconds."
-  or "Try again in 3 minutes (at 14:05)." to the message. This applies on the sign-in form and on every other screen. Without
-  `Retry-After` the message is unchanged. New exports `parseRetryAfter` and `retryAfterText` from
-  `@hollis-labs/kit-identity/client`.
+  HTTP date) into the new `IdentityError.retryAfter` (seconds). `errorMessage()` appends "Try again in 3 minutes (at
+  14:05)." to the message: whole minutes, rounded up, as Loom's own screen had it. This applies on the sign-in form and
+  every other screen. Without `Retry-After` the message is unchanged. New exports `parseRetryAfter` and
+  `retryAfterText` from `@hollis-labs/kit-identity/client`.
 
 ## 0.1.2 (CW-20261113-0029)
 

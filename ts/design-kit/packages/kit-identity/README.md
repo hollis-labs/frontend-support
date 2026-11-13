@@ -42,7 +42,7 @@ sessions item only once a pinned version ships it. Sign out is an action: put `S
   the `GET /api/identity/sessions` probe: the session is known, the profile is not, and the badge is "Identity unavailable".
 - Every non-2xx body is flat `{code, message, details?}` and becomes an `IdentityError`. The UI shows `message` only; a
   missing or unreadable body shows "The request could not be completed."
-- A 429 with `Retry-After` (seconds or an HTTP date) adds when to try again: "Try again in 30 seconds." or
+- A 429 with `Retry-After` (seconds or an HTTP date) adds when to try again: "Try again in 1 minute (at 14:03)." or
   "Try again in 3 minutes (at 14:05)." The value is on `IdentityError.retryAfter` in seconds.
 - Every request sends `X-Requested-With: XMLHttpRequest` and `credentials: 'same-origin'`. The session cookie is HttpOnly;
   the kit never sees it.

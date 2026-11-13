@@ -15,7 +15,7 @@ describe('identity client', () => {
     const { fetch } = fakeFetch({ 'POST /api/login': { status: 429, headers: { 'Retry-After': '30' }, body: { code: 'rate_limited', message: 'too many attempts' } } })
     const error = await createIdentityClient({ fetch }).login({ username: 'a', password: 'b' }).catch((e: unknown) => e)
     expect(error).toMatchObject({ status: 429, retryAfter: 30 })
-    expect(errorMessage(error)).toBe('too many attempts. Try again in 30 seconds.')
+    expect(errorMessage(error)).toMatch(/^too many attempts\. Try again in 1 minute \(at .+\)\.$/)
   })
 
   it('parses Retry-After as seconds or an HTTP date, and words it in seconds or minutes', () => {
@@ -25,7 +25,8 @@ describe('identity client', () => {
     expect(parseRetryAfter('Fri, 13 Nov 2026 11:00:00 GMT', now)).toBe(0)
     expect(parseRetryAfter(null, now)).toBeUndefined()
     expect(parseRetryAfter('soon', now)).toBeUndefined()
-    expect(retryAfterText(1, now)).toBe('Try again in 1 second.')
+    expect(retryAfterText(1, now)).toMatch(/^Try again in 1 minute \(at .+\)\.$/)
+    expect(retryAfterText(60, now)).toMatch(/^Try again in 1 minute \(/)
     expect(retryAfterText(150, now)).toMatch(/^Try again in 3 minutes \(at .+\)\.$/)
     expect(retryAfterText(0, now)).toBe('Try again now.')
   })

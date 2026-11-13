@@ -28,10 +28,9 @@ export function parseRetryAfter(value: string | null, now: number = Date.now()):
   return Number.isNaN(at) ? undefined : Math.max(0, Math.ceil((at - now) / 1000))
 }
 
-/** "Try again in 45 seconds." / "Try again in 3 minutes (at 14:05)." */
+/** "Try again in 1 minute (at 14:03)." / "Try again in 3 minutes (at 14:05)." Whole minutes, rounded up. */
 export function retryAfterText(seconds: number, now: number = Date.now()): string {
   if (seconds < 1) return 'Try again now.'
-  if (seconds < 60) return `Try again in ${seconds} second${seconds === 1 ? '' : 's'}.`
   const minutes = Math.ceil(seconds / 60)
   const at = new Date(now + seconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return `Try again in ${minutes} minute${minutes === 1 ? '' : 's'} (at ${at}).`
