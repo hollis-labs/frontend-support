@@ -1,4 +1,4 @@
-/** Returned by setup and login. There is no read route for the signed-in caller, so this is only known after one of them. */
+/** Returned by setup, login and `GET /api/identity/profile` (the signed-in caller). */
 export interface IdentityProfile {
   readonly id: string
   readonly username: string

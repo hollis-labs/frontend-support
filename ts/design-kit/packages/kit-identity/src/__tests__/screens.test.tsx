@@ -18,7 +18,8 @@ function mount(routes: Parameters<typeof fakeFetch>[0], ui: React.ReactNode) {
   render(<IdentityProvider options={{ fetch: fake.fetch }}><IdentityGate>{ui}</IdentityGate></IdentityProvider>)
   return fake
 }
-const signedIn = { 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/sessions': { status: 200, body: { sessions: [] } } }
+const signedIn = { 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/profile': { status: 200, body: PROFILE } }
+const signedOut = { status: 401, body: { code: 'unauthorized', message: 'x' } }
 
 async function signIn() {
   fireEvent.change(await screen.findByLabelText('Username'), { target: { value: 'owner' } })
@@ -84,7 +85,7 @@ describe('IdentityGate', () => {
   it('keeps invalid_login on the form (not expired) and mounts the shell after sign-in', async () => {
     mount({
       'GET /api/setup': { status: 200, body: { setup_required: false } },
-      'GET /api/identity/sessions': { status: 401, body: { code: 'unauthorized', message: 'x' } },
+      'GET /api/identity/profile': signedOut,
       'POST /api/login': [{ status: 401, body: { code: 'invalid_login', message: 'invalid username or password' } }, { status: 200, body: PROFILE }],
     }, <p>shell</p>)
     await signIn()
@@ -95,7 +96,7 @@ describe('IdentityGate', () => {
   })
 
   it('autocomplete attributes suit password managers', async () => {
-    mount({ ...signedIn, 'GET /api/identity/sessions': { status: 401, body: { code: 'unauthorized', message: 'x' } } }, <p>shell</p>)
+    mount({ ...signedIn, 'GET /api/identity/profile': signedOut }, <p>shell</p>)
     expect((await screen.findByLabelText('Username')).getAttribute('autocomplete')).toBe('username')
     expect(screen.getByLabelText('Password').getAttribute('autocomplete')).toBe('current-password')
   })
@@ -247,7 +248,7 @@ describe('identity badge', () => {
   const badgeFor = async (profile: object) => {
     mount({
       'GET /api/setup': { status: 200, body: { setup_required: false } },
-      'GET /api/identity/sessions': { status: 401, body: { code: 'unauthorized', message: 'x' } },
+      'GET /api/identity/profile': signedOut,
       'POST /api/login': { status: 200, body: profile },
     }, <Probe />)
     await signIn()
@@ -274,10 +275,34 @@ describe('IDENTITY_ROUTES', () => {
 })
 
 describe('identity badge', () => {
-  it('is local unless the server says verified, and unknown after a reload', async () => {
+  it('reads the profile back after a reload (CW-20261113-0023)', async () => {
+    const Scopes = () => <output data-testid="scopes">{JSON.stringify(useIdentity().scopes)}</output>
     const { Probe } = await import('./probe')
-    mount({ 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/sessions': { status: 200, body: { sessions: [] } } }, <Probe />)
+    const fake = mount(signedIn, <><Probe /><Scopes /></>)
+    expect((await screen.findByTestId('badge')).textContent).toBe('identified')
+    expect(screen.getByTestId('scopes').textContent).toBe('["*"]')
+    expect(fake.calls.map((call) => `${call.method} ${call.url}`)).toEqual(['GET /api/setup', 'GET /api/identity/profile'])
+  })
+
+  it('a 401 on the profile read is signed out, not expired', async () => {
+    mount({ ...signedIn, 'GET /api/identity/profile': signedOut }, <p>shell</p>)
+    expect(await screen.findByRole('button', { name: 'Sign in' })).toBeTruthy()
+    expect(screen.queryByText(/session expired/i)).toBeNull()
+  })
+
+  it.each([
+    ['403 route_not_mapped', { status: 403, body: { code: 'route_not_mapped', message: 'x' } }],
+    ['404', { status: 404 }],
+  ])('falls back to the session probe when the host has no profile route (%s), badge unknown', async (_, reply) => {
+    const { Probe } = await import('./probe')
+    const fake = mount({ ...signedIn, 'GET /api/identity/profile': reply, 'GET /api/identity/sessions': { status: 200, body: { sessions: [] } } }, <Probe />)
     expect((await screen.findByTestId('badge')).textContent).toBe('unknown')
+    expect(fake.calls.map((call) => call.url)).toContain('/api/identity/sessions')
+  })
+
+  it('a failed profile read is a boot error', async () => {
+    mount({ ...signedIn, 'GET /api/identity/profile': { status: 500, body: { code: 'internal', message: 'boom' } } }, <p>shell</p>)
+    expect(await screen.findByText('boom')).toBeTruthy()
   })
 })
 

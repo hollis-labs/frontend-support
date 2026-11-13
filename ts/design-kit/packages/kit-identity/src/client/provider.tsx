@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { createIdentityClient } from './client'
 import type { IdentityClientOptions } from './client'
-import { errorMessage } from './errors'
+import { errorMessage, IdentityError } from './errors'
 import { IdentityContext } from './identity-context'
 import type { IdentityContextValue, IdentityStatus } from './identity-context'
 import type { IdentityProfile } from './types'
@@ -30,10 +30,19 @@ export function IdentityProvider({ options, children }: IdentityProviderProps) {
 
   useEffect(() => {
     let live = true
+    // After a reload the profile is read back. A host without the route (404, or 403 `route_not_mapped`) can only say
+    // whether the session is alive; any 403 takes that path rather than failing the boot.
+    const session = (): Promise<{ status: IdentityStatus; profile: IdentityProfile | null }> => client.readProfile().then(
+      (read) => ({ status: read ? 'signed-in' : 'signed-out', profile: read }),
+      (error: unknown) => {
+        if (!(error instanceof IdentityError && (error.status === 403 || error.status === 404))) throw error
+        return client.hasSession().then((has) => ({ status: has ? 'signed-in' : 'signed-out', profile: null }))
+      },
+    )
     client.setupState().then(
-      (state) => (state.required ? (state.overHttp ? 'setup' : 'setup-offline') : client.hasSession().then((has) => (has ? 'signed-in' : 'signed-out'))),
+      (state) => (state.required ? { status: state.overHttp ? 'setup' : 'setup-offline', profile: null } as const : session()),
     ).then(
-      (next) => { if (live) { setBootError(null); setStatus(next as IdentityStatus) } },
+      (next) => { if (live) { setBootError(null); setProfile(next.profile); setStatus(next.status) } },
       (error: unknown) => { if (live) { setBootError(errorMessage(error)); setStatus('boot-error') } },
     )
     return () => { live = false }
