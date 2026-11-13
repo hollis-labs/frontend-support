@@ -34,8 +34,12 @@ sessions item only once a pinned version ships it. Sign out is an action: put `S
 
 ## Contract (the client owns it; apps do not redo it)
 
-- Paths default to `/api/setup`, `/api/login`, `/api/logout`, `/api/password` and `/api/identity/{keys,pairing-codes,sessions}`;
-  override with `baseUrl`, `identityBase` and `paths`.
+- Paths default to `/api/setup`, `/api/login`, `/api/logout`, `/api/password` and
+  `/api/identity/{profile,keys,pairing-codes,sessions}`; override with `baseUrl`, `identityBase` and `paths` (`paths.profile`
+  defaults to `<identityBase>/profile`).
+- On boot, once no setup is needed, the provider reads `GET /api/identity/profile`: 200 fills `profile`, `scopes` and the
+  badge (also after a reload), 401 is signed out. A host without the route (404, or 403 `route_not_mapped`) falls back to
+  the `GET /api/identity/sessions` probe: the session is known, the profile is not, and the badge is "Identity unavailable".
 - Every non-2xx body is flat `{code, message, details?}` and becomes an `IdentityError`. The UI shows `message` only; a
   missing or unreadable body shows "The request could not be completed."
 - Every request sends `X-Requested-With: XMLHttpRequest` and `credentials: 'same-origin'`. The session cookie is HttpOnly;
@@ -51,8 +55,8 @@ sessions item only once a pinned version ships it. Sign out is an action: put `S
 
 ## Known gaps in the server (as run against Basalisk)
 
-- There is no read route for the signed-in caller (`GET /api/identity/profile` is `403 route_not_mapped`). The profile
-  and scopes are known only after setup or sign-in; after a reload `profile` and `scopes` are `null`, the badge is
+- Older identity modules have no `GET /api/identity/profile` (`403 route_not_mapped`). Against those the profile and
+  scopes are known only after setup or sign-in; after a reload `profile` and `scopes` are `null`, the badge is
   "Identity unavailable", and the Pairing page can only learn it is denied from the server's 403.
 - There is no scope catalogue. The scope picker offers the caller's own scopes, the host's `scopeSuggestions`, and
   free-text entry.

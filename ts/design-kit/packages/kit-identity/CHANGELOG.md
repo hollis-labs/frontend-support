@@ -1,8 +1,16 @@
 # @hollis-labs/kit-identity
 
-## Unreleased
+## 0.1.1 (CW-20261113-0023)
 
-First version (`0.1.0`), CW-20261112-0080.
+- Fix: after a page reload the provider had no profile, so `useIdentity()` gave `profile` and `scopes` as `null` and the
+  badge read "Identity unavailable". On boot it now reads `GET /api/identity/profile` (new `IdentityPaths.profile`,
+  default `<identityBase>/profile`; new `IdentityClient.readProfile()`, `null` on 401). 200 fills profile, scopes and
+  badge; 401 is signed out (not "Session expired"). A host without the route (404 or 403 `route_not_mapped`) keeps the
+  0.1.0 behaviour through the `/api/identity/sessions` probe.
+
+## 0.1.0
+
+First version, CW-20261112-0080.
 
 - `IdentityGate`, `SetupScreen`, `SignInScreen`, `BootScreen`, `AuthLayout`.
 - Pages: `AccountSecurityPage`, `ApiKeysPage`, `PairingCodesPage`, `SessionsPage`, `SignOutPage`, `SignOutButton`.

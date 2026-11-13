@@ -62,6 +62,17 @@ describe('identity client', () => {
     expect(onUnauthorized).not.toHaveBeenCalled()
   })
 
+  it('reads the profile, answers null on 401 without signalling an expired session, and rejects a missing route', async () => {
+    const onUnauthorized = vi.fn()
+    const ok = fakeFetch({ 'GET /api/identity/profile': { status: 200, body: { id: 'u1', username: 'owner', display_name: 'Owner', email: '', scopes: null } } })
+    await expect(createIdentityClient({ fetch: ok.fetch }).readProfile()).resolves.toMatchObject({ username: 'owner', scopes: [] })
+    const out = fakeFetch({ 'GET /api/identity/profile': { status: 401, body: { code: 'unauthorized', message: 'x' } } })
+    await expect(createIdentityClient({ fetch: out.fetch, onUnauthorized }).readProfile()).resolves.toBeNull()
+    expect(onUnauthorized).not.toHaveBeenCalled()
+    const old = fakeFetch({ 'GET /api/identity/profile': { status: 403, body: { code: 'route_not_mapped', message: 'x' } } })
+    await expect(createIdentityClient({ fetch: old.fetch }).readProfile()).rejects.toMatchObject({ status: 403, code: 'route_not_mapped' })
+  })
+
   it('reads an empty key list sent as null', async () => {
     const { fetch } = fakeFetch({ 'GET /api/identity/keys': { status: 200, body: { keys: null } } })
     await expect(createIdentityClient({ fetch }).listKeys()).resolves.toEqual([])
@@ -86,5 +97,14 @@ describe('identity client', () => {
     await expect(client.setupState()).resolves.toEqual({ required: true, overHttp: true })
     await client.listKeys()
     expect(calls).toHaveLength(2)
+  })
+
+  it('reads the profile under identityBase unless paths.profile is given', async () => {
+    const profile = { status: 200, body: { id: 'u1', username: 'owner', display_name: '', email: '', scopes: [] } }
+    const derived = fakeFetch({ 'GET /id/profile': profile })
+    await createIdentityClient({ fetch: derived.fetch, identityBase: '/id' }).readProfile()
+    const explicit = fakeFetch({ 'GET /me': profile })
+    await createIdentityClient({ fetch: explicit.fetch, identityBase: '/id', paths: { profile: '/me' } }).readProfile()
+    expect([...derived.calls, ...explicit.calls].map((call) => call.url)).toEqual(['/id/profile', '/me'])
   })
 })

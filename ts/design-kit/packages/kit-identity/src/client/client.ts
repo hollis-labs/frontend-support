@@ -18,6 +18,8 @@ export interface IdentityPaths {
   readonly login: string
   readonly logout: string
   readonly credentialChange: string
+  /** The signed-in caller's profile. Defaults to `<identityBase>/profile`. */
+  readonly profile: string
 }
 
 /** The identity module serves these under every app. */
@@ -26,6 +28,7 @@ export const DEFAULT_IDENTITY_PATHS: IdentityPaths = {
   login: '/api/login',
   logout: '/api/logout',
   credentialChange: '/api/password',
+  profile: '/api/identity/profile',
 }
 
 export interface IdentityClientOptions {
@@ -56,7 +59,12 @@ export interface IdentityClient {
   login(input: LoginInput): Promise<IdentityProfile>
   logout(): Promise<void>
   changePassword(input: ChangePasswordInput): Promise<void>
-  /** True when a session cookie is accepted. The profile cannot be read back, so this is all a reload can learn. */
+  /**
+   * The signed-in caller (`GET /api/identity/profile`); `null` on a 401 (signed out), without signalling an expired
+   * session. Hosts without the route answer 404 or 403 `route_not_mapped`, which reject as an `IdentityError`.
+   */
+  readProfile(): Promise<IdentityProfile | null>
+  /** True when a session cookie is accepted. The boot fallback for hosts that cannot read the profile back. */
   hasSession(): Promise<boolean>
   listKeys(): Promise<readonly IdentityCredential[]>
   createKey(input: CreateKeyInput): Promise<CreatedKey>
@@ -87,7 +95,7 @@ async function readError(response: Response): Promise<IdentityError> {
 export function createIdentityClient(options: IdentityClientOptions = {}): IdentityClient {
   const base = options.baseUrl ?? ''
   const identity = options.identityBase ?? '/api/identity'
-  const paths: IdentityPaths = { ...DEFAULT_IDENTITY_PATHS, ...options.paths }
+  const paths: IdentityPaths = { ...DEFAULT_IDENTITY_PATHS, profile: join(identity, '/profile'), ...options.paths }
   const doFetch = options.fetch ?? ((input, init) => fetch(input, init))
 
   async function request<T>(path: string, { method = 'GET', body, quiet401 = false }: RequestOptions = {}): Promise<T> {
@@ -127,6 +135,15 @@ export function createIdentityClient(options: IdentityClientOptions = {}): Ident
     login: (input) => request<IdentityProfile>(paths.login, { method: 'POST', body: input }),
     logout: () => request<void>(paths.logout, { method: 'POST' }),
     changePassword: (input) => request<void>(paths.credentialChange, { method: 'PUT', body: input }),
+    async readProfile() {
+      try {
+        const profile = await request<IdentityProfile>(paths.profile, { quiet401: true })
+        return { ...profile, scopes: profile.scopes ?? [] }
+      } catch (error) {
+        if (error instanceof IdentityError && error.status === 401) return null
+        throw error
+      }
+    },
     async hasSession() {
       try {
         await request(join(identity, '/sessions'), { quiet401: true })
