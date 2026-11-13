@@ -1,7 +1,8 @@
 import { vi } from 'vitest'
 
 export interface Call { readonly method: string; readonly url: string; readonly headers: Record<string, string>; readonly body: unknown }
-type Reply = { status: number; body?: unknown } | ((call: Call) => { status: number; body?: unknown })
+type Answer = { status: number; body?: unknown; headers?: Record<string, string> }
+type Reply = Answer | ((call: Call) => Answer)
 
 /** A scripted fetch keyed by "METHOD /path". Unscripted calls fail the test loudly. */
 export function fakeFetch(routes: Record<string, Reply | Reply[]>) {
@@ -18,8 +19,8 @@ export function fakeFetch(routes: Record<string, Reply | Reply[]>) {
     const queue = queues.get(key) ?? (Array.isArray(route) ? [...route] : [route])
     queues.set(key, queue)
     const reply = queue.length > 1 ? queue.shift()! : queue[0]!
-    const { status, body } = typeof reply === 'function' ? reply(call) : reply
-    return new Response(status === 204 || body === undefined ? null : JSON.stringify(body), { status })
+    const { status, body, headers } = typeof reply === 'function' ? reply(call) : reply
+    return new Response(status === 204 || body === undefined ? null : JSON.stringify(body), { status, headers })
   })
   return { fetch: impl as unknown as typeof fetch, calls }
 }

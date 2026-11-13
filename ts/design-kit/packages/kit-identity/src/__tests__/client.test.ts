@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { IdentityError, createIdentityClient, errorMessage } from '../client'
+import { IdentityError, createIdentityClient, errorMessage, parseRetryAfter, retryAfterText } from '../client'
 import { fakeFetch } from './fake'
 
 describe('identity client', () => {
@@ -9,6 +9,33 @@ describe('identity client', () => {
     expect(error).toBeInstanceOf(IdentityError)
     expect(error).toMatchObject({ status: 429, code: 'rate_limited', details: { x: 1 } })
     expect(errorMessage(error)).toBe('too many attempts; wait a few minutes')
+  })
+
+  it('reads Retry-After on a 429 and says when to try again', async () => {
+    const { fetch } = fakeFetch({ 'POST /api/login': { status: 429, headers: { 'Retry-After': '30' }, body: { code: 'rate_limited', message: 'too many attempts' } } })
+    const error = await createIdentityClient({ fetch }).login({ username: 'a', password: 'b' }).catch((e: unknown) => e)
+    expect(error).toMatchObject({ status: 429, retryAfter: 30 })
+    expect(errorMessage(error)).toMatch(/^too many attempts\. Try again in 1 minute \(at .+\)\.$/)
+  })
+
+  it('parses Retry-After as seconds or an HTTP date, and words it in seconds or minutes', () => {
+    const now = Date.parse('2026-11-13T12:00:00Z')
+    expect(parseRetryAfter('120', now)).toBe(120)
+    expect(parseRetryAfter('Fri, 13 Nov 2026 12:02:30 GMT', now)).toBe(150)
+    expect(parseRetryAfter('Fri, 13 Nov 2026 11:00:00 GMT', now)).toBe(0)
+    expect(parseRetryAfter(null, now)).toBeUndefined()
+    expect(parseRetryAfter('soon', now)).toBeUndefined()
+    expect(retryAfterText(1, now)).toMatch(/^Try again in 1 minute \(at .+\)\.$/)
+    expect(retryAfterText(60, now)).toMatch(/^Try again in 1 minute \(/)
+    expect(retryAfterText(150, now)).toMatch(/^Try again in 3 minutes \(at .+\)\.$/)
+    expect(retryAfterText(0, now)).toBe('Try again now.')
+  })
+
+  it('keeps the plain message on a 429 without Retry-After', async () => {
+    const { fetch } = fakeFetch({ 'POST /api/login': { status: 429, body: { code: 'rate_limited', message: 'too many attempts.' } } })
+    const error = await createIdentityClient({ fetch }).login({ username: 'a', password: 'b' }).catch((e: unknown) => e)
+    expect((error as IdentityError).retryAfter).toBeUndefined()
+    expect(errorMessage(error)).toBe('too many attempts.')
   })
 
   it('falls back to a generic message for a missing or non-JSON body, and never echoes it', async () => {
