@@ -1,4 +1,4 @@
-import { GENERIC_ERROR_MESSAGE, IdentityError, NETWORK_ERROR_MESSAGE } from './errors'
+import { GENERIC_ERROR_MESSAGE, IdentityError, NETWORK_ERROR_MESSAGE, parseRetryAfter } from './errors'
 import type {
   ChangePasswordInput,
   CreateKeyInput,
@@ -89,7 +89,7 @@ async function readError(response: Response): Promise<IdentityError> {
   const code = typeof flat.code === 'string' && flat.code !== '' ? flat.code : 'unknown'
   const text = [flat.message, flat.error].find((value): value is string => typeof value === 'string' && value !== '')
   const message = text ?? GENERIC_ERROR_MESSAGE
-  return new IdentityError(response.status, code, message, flat.details)
+  return new IdentityError(response.status, code, message, flat.details, parseRetryAfter(response.headers.get('Retry-After')))
 }
 
 export function createIdentityClient(options: IdentityClientOptions = {}): IdentityClient {

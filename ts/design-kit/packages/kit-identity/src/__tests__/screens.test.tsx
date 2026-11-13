@@ -108,6 +108,16 @@ describe('IdentityGate', () => {
     await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('alert')))
   })
 
+  it('shows when to try again on a rate-limited sign-in', async () => {
+    mount({
+      'GET /api/setup': { status: 200, body: { setup_required: false } },
+      'GET /api/identity/profile': signedOut,
+      'POST /api/login': { status: 429, headers: { 'Retry-After': '120' }, body: { code: 'rate_limited', message: 'too many sign-in attempts' } },
+    }, <p>shell</p>)
+    await signIn()
+    expect((await screen.findByRole('alert')).textContent).toMatch(/^too many sign-in attempts\. Try again in 2 minutes \(at .+\)\.$/)
+  })
+
   it('autocomplete attributes suit password managers', async () => {
     mount({ ...signedIn, 'GET /api/identity/profile': signedOut }, <p>shell</p>)
     expect((await screen.findByLabelText('Username')).getAttribute('autocomplete')).toBe('username')
