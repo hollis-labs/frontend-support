@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-dashboard",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Kit Dashboard — the dashboard idiom: shell components, layout presets, DataTable, filters, widgets and charts. Forked from @hollis-labs/sysop-ui 0.9.0.",
   "keywords": [
     "react",

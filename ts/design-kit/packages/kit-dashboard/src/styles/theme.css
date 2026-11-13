@@ -701,6 +701,9 @@
  * Keep the native select's form, keyboard, ref and change-event behavior. */
 :root, [data-theme] {
   --dash-control-height: calc(var(--spacing) * 8);
+  /* Search fields sit level with the controls beside them. A compact header that
+   * wants the field's content height sets this to `auto` on the field. */
+  --dash-search-min-height: var(--dash-control-height);
   --dash-control-padding: calc(var(--spacing) * 2.5);
   --dash-control-bg: var(--hl-bg);
   --dash-control-active-bg: var(--hl-surface-hover);
@@ -863,7 +866,7 @@
   /* The adapter owns the legacy SearchInput's outer field, without changing
    * its debounce/focus behavior or giving the inner input a second surface. */
   .dash-search-adapter > div, .dash-search-field {
-    min-height: calc(var(--spacing) * 8);
+    min-height: var(--dash-search-min-height);
     display: flex;
     align-items: center;
     gap: calc(var(--spacing) * 2);
