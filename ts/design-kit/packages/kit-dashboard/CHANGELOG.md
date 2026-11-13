@@ -1,5 +1,12 @@
 # @hollis-labs/kit-dashboard
 
+## 0.6.2 (CW-20261112-0113)
+
+- New token `--dash-search-min-height` for `.dash-search-field` and the FilterBar search adapter. The default is
+  `var(--dash-control-height)`, so nothing changes unless a consumer sets it. Set it to `auto` on a field to size it
+  to its content: 26/32/38px at root 16/20/24 with `data-dashboard-scale="root-relative"`, matching the audited compact
+  header, instead of the control height (32/40/48px).
+
 ## 0.6.1
 
 - `@hollis-labs/design-app-runtime` range `^0.5.0` → `^0.6.0` (runtime adds the versioned store). No source change.

@@ -649,8 +649,10 @@ Focus itself, keyboard behavior, selection and return targets are preserved;
 interactive keyboard focus uses background/foreground feedback instead. This is
 an idiom-level policy and does not change the neutral components' ring tokens.
 `--dash-control-height`, `--dash-control-padding`, `--dash-control-bg`,
-`--dash-control-active-bg`, `--dash-search-bg`, `--dash-search-active-bg`, and
-`--dash-menu-divider` are the shared tuning points. Do not add route-local rings
+`--dash-control-active-bg`, `--dash-search-bg`, `--dash-search-active-bg`,
+`--dash-search-min-height` and `--dash-menu-divider` are the shared tuning points.
+`--dash-search-min-height` defaults to `--dash-control-height`; set it to `auto` on a
+search field (e.g. in a compact header) to size the field to its content. Do not add route-local rings
 or a second border to a composed search editor.
 
 ### Shared control layouts and evidence tables
