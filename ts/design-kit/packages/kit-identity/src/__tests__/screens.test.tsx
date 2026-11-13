@@ -95,6 +95,18 @@ describe('IdentityGate', () => {
     expect(await screen.findByText('shell')).toBeTruthy()
   })
 
+  it('moves keyboard focus to the error after each failed sign-in', async () => {
+    const failed = { status: 401, body: { code: 'invalid_login', message: 'invalid username or password' } }
+    mount({ 'GET /api/setup': { status: 200, body: { setup_required: false } }, 'GET /api/identity/profile': signedOut, 'POST /api/login': [failed, failed] }, <p>shell</p>)
+    await signIn()
+    const alert = await screen.findByRole('alert')
+    await waitFor(() => expect(document.activeElement?.contains(alert)).toBe(true))
+    screen.getByLabelText('Password').focus()
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in' })).toBeTruthy())
+    await waitFor(() => expect(document.activeElement?.contains(screen.getByRole('alert'))).toBe(true))
+  })
+
   it('autocomplete attributes suit password managers', async () => {
     mount({ ...signedIn, 'GET /api/identity/profile': signedOut }, <p>shell</p>)
     expect((await screen.findByLabelText('Username')).getAttribute('autocomplete')).toBe('username')

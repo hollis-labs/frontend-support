@@ -34,7 +34,7 @@ export function SignInScreen({ onSubmit, busy = false, error, notice, expired = 
           <Field label="Password" type="password" value={password} onChange={setPassword} autoComplete="current-password" />
         </fieldset>
         {notice ? <FormMessage tone="notice">{notice}</FormMessage> : null}
-        {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+        {error ? <FormMessage tone="error" focus>{error}</FormMessage> : null}
         <Button type="submit" disabled={busy || username === '' || password === ''}>{busy ? 'Signing in…' : 'Sign in'}</Button>
       </form>
     </AuthLayout>

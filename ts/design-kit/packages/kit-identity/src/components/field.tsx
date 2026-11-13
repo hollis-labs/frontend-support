@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useEffect, useId, useRef } from 'react'
 import { Callout, Input } from '@hollis-labs/design-components'
 
 export interface FieldProps {
@@ -26,9 +26,23 @@ export function Field({ label, value, onChange, type = 'text', autoComplete, hin
   )
 }
 
-export function FormMessage({ tone, children }: { readonly tone: 'error' | 'notice' | 'success'; readonly children: React.ReactNode }) {
+export interface FormMessageProps {
+  readonly tone: 'error' | 'notice' | 'success'
+  /** Move keyboard focus to the message when it appears, so a failed submit lands the person on the reason. */
+  readonly focus?: boolean
+  readonly children: React.ReactNode
+}
+
+export function FormMessage({ tone, focus = false, children }: FormMessageProps) {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (focus) ref.current?.focus()
+  }, [focus])
   // Errors use the danger Callout: danger token, icon, border and role="alert".
-  if (tone === 'error') return <Callout tone="danger">{children}</Callout>
+  if (tone === 'error') {
+    const callout = <Callout tone="danger">{children}</Callout>
+    return focus ? <div ref={ref} tabIndex={-1} className="outline-none">{callout}</div> : callout
+  }
   return (
     <div role="status" className={tone === 'success' ? 'text-control text-success' : 'text-control text-fg-secondary'}>
       {children}
