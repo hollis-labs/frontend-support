@@ -1,5 +1,11 @@
 # @hollis-labs/kit-chat
 
+## 0.8.0 (CW-20261113-0024)
+
+- Dependency ranges only, no source change: `@hollis-labs/design-bindings` `^0.2.0` → `^0.3.0` and
+  `@hollis-labs/kit-cards` `^0.2.0` → `^0.3.0`, matching app-shell 0.11.0, so an app installs one binding contract.
+  No `design-app-runtime` dependency; the package works beside design-app-runtime 0.6.
+
 ## 0.7.0
 
 - Dependency ranges only, no source change: `@hollis-labs/design-bindings` `^0.1.0` → `^0.2.0` and

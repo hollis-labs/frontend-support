@@ -1,5 +1,11 @@
 # @hollis-labs/kit-cards
 
+## 0.3.0 (CW-20261113-0024)
+
+- Dependency range only, no source change: `@hollis-labs/design-bindings` `^0.2.0` → `^0.3.0`, the contract app-shell
+  0.11.0 uses, so an app installs one binding contract. design-bindings 0.3.0 is additive over 0.2.0. No
+  `design-app-runtime` dependency; the package works beside design-app-runtime 0.6.
+
 ## 0.2.0 — BREAKING (CW-20261105-0004)
 
 - Follows design-bindings 0.2.0 (`^0.2.0`): the registry speaks isolation, not trust classes.
