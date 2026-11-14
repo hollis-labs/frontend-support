@@ -3,7 +3,7 @@
 > **DEPRECATED — historical document.** `@hollis-labs/sysop-ui` is deprecated and
 > scheduled for removal (no date; once GUI vNext is ready), so the v2 iteration
 > described below is not planned in this repository. The dashboard kit now lives
-> in [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/design-kit/tree/main/packages/kit-dashboard).
+> in [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/kit-dashboard).
 > See [docs/DEPRECATION.md](./docs/DEPRECATION.md). The text below is kept for
 > history and has not been updated.
 

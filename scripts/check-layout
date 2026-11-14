@@ -33,5 +33,30 @@ for p in $(repo_files | awk -F/ -v g="$GROUP" '$1 == g && NF > 2 { print $1 "/" 
   [ ! -e "$REPO_ROOT/$p/go.mod" ] || bad "$p/go.mod: Go modules belong in libs, tools or plugins"
 done
 repo_files | awk -F/ -v g="$GROUP" '$1 == g && NF == 2 { print }' | while IFS= read -r f; do echo "FAIL: $f: loose file in $GROUP/" >&2; done
+
+# Published packages point npm at this repository: repository {url, directory}, homepage and bugs.
+if ! repo_files | grep -E "^$GROUP/(.+/)?package\.json$" | python3 -c '
+import json, os, sys
+root, name = sys.argv[1], sys.argv[2]
+base = "https://github.com/hollis-labs/" + name
+ok = True
+for path in sys.stdin.read().split():
+    p = json.load(open(os.path.join(root, path)))
+    if p.get("private"):
+        continue
+    d = os.path.dirname(path)
+    r = p.get("repository") or {}
+    want = {"repository.url": ("git+" + base + ".git", r.get("url") if isinstance(r, dict) else r),
+            "repository.directory": (d, r.get("directory") if isinstance(r, dict) else None),
+            "bugs.url": (base + "/issues", (p.get("bugs") or {}).get("url"))}
+    for key, (expected, got) in want.items():
+        if got != expected:
+            print("FAIL: %s: %s is %r, want %r" % (path, key, got, expected), file=sys.stderr); ok = False
+    if not str(p.get("homepage", "")).startswith(base + "/tree/main/" + d):
+        print("FAIL: %s: homepage is %r, want %s/tree/main/%s#readme" % (path, p.get("homepage"), base, d), file=sys.stderr); ok = False
+sys.exit(0 if ok else 1)
+' "$REPO_ROOT" "$REPO_NAME"; then
+  fail=1
+fi
 [ "$fail" -eq 0 ] || exit 1
 echo "ok: layout ($count packages under $GROUP/)"

@@ -1,7 +1,7 @@
 # Deprecation of `@hollis-labs/sysop-ui`
 
 **Status:** deprecated, pending removal.
-**Replacement:** [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/design-kit/tree/main/packages/kit-dashboard), in [design-kit](https://github.com/hollis-labs/design-kit).
+**Replacement:** [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/kit-dashboard), in [design-kit](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit).
 **Removal:** once GUI vNext is ready. There is no date.
 
 ## Replacement

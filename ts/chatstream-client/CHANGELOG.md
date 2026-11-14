@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 — 2026-11-14
+
+Metadata only: `repository` (with `directory: ts/chatstream-client`), `homepage` and `bugs` point at hollis-labs/frontend-support; the published 0.1.0 pointed at a repository that no longer exists. `LICENSE` is in the package again. README links to the sibling chatstream package are absolute, so they work on npm. No code change.
+
 ## 0.1.0 — 2026-09-30
 
 Initial extraction; not published, not tagged.
