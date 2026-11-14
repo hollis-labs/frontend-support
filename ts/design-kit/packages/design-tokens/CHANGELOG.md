@@ -1,5 +1,9 @@
 # @hollis-labs/design-tokens
 
+## 0.5.1 — 2026-11-14
+
+Metadata only: corrected npm repository field to point to hollis-labs/frontend-support.
+
 ## 0.5.0 — 2026-10-10
 
 No token implementation change since 0.4.0; align the six-package core version. Upgrade the six core packages together; ^0.4.0 excludes this minor.

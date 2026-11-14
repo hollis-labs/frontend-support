@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.1 — 2026-11-14
+
+Metadata only: corrected npm repository field to point to hollis-labs/frontend-support.
+
 ## 0.1.0 — 2026-09-30
 
 Initial extraction; not published, not tagged.

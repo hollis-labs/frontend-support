@@ -6,6 +6,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-14
+
+### Changed
+
+- Metadata only: corrected npm repository field to point to hollis-labs/frontend-support.
+
+## [0.9.0] - 2026-05-25
+
 ### Changed
 
 - Project AGENTS.md added and later genericized for outside readers; `CLAUDE.md`

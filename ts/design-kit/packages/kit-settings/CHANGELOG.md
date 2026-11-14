@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1 — 2026-11-14
+
+Metadata only: corrected npm repository field to point to hollis-labs/frontend-support.
+
 ## 0.2.0 — 2026-10-02
 
 - Add optional `readOnlyContext` to SettingsRenderer and SettingsProvenanceRenderer
