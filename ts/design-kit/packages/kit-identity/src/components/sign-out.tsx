@@ -31,12 +31,15 @@ export function SignOutButton({ label = 'Sign out', variant = 'outline' }: SignO
   )
 }
 
-/** In-shell page for apps whose shell has no user menu yet. */
+/** In-shell page for apps whose shell has no user menu yet. Names the signed-in person when the profile is known. */
 export function SignOutPage() {
+  const { badge } = useIdentity()
+  const who = badge.state === 'identified' ? badge.displayName : null
   return (
     <section aria-labelledby="identity-signout-title" className="flex min-w-0 flex-col items-start gap-3 rounded-panel border border-border bg-bg-elevated p-4">
       <h2 id="identity-signout-title" className="text-control font-semibold text-fg">Sign out</h2>
-      <p className="text-control text-fg-secondary">End this session on this device.</p>
+      {who ? <p className="text-control text-fg">Signed in as <span className="font-semibold [overflow-wrap:anywhere]">{who}</span>.</p> : null}
+      <p className="text-control text-fg-secondary">End this session on this device. You will need your password to come back.</p>
       <SignOutButton />
     </section>
   )

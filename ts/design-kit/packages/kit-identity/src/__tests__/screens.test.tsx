@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
-import { ApiKeysPage, AccountSecurityPage, IDENTITY_PAGES, IDENTITY_ROUTES, IdentityGate, PairingCodesPage } from '../index'
+import { ApiKeysPage, AccountSecurityPage, IDENTITY_PAGES, IDENTITY_ROUTES, IdentityGate, PairingCodesPage, SignOutPage } from '../index'
 import { IdentityProvider, useIdentity } from '../client'
 import { deviceLabel, relativeWhen } from '../components/device'
 import { fakeFetch } from './fake'
@@ -39,7 +39,7 @@ describe('IdentityGate', () => {
   it('shows a plain no-owner screen with no form when setup_over_http is false', async () => {
     const { calls } = mount({ 'GET /api/setup': { status: 200, body: { setup_required: true, setup_over_http: false } } }, <p>shell</p>)
     expect(await screen.findByRole('heading', { name: 'No owner yet' })).toBeTruthy()
-    expect(document.body.textContent).toContain('identity setup')
+    expect(document.querySelector('code')?.textContent).toBe('<app> identity setup --username NAME')
     expect(document.querySelector('form')).toBeNull()
     expect(screen.queryByRole('button')).toBeNull()
     expect(screen.queryByText('shell')).toBeNull()
@@ -284,6 +284,22 @@ describe('identity badge', () => {
   })
   it('keeps the username as source when it differs from the display name', async () => {
     expect((await badgeFor({ ...PROFILE, display_name: 'Ada L' })).source).toBe('owner')
+  })
+})
+
+describe('SignOutPage', () => {
+  it('names the signed-in person above the action', async () => {
+    mount({ ...signedIn, 'GET /api/identity/profile': { status: 200, body: { ...PROFILE, display_name: 'Ada L' } } }, <SignOutPage />)
+    expect(await screen.findByRole('heading', { name: 'Sign out' })).toBeTruthy()
+    expect(document.body.textContent).toContain('Signed in as Ada L.')
+    expect(screen.getByRole('button', { name: 'Sign out' })).toBeTruthy()
+  })
+
+  it('renders without a name when the profile is unknown', async () => {
+    mount({ ...signedIn, 'GET /api/identity/profile': { status: 404 }, 'GET /api/identity/sessions': { status: 200, body: { sessions: [] } } }, <SignOutPage />)
+    expect(await screen.findByRole('button', { name: 'Sign out' })).toBeTruthy()
+    expect(document.body.textContent).not.toContain('Signed in as')
+    expect(document.body.textContent).toContain('End this session on this device.')
   })
 })
 

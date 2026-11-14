@@ -1,5 +1,14 @@
 # @hollis-labs/kit-identity
 
+## 0.1.4 (CW-20261113-0035)
+
+- Fix: the no-owner screen (`SetupOfflineScreen`) showed `<app> identity setup`, which the Substrate identity CLI
+  refuses ("--username is required"). It now shows `<app> identity setup --username NAME`. Still fixed text from
+  `appName`; no new prop.
+- `SignOutPage` names who is signed in: "Signed in as <display name>." above the button (the badge's display name,
+  falling back to the username), and says "You will need your password to come back." With no profile (a host without
+  the profile route) the name line is left out.
+
 ## 0.1.3 (CW-20261113-0030)
 
 - Fix: a rate-limited answer (429) now says when to try again. The client reads the `Retry-After` header (seconds or an

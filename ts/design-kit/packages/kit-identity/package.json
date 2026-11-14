@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-identity",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Setup, sign-in, password, API-key and pairing-code screens and a typed client for apps on the Substrate identity module.",
   "keywords": [
     "react",

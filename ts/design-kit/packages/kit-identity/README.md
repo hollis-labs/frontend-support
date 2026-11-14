@@ -25,12 +25,13 @@ import { IdentityGate, IDENTITY_ROUTES, IDENTITY_PAGES } from '@hollis-labs/kit-
 </IdentityProvider>
 ```
 
-`IdentityGate` takes `appName` (the host command name shown on the no-owner screen; it reads `<app>` if omitted). It renders boot, first-run setup (or, when the server creates the owner on the host only, a plain no-owner screen) and sign-in outside the shell (no route, no nav item) and mounts its children
+`IdentityGate` takes `appName` (the host command name; the no-owner screen shows `<appName> identity setup --username NAME`, with `<app>` if omitted). It renders boot, first-run setup (or, when the server creates the owner on the host only, a plain no-owner screen) and sign-in outside the shell (no route, no nav item) and mounts its children
 only after a session exists. `IDENTITY_ROUTES` is the in-shell route table (`/identity/account`, `/identity/keys`,
 `/identity/pairing`, `/identity/sessions`, fallback `/identity/sign-out`) with labels and the capability each nav item
 requires (`{app}.admin` for keys and pairing); `IDENTITY_PAGES` maps the same ids to page components. Contribute the
 sessions item only once a pinned version ships it. Sign out is an action: put `SignOutButton` in the user menu, or use
-`SignOutPage` where the shell has no slot.
+`SignOutPage` where the shell has no slot. `SignOutPage` says "Signed in as <display name>." above the button when the
+profile is known, and leaves the line out when it is not.
 
 ## Contract (the client owns it; apps do not redo it)
 
