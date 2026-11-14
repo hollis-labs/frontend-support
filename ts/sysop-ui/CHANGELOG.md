@@ -6,6 +6,12 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-14
+
+### Fixed
+
+- Metadata only: `repository` (with `directory: ts/sysop-ui`), `homepage` and `bugs` point at hollis-labs/frontend-support; the published 0.9.0 pointed at a repository that no longer exists. The README and docs link `@hollis-labs/kit-dashboard` in frontend-support. `LICENSE` is in the package again. No code change.
+
 ### Changed
 
 - Project AGENTS.md added and later genericized for outside readers; `CLAUDE.md`

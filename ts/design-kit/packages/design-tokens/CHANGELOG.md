@@ -1,5 +1,10 @@
 # @hollis-labs/design-tokens
 
+## 0.5.1 — 2026-11-14
+
+Metadata only: `repository` (with `directory: ts/design-kit/packages/design-tokens`), `homepage` and `bugs` point at hollis-labs/frontend-support; the published 0.5.0 pointed at a repository that no longer exists. README links to the old design-kit repository now point at frontend-support. No token change.
+
+
 ## 0.5.0 — 2026-10-10
 
 No token implementation change since 0.4.0; align the six-package core version. Upgrade the six core packages together; ^0.4.0 excludes this minor.

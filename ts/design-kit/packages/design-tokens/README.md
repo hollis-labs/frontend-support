@@ -15,7 +15,7 @@ by CW-20260910-0124 as a **synthesis of two working implementations** —
 `libs/sysop-ui` and `apps/nanite` — not an extraction of either.
 
 Section references below (§3, §10, …) are to that contract, which lives at
-[`docs/token-contract.md`](https://github.com/hollis-labs/design-kit/blob/main/docs/token-contract.md)
+[`docs/token-contract.md`](https://github.com/hollis-labs/frontend-support/blob/main/ts/design-kit/docs/token-contract.md)
 in this repo.
 
 ---
@@ -58,7 +58,7 @@ When adding styled components, also import
 `@hollis-labs/design-components/source.css` and the chosen kit's registration
 (`kit-chat/source.css`, or `kit-dashboard/theme.css` which includes it).
 Tailwind does not scan dependency directories automatically. The
-[adopter-path guide](https://github.com/hollis-labs/design-kit/blob/main/docs/adopter-path.md)
+[adopter-path guide](https://github.com/hollis-labs/frontend-support/blob/main/ts/design-kit/docs/adopter-path.md)
 covers the full CSS wiring and focused production-browser verification; a green
 build alone does not establish styling.
 
@@ -79,7 +79,7 @@ Bring your own values instead of the built-ins:
 
 …then declare **all 50 base values: 48 colors plus `--hl-font-sans` and
 `--hl-font-mono`**, or generate them (see *Emitting your own themes*). The
-[adopter-path guide](https://github.com/hollis-labs/design-kit/blob/main/docs/adopter-path.md)
+[adopter-path guide](https://github.com/hollis-labs/frontend-support/blob/main/ts/design-kit/docs/adopter-path.md)
 lists every declaration. `Theme.tokens` and
 `emitThemeCss` cover colors only; include font declarations separately or use
 `emitThemesCss`, which also emits default font stacks. Missing values have no
@@ -604,7 +604,7 @@ and no bundler.
 ## Published
 
 `0.1.0`, the first release, alongside the five other packages in this repo — see the
-repo's [`CHANGELOG.md`](https://github.com/hollis-labs/design-kit/blob/main/CHANGELOG.md).
+repo's [`CHANGELOG.md`](https://github.com/hollis-labs/frontend-support/blob/main/ts/design-kit/CHANGELOG.md).
 
 Verified before release by `npm pack` and installed into a scratch project with no
 other design-kit package present — no React, no transitive dependencies at all, both

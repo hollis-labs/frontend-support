@@ -4,8 +4,8 @@
 >
 > `@hollis-labs/sysop-ui` is deprecated and will be removed once GUI vNext is
 > ready. There is no removal date. **Do not start new work on it.** Use
-> [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/design-kit/tree/main/packages/kit-dashboard)
-> from [design-kit](https://github.com/hollis-labs/design-kit) instead.
+> [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/kit-dashboard)
+> from [design-kit](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit) instead.
 > Existing installs keep working until removal.
 >
 > See [docs/DEPRECATION.md](./docs/DEPRECATION.md) for the status, the removal
@@ -75,7 +75,7 @@ Recommended rule:
 ## Consuming the kit
 
 > **Deprecated.** The instructions below are for existing consumers only. New
-> projects should use [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/design-kit/tree/main/packages/kit-dashboard)
+> projects should use [`@hollis-labs/kit-dashboard`](https://github.com/hollis-labs/frontend-support/tree/main/ts/design-kit/packages/kit-dashboard)
 > (see the notice at the top of this file).
 
 Install from the public npm registry:

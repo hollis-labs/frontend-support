@@ -1,5 +1,10 @@
 # @hollis-labs/eslint-config-design
 
+## 0.5.1 — 2026-11-14
+
+Metadata only: `repository` (with `directory: ts/design-kit/packages/eslint-config-design`), `homepage` and `bugs` point at hollis-labs/frontend-support; the published 0.5.0 pointed at a repository that no longer exists. No rule change. Also ships the source change made since 0.5.0: `scripts/explain.mjs` and `scripts/validate-against-portfolio.mjs` default the portfolio root to `PORTFOLIO_ROOT` or the current directory instead of a fixed local path.
+
+
 ## 0.5.0 — 2026-10-10
 
 No rule implementation change since 0.4.0; align token peer and core version. Upgrade the six core packages together; ^0.4.0 excludes this minor.
