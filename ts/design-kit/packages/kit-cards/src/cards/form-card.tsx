@@ -122,6 +122,7 @@ export function FormCard({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const summaryRef = useRef<HTMLDivElement>(null)
   const blocked = compiled.issues.length > 0
+  const [secretEpoch, setSecretEpoch] = useState(0)
   const [replacing, setReplacing] = useState<ReadonlySet<string>>(new Set())
   const kept = (f: FormField) => f.kind === 'secret' && secrets?.[f.key]?.fingerprint != null && !replacing.has(f.key)
 
@@ -174,6 +175,7 @@ export function FormCard({
         const cleared: Record<string, unknown> = { ...values }
         for (const f of compiled.fields) if (f.kind === 'secret') delete cleared[f.key]
         setValues(cleared)
+        setSecretEpoch((n) => n + 1)
       })
     } catch (cause) {
       setSubmitError(cause instanceof Error ? cause.message : 'Could not submit. Your answers are kept; try again.')
@@ -247,6 +249,7 @@ export function FormCard({
                 hasSecretHandler={storeSecret != null}
                 secret={field.kind === 'secret' ? secrets?.[field.key] : undefined}
                 replacing={replacing.has(field.key)}
+                epoch={secretEpoch}
                 onReplace={() => {
                   setReplacing(new Set(replacing).add(field.key))
                   secrets?.[field.key]?.onReplace?.()
@@ -324,6 +327,8 @@ interface FieldControlProps {
   readonly hasSecretHandler: boolean
   readonly secret?: SecretFieldOptions
   readonly replacing: boolean
+  /** Changes after a submit hands a secret off, so an uncontrolled secret input is emptied. */
+  readonly epoch: number
   readonly onReplace: () => void
   readonly onFieldError: (message: string | null) => void
   readonly onChange: (value: unknown) => void
@@ -339,7 +344,8 @@ const readText = (file: Blob) =>
 const byteLength = (v: string) => new TextEncoder().encode(v).length
 const tooLarge = (max: number) => `That is larger than the ${max.toLocaleString()}-byte limit. Nothing was stored.`
 
-function FieldControl({ field, id, value, error, disabled, hasSecretHandler, secret, replacing, onReplace, onFieldError, onChange }: FieldControlProps) {
+function FieldControl({ field, id, value, error, disabled, hasSecretHandler, secret, replacing, epoch, onReplace, onFieldError, onChange }: FieldControlProps) {
+  const [fromFile, setFromFile] = useState(false)
   const describedBy = fieldDescribedBy(id, { hint: field.description != null || field.kind === 'fallback' || field.kind === 'secret', error: error != null })
   const common = { id, disabled, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy } as const
   const text = value == null ? '' : String(value)
@@ -358,7 +364,7 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
     hint = (
       <>
         {field.description ? <>{field.description} </> : null}
-        {hasSecretHandler ? 'Stored by the host; only a reference is sent with your answer.' : 'No secret handler is configured, so this field is disabled.'}
+        {hasSecretHandler ? `${secret?.multiline ? 'Paste the value. ' : ''}Stored by the host; only a reference is sent with your answer.` : 'No secret handler is configured, so this field is disabled.'}
       </>
     )
   }
@@ -431,7 +437,7 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
             <span className="min-w-0 [overflow-wrap:anywhere]">
               Stored · <code className="font-mono">{secret.fingerprint}</code>
             </span>
-            <Button type="button" variant="outline" size="sm" disabled={disabled} className="max-sm:min-h-11" onClick={onReplace}>
+            <Button type="button" variant="outline" size="sm" disabled={disabled} aria-label={`Replace ${field.title}`} className="max-sm:min-h-11" onClick={onReplace}>
               Replace
             </Button>
           </div>
@@ -439,28 +445,58 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
         break
       }
       const off = disabled || !hasSecretHandler
-      const entry = secret?.multiline ? (
-        <Textarea
-          {...common}
-          disabled={off}
-          autoComplete="off"
-          spellCheck={false}
-          value={text}
-          onChange={(e) => onChange(e.target.value)}
-          style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
-          className={CONTROL}
-        />
-      ) : (
-        <Input
-          {...common}
-          disabled={off}
-          type="password"
-          autoComplete="off"
-          value={text}
-          onChange={(e) => onChange(e.target.value)}
-          className={`${CONTROL} max-sm:min-h-11`}
-        />
-      )
+      // A secret is never echoed into the DOM: the single-line field is uncontrolled (no value
+      // attribute), and a pasted or uploaded value is held in state and shown only as a size.
+      const entered = text === '' ? 0 : byteLength(text)
+      const summary =
+        entered > 0 && (secret?.multiline || fromFile) ? (
+          <div id={id} data-slot="secret-entered" className="flex min-w-0 items-center gap-3 text-control text-fg-secondary">
+            <span>{entered.toLocaleString()} {entered === 1 ? 'byte' : 'bytes'} entered</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={off}
+              aria-label={`Clear ${field.title}`}
+              className="max-sm:min-h-11"
+              onClick={() => {
+                setFromFile(false)
+                onChange('')
+              }}
+            >
+              Clear
+            </Button>
+          </div>
+        ) : null
+      const entry =
+        summary ??
+        (secret?.multiline ? (
+          <Textarea
+            {...common}
+            disabled={off}
+            autoComplete="off"
+            spellCheck={false}
+            placeholder="Paste the value"
+            defaultValue=""
+            onChange={(e) => {
+              // Move the text out of the field at once so it is not left in the DOM.
+              const typed = e.target.value
+              e.target.value = ''
+              onChange(`${text}${typed}`)
+            }}
+            className={CONTROL}
+          />
+        ) : (
+          <Input
+            key={epoch}
+            {...common}
+            disabled={off}
+            type="password"
+            autoComplete="off"
+            onChange={(e) => onChange(e.target.value)}
+            className={`${CONTROL} max-sm:min-h-11`}
+          />
+        ))
       control = secret?.allowFile ? (
         <div className="flex min-w-0 flex-col gap-1.5">
           {entry}
@@ -477,8 +513,14 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
                 onFieldError(tooLarge(secret.maxBytes))
                 return
               }
-              onFieldError(null)
-              onChange(await readText(file))
+              try {
+                const content = await readText(file)
+                onFieldError(null)
+                setFromFile(true)
+                onChange(content)
+              } catch {
+                onFieldError('That file could not be read. Nothing was stored.')
+              }
             }}
           />
         </div>

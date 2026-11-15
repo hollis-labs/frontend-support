@@ -23,15 +23,37 @@ describe('held decisions (CW-20261115-0031)', () => {
     render(<ApprovalCard title="t" risk="low" id="a1" undoMs={8000} onRespond={onRespond} />)
     await click(screen.getByRole('button', { name: 'Approve' }))
     expect(onRespond).not.toHaveBeenCalled()
-    expect(screen.getByRole('status').textContent).toMatch(/Approve in 8s/)
+    expect(screen.getByRole('status').textContent).toBe('Approve will be sent. Undo to cancel.')
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Undo' }))
     await act(async () => {
-      vi.advanceTimersByTime(7999)
+      vi.advanceTimersByTime(2000)
+    })
+    // The live region's text is constant, so it is announced once, not every second.
+    expect(screen.getByRole('status').textContent).toBe('Approve will be sent. Undo to cancel.')
+    await act(async () => {
+      vi.advanceTimersByTime(5999)
     })
     expect(onRespond).not.toHaveBeenCalled()
     await act(async () => {
       vi.advanceTimersByTime(1)
     })
     expect(onRespond).toHaveBeenCalledTimes(1)
+  })
+
+  it('typing y or n in the note field does not decide', async () => {
+    const onRespond = vi.fn()
+    render(<ApprovalCard title="t" risk="low" shortcuts note onRespond={onRespond} />)
+    const note = screen.getByRole('textbox')
+    await act(async () => {
+      fireEvent.keyDown(note, { key: 'y' })
+      fireEvent.keyDown(note, { key: 'n' })
+    })
+    expect(onRespond).not.toHaveBeenCalled()
+  })
+
+  it('adds no key handling when shortcuts is off', () => {
+    const { container } = render(<ApprovalCard title="t" risk="low" onRespond={() => {}} />)
+    expect(container.firstElementChild?.getAttribute('data-slot')).toBe('envelope')
   })
 
   it('Undo cancels the hold and restores the actions', async () => {
@@ -69,7 +91,7 @@ describe('held decisions (CW-20261115-0031)', () => {
     await act(async () => {
       fireEvent.keyDown(screen.getByRole('button', { name: 'Approve' }), { key: 'n' })
     })
-    expect(screen.getByRole('status').textContent).toMatch(/Deny in 3s/)
+    expect(screen.getByRole('status').textContent).toMatch(/Deny will be sent/)
     await act(async () => {
       fireEvent.keyDown(screen.getByRole('button', { name: 'Undo' }), { key: 'z', ctrlKey: true })
     })
@@ -162,9 +184,44 @@ describe('FormCard secret options (CW-20261115-0031)', () => {
     await click(screen.getByRole('button', { name: 'Submit' }))
     expect(storeSecret).not.toHaveBeenCalled()
     expect(onRespond).toHaveBeenCalledWith({ status: 'submitted', data: {} })
-    await click(screen.getByRole('button', { name: 'Replace' }))
+    await click(screen.getByRole('button', { name: 'Replace Token' }))
     expect(onReplace).toHaveBeenCalled()
     expect(screen.getByLabelText(/Token/)).toBeTruthy()
+  })
+
+  it('does not put a multiline or uploaded secret in the DOM, only its size', async () => {
+    const storeSecret = vi.fn(async () => 'r')
+    const { container } = render(<FormCard title="t" schema={schema} storeSecret={storeSecret} secrets={{ token: { multiline: true, allowFile: true } }} onRespond={() => {}} />)
+    const box = screen.getByPlaceholderText('Paste the value')
+    fireEvent.change(box, { target: { value: SAMPLE } })
+    expect(screen.getByText(`${SAMPLE.length} bytes entered`)).toBeTruthy()
+    expect(container.innerHTML).not.toContain(SAMPLE)
+    await click(screen.getByRole('button', { name: 'Submit' }))
+    expect(storeSecret).toHaveBeenCalledWith('token', SAMPLE, undefined)
+  })
+
+  it('does not reflect a typed single-line secret as a value attribute', () => {
+    const { container } = render(<FormCard title="t" schema={schema} storeSecret={async () => 'r'} onRespond={() => {}} />)
+    fireEvent.change(screen.getByLabelText(/Token/), { target: { value: SAMPLE } })
+    expect(container.innerHTML).not.toContain(SAMPLE)
+  })
+
+  it('names Replace after its field', () => {
+    render(<FormCard title="t" schema={schema} storeSecret={async () => 'r'} secrets={{ token: { fingerprint: 'sha256:ab12' } }} onRespond={() => {}} />)
+    expect(screen.getByRole('button', { name: 'Replace Token' })).toBeTruthy()
+  })
+
+  it('says so when a file cannot be read, instead of rejecting unhandled', async () => {
+    const read = vi.spyOn(FileReader.prototype, 'readAsText').mockImplementation(function (this: FileReader) {
+      queueMicrotask(() => this.onerror?.(new ProgressEvent('error') as ProgressEvent<FileReader>))
+    })
+    render(<FormCard title="t" schema={schema} storeSecret={async () => 'r'} secrets={{ token: { allowFile: true } }} onRespond={() => {}} />)
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Token: upload file'), { target: { files: [new File(['x'], 'a.pem')] } })
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
+    expect(screen.getAllByText(/could not be read/).length).toBeGreaterThan(0)
+    read.mockRestore()
   })
 
   it('rejects an over-limit typed value with a clear message', async () => {

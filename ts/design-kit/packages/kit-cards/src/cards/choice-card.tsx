@@ -1,7 +1,8 @@
 import { useId, useState, type ReactNode } from 'react'
 import { ListChecks } from 'lucide-react'
 import { Button, Checkbox, Input } from '@hollis-labs/design-components'
-import { cardKeyHandler, FallbackLink, HeldBar, RecommendedTag, useHeldDecision } from '../decision-extras'
+import { cardKeyHandler, useHeldDecision } from '../decision-extras'
+import { FallbackLink, HeldBar, RecommendedTag } from '../decision-parts'
 import { AnswerableNotices, ResolvedFooter } from '../answerable'
 import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
 import { ActionBar } from '../layout'
@@ -133,8 +134,7 @@ export function ChoiceCard({
   })
 
   return (
-    <div style={{ display: 'contents' }} onKeyDown={onKeyDown}>
-    <Envelope accent={a.live ? 'info' : undefined} muted={!a.live} className={className}>
+    <Envelope accent={a.live ? 'info' : undefined} muted={!a.live} className={className} onKeyDown={shortcuts ? onKeyDown : undefined}>
       <EnvelopeHeader icon={ListChecks} tone="info" label="Choice" />
       <EnvelopeBody title={title} description={description}>
         <fieldset className="m-0 min-w-0 border-0 p-0" disabled={a.disabled || hold.held != null} aria-describedby={error ? `${group}-error` : undefined}>
@@ -220,6 +220,5 @@ export function ChoiceCard({
         <ResolvedFooter state={a.state} receipt={receipt} supersededBy={supersededBy} focusOnMount={a.transitioned} />
       )}
     </Envelope>
-    </div>
   )
 }

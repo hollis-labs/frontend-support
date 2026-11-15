@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react'
-import { Button } from '@hollis-labs/design-components'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 
 /**
  * Shared by ApprovalCard and ChoiceCard: the held decision (undo window), the keyboard
@@ -13,7 +12,7 @@ import { Button } from '@hollis-labs/design-components'
 export interface HeldDecision<T> {
   /** The decision waiting out its window, or null. */
   readonly held: T | null
-  /** Whole seconds left in the window. */
+  /** Whole seconds left in the window (0 when nothing is held). */
   readonly secondsLeft: number
   /** Hold `item` for `undoMs`, or commit at once when `undoMs` is unset or 0. */
   readonly start: (item: T) => void
@@ -21,34 +20,35 @@ export interface HeldDecision<T> {
 }
 
 export function useHeldDecision<T>(undoMs: number | undefined, commit: (item: T) => void | Promise<void>): HeldDecision<T> {
-  const [held, setHeld] = useState<T | null>(null)
-  const [secondsLeft, setSecondsLeft] = useState(0)
+  // The deadline is fixed when the hold starts; `now` only advances from the timer callback.
+  const [hold, setHold] = useState<{ item: T; end: number } | null>(null)
+  const [now, setNow] = useState(0)
   const commitRef = useRef(commit)
   useEffect(() => {
     commitRef.current = commit
   })
   useEffect(() => {
-    if (held == null || !undoMs) return
-    const end = Date.now() + undoMs
-    setSecondsLeft(Math.ceil(undoMs / 1000))
-    const tick = setInterval(() => setSecondsLeft(Math.max(0, Math.ceil((end - Date.now()) / 1000))), 250)
+    if (hold == null) return
+    const tick = setInterval(() => setNow(Date.now()), 250)
     const done = setTimeout(() => {
-      setHeld(null)
-      void commitRef.current(held)
-    }, undoMs)
+      setHold(null)
+      void commitRef.current(hold.item)
+    }, Math.max(0, hold.end - Date.now()))
     return () => {
       clearInterval(tick)
       clearTimeout(done)
     }
-  }, [held, undoMs])
+  }, [hold])
   return {
-    held,
-    secondsLeft,
+    held: hold?.item ?? null,
+    secondsLeft: hold ? Math.max(0, Math.ceil((hold.end - now) / 1000)) : 0,
     start(item) {
-      if (undoMs && undoMs > 0) setHeld(item)
-      else void commit(item)
+      if (undoMs && undoMs > 0) {
+        setNow(Date.now())
+        setHold({ item, end: Date.now() + undoMs })
+      } else void commit(item)
     },
-    undo: () => setHeld(null),
+    undo: () => setHold(null),
   }
 }
 
@@ -77,33 +77,4 @@ export function cardKeyHandler(enabled: boolean, keys: CardKeys) {
     if (typing || event.metaKey || event.ctrlKey || event.altKey || event.key.length !== 1) return
     if (keys.onKey) keys.onKey(event.key.toLowerCase())
   }
-}
-
-export function HeldBar({ label, secondsLeft, onUndo, disabled }: { label: ReactNode; secondsLeft: number; onUndo: () => void; disabled?: boolean }) {
-  return (
-    <>
-      <span role="status" data-slot="held-decision" className="mr-auto text-control text-fg-secondary">
-        {label} in {secondsLeft}s
-      </span>
-      <Button type="button" variant="outline" size="sm" disabled={disabled} className="max-sm:min-h-11" onClick={onUndo}>
-        Undo
-      </Button>
-    </>
-  )
-}
-
-export function RecommendedTag() {
-  return (
-    <span data-slot="recommended" className="ml-1.5 rounded-control border border-border-subtle px-1 text-caption text-fg-muted">
-      Recommended
-    </span>
-  )
-}
-
-export function FallbackLink({ href, children }: { href: string; children?: ReactNode }) {
-  return (
-    <a data-slot="fallback-link" href={href} className="mr-auto text-control text-primary underline">
-      {children ?? 'Open in Approvals'}
-    </a>
-  )
 }

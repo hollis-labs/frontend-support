@@ -16,6 +16,11 @@ patch so the `^0.3.0` ranges in kit-chat keep resolving.
   per-field map of `SecretFieldOptions`: `allowFile`, `maxBytes` (clear message for a typed value or file over the
   limit), `multiline` (masked textarea), `fingerprint` + `onReplace` (shows the fingerprint and Replace instead of the
   value; nothing is submitted for the field until it is replaced).
+- A secret is never echoed into the DOM: the single-line field is uncontrolled (no `value` attribute), and a multiline,
+  pasted or uploaded secret is held in state and shown only as "N bytes entered" with Clear. The held-decision bar's
+  live region has constant text (announced once) and Undo takes focus when it appears, so Cmd/Ctrl+Z works. Replace and
+  Clear buttons are named after their field. Key handling sits on the Envelope and only when `shortcuts` is on. A file
+  that cannot be read shows a field error.
 - Not in this release: the typed "access needed, input kept" state (the existing `elevation` and `stale` states already
   keep input), and `note`/`rememberChoice` on `ChoiceCard`.
 

@@ -3,7 +3,8 @@ import { OctagonAlert, ShieldAlert, ShieldCheck } from 'lucide-react'
 import { Button, Checkbox, Input, Textarea, type Accent, type IconComponent } from '@hollis-labs/design-components'
 import { AnswerableNotices, ResolvedFooter } from '../answerable'
 import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
-import { cardKeyHandler, FallbackLink, HeldBar, RecommendedTag, useHeldDecision } from '../decision-extras'
+import { cardKeyHandler, useHeldDecision } from '../decision-extras'
+import { FallbackLink, HeldBar, RecommendedTag } from '../decision-parts'
 import { fieldDescribedBy } from '../field-ids'
 import { ActionBar, Field } from '../layout'
 import type { CardResponder } from '../response'
@@ -199,8 +200,7 @@ export function ApprovalCard({
   })
 
   return (
-    <div style={{ display: 'contents' }} onKeyDown={onKeyDown}>
-    <Envelope accent={a.live ? r.accent : undefined} muted={!a.live} data-risk={effectiveRisk} className={className}>
+    <Envelope accent={a.live ? r.accent : undefined} muted={!a.live} data-risk={effectiveRisk} className={className} onKeyDown={shortcuts ? onKeyDown : undefined}>
       <EnvelopeHeader
         icon={Icon}
         tone={r.accent}
@@ -358,6 +358,5 @@ export function ApprovalCard({
         <ResolvedFooter state={a.state} receipt={receipt} supersededBy={supersededBy} focusOnMount={a.transitioned} />
       )}
     </Envelope>
-    </div>
   )
 }
