@@ -57,16 +57,19 @@ function SheetContent({
   children,
   side = "right",
   showCloseButton = true,
+  overlay = true,
   showFullscreenToggle, fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus,
   ...props
 }: SheetPrimitive.Popup.Props & DialogOptions & {
   side?: "top" | "right" | "bottom" | "left"
   showCloseButton?: boolean
+  /** false omits the dimming/blurring backdrop; pair with <Sheet modal={false}> for a side panel beside live content. */
+  overlay?: boolean
 }) {
   const { popupRef, fullscreen, toggle, finalFocus: admittedFinalFocus } = useDialogOptions({ fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus }, props.ref)
   return (
     <SheetPortal>
-      <SheetOverlay />
+      {overlay && <SheetOverlay />}
       <SheetPrimitive.Popup
         data-slot="sheet-content"
         data-side={side}
