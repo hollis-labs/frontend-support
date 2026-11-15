@@ -10,6 +10,15 @@ anything specific to it.
 
 ---
 
+## Unreleased — design-components, kit-dashboard (additive)
+
+CW-20261030-0229 / CW-20261030-0230 (Tachyon goldens). Not published; the owner publishes.
+
+- **design-components**: `SheetContent` takes `overlay` (default `true`). `overlay={false}` omits the backdrop; with
+  `<Sheet modal={false}>` it gives the goldens' side panel beside live content (Pull requests preview and Review panel).
+- **kit-dashboard**: `PageHeader` takes `leading`, rendered beside the title (Transcripts Sessions/Insights tabs,
+  Pull requests "N need attention" chip). Without it the header renders as before.
+
 ## Unreleased — kit-identity 0.1.0 (new), kit-account (next minor)
 
 CW-20261112-0080. Not published; the owner publishes. `kit-identity` is new and versions on its own; it is added to
