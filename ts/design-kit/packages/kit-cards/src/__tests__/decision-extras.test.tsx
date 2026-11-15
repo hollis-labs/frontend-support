@@ -51,9 +51,14 @@ describe('held decisions (CW-20261115-0031)', () => {
     expect(onRespond).not.toHaveBeenCalled()
   })
 
-  it('adds no key handling when shortcuts is off', () => {
-    const { container } = render(<ApprovalCard title="t" risk="low" onRespond={() => {}} />)
+  it('adds no key handling when shortcuts is off', async () => {
+    const onRespond = vi.fn()
+    const { container } = render(<ApprovalCard title="t" risk="low" onRespond={onRespond} />)
     expect(container.firstElementChild?.getAttribute('data-slot')).toBe('envelope')
+    await act(async () => {
+      fireEvent.keyDown(screen.getByRole('button', { name: 'Approve' }), { key: 'y' })
+    })
+    expect(onRespond).not.toHaveBeenCalled()
   })
 
   it('Undo cancels the hold and restores the actions', async () => {
@@ -189,13 +194,29 @@ describe('FormCard secret options (CW-20261115-0031)', () => {
     expect(screen.getByLabelText(/Token/)).toBeTruthy()
   })
 
-  it('does not put a multiline or uploaded secret in the DOM, only its size', async () => {
+  it('keeps a typed multiline secret whole, one keystroke at a time, without echoing it into the DOM', async () => {
+    const storeSecret = vi.fn(async () => 'r')
+    const { container } = render(<FormCard title="t" schema={schema} storeSecret={storeSecret} secrets={{ token: { multiline: true } }} onRespond={() => {}} />)
+    const box = screen.getByLabelText(/Token/) as HTMLTextAreaElement
+    for (let i = 1; i <= SAMPLE.length; i++) fireEvent.change(box, { target: { value: SAMPLE.slice(0, i) } })
+    expect(screen.getByLabelText(/Token/)).toBe(box) // the same element: never unmounted while typing
+    expect(container.innerHTML).not.toContain(SAMPLE)
+    expect(box.textContent).toBe('')
+    await click(screen.getByRole('button', { name: 'Submit' }))
+    expect(storeSecret).toHaveBeenCalledWith('token', SAMPLE, undefined)
+  })
+
+  it('shows an uploaded secret only as its size, and the label still points at a control', async () => {
     const storeSecret = vi.fn(async () => 'r')
     const { container } = render(<FormCard title="t" schema={schema} storeSecret={storeSecret} secrets={{ token: { multiline: true, allowFile: true } }} onRespond={() => {}} />)
-    const box = screen.getByPlaceholderText('Paste the value')
-    fireEvent.change(box, { target: { value: SAMPLE } })
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Token: upload file'), { target: { files: [new File([SAMPLE], 'a.pem')] } })
+      await new Promise((resolve) => setTimeout(resolve, 20))
+    })
     expect(screen.getByText(`${SAMPLE.length} bytes entered`)).toBeTruthy()
     expect(container.innerHTML).not.toContain(SAMPLE)
+    const label = container.querySelector('label[for]') as HTMLLabelElement
+    expect(document.getElementById(label.htmlFor)?.tagName).toBe('BUTTON')
     await click(screen.getByRole('button', { name: 'Submit' }))
     expect(storeSecret).toHaveBeenCalledWith('token', SAMPLE, undefined)
   })

@@ -364,7 +364,7 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
     hint = (
       <>
         {field.description ? <>{field.description} </> : null}
-        {hasSecretHandler ? `${secret?.multiline ? 'Paste the value. ' : ''}Stored by the host; only a reference is sent with your answer.` : 'No secret handler is configured, so this field is disabled.'}
+        {hasSecretHandler ? `Stored by the host; only a reference is sent with your answer.` : 'No secret handler is configured, so this field is disabled.'}
       </>
     )
   }
@@ -445,14 +445,16 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
         break
       }
       const off = disabled || !hasSecretHandler
-      // A secret is never echoed into the DOM: the single-line field is uncontrolled (no value
-      // attribute), and a pasted or uploaded value is held in state and shown only as a size.
+      // A secret is never echoed into the DOM: typed entry is an uncontrolled field (no value
+      // attribute, no children) that is never unmounted while typing, and an uploaded value is
+      // held in state and shown only as a size.
       const entered = text === '' ? 0 : byteLength(text)
       const summary =
-        entered > 0 && (secret?.multiline || fromFile) ? (
-          <div id={id} data-slot="secret-entered" className="flex min-w-0 items-center gap-3 text-control text-fg-secondary">
+        entered > 0 && fromFile ? (
+          <div data-slot="secret-entered" className="flex min-w-0 items-center gap-3 text-control text-fg-secondary">
             <span>{entered.toLocaleString()} {entered === 1 ? 'byte' : 'bytes'} entered</span>
             <Button
+              id={id}
               type="button"
               variant="outline"
               size="sm"
@@ -472,18 +474,13 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, sec
         summary ??
         (secret?.multiline ? (
           <Textarea
+            key={epoch}
             {...common}
             disabled={off}
             autoComplete="off"
             spellCheck={false}
-            placeholder="Paste the value"
-            defaultValue=""
-            onChange={(e) => {
-              // Move the text out of the field at once so it is not left in the DOM.
-              const typed = e.target.value
-              e.target.value = ''
-              onChange(`${text}${typed}`)
-            }}
+            onChange={(e) => onChange(e.target.value)}
+            style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
             className={CONTROL}
           />
         ) : (
