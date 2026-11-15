@@ -9,8 +9,10 @@ Additive; every new prop is optional. `ChatComposer` takes them too, as it exten
   `error` + `onRetry` (inline alert with Retry; the draft is never cleared by the component); `menu` (a + button opening
   items with optional key hints, `ChatInputMenuItem`); `toggles` (toolbar buttons with `aria-pressed`, `ChatInputToggle`).
 - `ChatStream`: `messageActions.custom`, host actions rendered after Copy/Download/Details (`ChatMessageActionItem`).
-- Not changed: tachyon's modal `/` palette with modes. `CommandTrigger` stays an inline list. Which of the two to
-  support is a decision for the owner; the inline list covers the keyboard path.
+- `stopping` only takes effect while `busy`; "Responding…" is hidden while stopping; Retry is disabled while `busy`;
+  `ChatComposer`'s `onRetry` receives the kept draft.
+- Not changed: tachyon's modal `/` palette with modes. `CommandTrigger` stays an inline list. The inline
+  list is kept; a modal palette would be a separate opt-in later.
 
 ## 0.8.0 (CW-20261113-0024)
 

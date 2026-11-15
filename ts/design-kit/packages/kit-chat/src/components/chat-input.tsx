@@ -94,10 +94,10 @@ export interface ChatInputProps<TItem extends SuggestionItem = SuggestionItem> {
    */
   readonly menuSide?: 'top' | 'bottom'
 
-  /** A stop was requested and is not confirmed yet. Replaces Stop with a disabled "Stopping…" until `busy` ends. */
+  /** A stop was requested and is not confirmed yet. While `busy`, replaces Stop with a disabled "Stopping…"; ignored when not busy. */
   readonly stopping?: boolean
   /**
-   * The last send or stop failed. Shown inline with a Retry button when `onRetry` is given.
+   * The last send or stop failed. Shown inline with a Retry button when `onRetry` is given (disabled while `busy`).
    * The draft is not touched: this component never clears it.
    */
   readonly error?: ReactNode
@@ -390,7 +390,7 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
         <div role="alert" data-slot="chat-input-error" className="flex min-w-0 items-center gap-2 text-control text-danger">
           <span className="min-w-0 [overflow-wrap:anywhere]">{error}</span>
           {onRetry ? (
-            <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onRetry}>
               Retry
             </Button>
           ) : null}
@@ -439,10 +439,10 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
           })}
           {toolbarStart}
           <div className="ml-auto flex items-center gap-2">
-            {busy ? <span className="text-caption text-fg-muted" role="status">Responding…</span> : null}
+            {busy && !stopping ? <span className="text-caption text-fg-muted" role="status">Responding…</span> : null}
             {toolbarEnd}
             {showSubmitButton ? (
-              stopping ? (
+              busy && stopping ? (
                 <Button type="button" variant="outline" size="sm" disabled aria-label="Stopping response">
                   <Square className="size-3.5" aria-hidden />
                   Stopping…
