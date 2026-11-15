@@ -37,6 +37,27 @@ import { Envelope, EnvelopeBody, EnvelopeFooter, EnvelopeHeader } from './envelo
  * disabled and says so — a form that quietly sent the value onward would be the bug.
  */
 
+/** Per-field options for a secret field, keyed by the field's key in `FormCardProps.secrets`. */
+export interface SecretFieldOptions {
+  /** Offer "Upload file": the file's text becomes the value. It never leaves the browser except through `storeSecret`. */
+  readonly allowFile?: boolean
+  /** Largest accepted value in bytes (UTF-8), typed or from a file. A clear message names the limit. */
+  readonly maxBytes?: number
+  /** Masked multi-line entry (a key or certificate). Default is a single masked line. */
+  readonly multiline?: boolean
+  /**
+   * A value is already stored: show this fingerprint (never the value) with a Replace button, and
+   * submit nothing for the field until the person replaces it.
+   */
+  readonly fingerprint?: string
+  readonly onReplace?: () => void
+}
+
+export interface StoreSecretOptions {
+  /** `FormCardProps.idempotencyKey`, so a retry after re-authorising returns the same reference. */
+  readonly idempotencyKey?: string
+}
+
 export interface FormCardProps extends AnswerableStateProps {
   readonly title: ReactNode
   readonly description?: ReactNode
@@ -48,7 +69,11 @@ export interface FormCardProps extends AnswerableStateProps {
   readonly onValuesChange?: (values: FormValues) => void
   readonly onRespond: CardResponder
   /** Keep a secret out of the outcome: store it and return a reference. */
-  readonly storeSecret?: (key: string, value: string) => Promise<string>
+  readonly storeSecret?: (key: string, value: string, options?: StoreSecretOptions) => Promise<string>
+  /** Passed to every `storeSecret` call. Keep it stable across retries of the same card. */
+  readonly idempotencyKey?: string
+  /** Options for secret fields, by field key. */
+  readonly secrets?: Readonly<Record<string, SecretFieldOptions>>
   readonly submitLabel?: ReactNode
   readonly className?: string
 }
@@ -73,6 +98,8 @@ export function FormCard({
   onValuesChange,
   onRespond,
   storeSecret,
+  idempotencyKey,
+  secrets,
   submitLabel = 'Submit',
   priorStatus,
   busy,
@@ -95,6 +122,8 @@ export function FormCard({
   const [submitError, setSubmitError] = useState<string | null>(null)
   const summaryRef = useRef<HTMLDivElement>(null)
   const blocked = compiled.issues.length > 0
+  const [replacing, setReplacing] = useState<ReadonlySet<string>>(new Set())
+  const kept = (f: FormField) => f.kind === 'secret' && secrets?.[f.key]?.fingerprint != null && !replacing.has(f.key)
 
   function set(key: string, value: unknown) {
     setValues({ ...values, [key]: value })
@@ -111,7 +140,12 @@ export function FormCard({
   }
 
   async function submit() {
-    const found = validateForm(compiled.fields, values)
+    const found: Record<string, string> = { ...validateForm(compiled.fields.filter((f) => !kept(f)), values) }
+    for (const f of compiled.fields) {
+      const max = f.kind === 'secret' ? secrets?.[f.key]?.maxBytes : undefined
+      const v = values[f.key]
+      if (max != null && typeof v === 'string' && byteLength(v) > max) found[f.key] = tooLarge(max)
+    }
     setErrors(found)
     setSubmitError(null)
     if (Object.keys(found).length > 0) {
@@ -123,13 +157,14 @@ export function FormCard({
       await a.run(async () => {
         const data: Record<string, unknown> = {}
         for (const f of compiled.fields) {
+          if (kept(f)) continue
           const v = coerceValue(f, values[f.key])
           if (v === undefined) continue
           // Defence in depth: a sensitive field is NEVER sent as ordinary data.
           if (f.sensitive && f.kind !== 'secret') throw new Error(`Field "${f.key}" is secret and cannot be submitted as data.`)
           if (f.kind === 'secret') {
             if (!storeSecret) throw new Error('This form has a secret field but no secret handler.')
-            data[f.key] = { ref: await storeSecret(f.key, String(v)) }
+            data[f.key] = { ref: await storeSecret(f.key, String(v), idempotencyKey != null ? { idempotencyKey } : undefined) }
           } else {
             data[f.key] = v
           }
@@ -210,6 +245,20 @@ export function FormCard({
                 error={errors[field.key]}
                 disabled={a.disabled || field.readOnly || blocked}
                 hasSecretHandler={storeSecret != null}
+                secret={field.kind === 'secret' ? secrets?.[field.key] : undefined}
+                replacing={replacing.has(field.key)}
+                onReplace={() => {
+                  setReplacing(new Set(replacing).add(field.key))
+                  secrets?.[field.key]?.onReplace?.()
+                }}
+                onFieldError={(message) =>
+                  setErrors((prev) => {
+                    const next = { ...prev }
+                    if (message) next[field.key] = message
+                    else delete next[field.key]
+                    return next
+                  })
+                }
                 onChange={(v) => set(field.key, v)}
               />
             ))}
@@ -273,10 +322,24 @@ interface FieldControlProps {
   readonly error?: string
   readonly disabled: boolean
   readonly hasSecretHandler: boolean
+  readonly secret?: SecretFieldOptions
+  readonly replacing: boolean
+  readonly onReplace: () => void
+  readonly onFieldError: (message: string | null) => void
   readonly onChange: (value: unknown) => void
 }
 
-function FieldControl({ field, id, value, error, disabled, hasSecretHandler, onChange }: FieldControlProps) {
+const readText = (file: Blob) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result))
+    reader.onerror = () => reject(reader.error)
+    reader.readAsText(file)
+  })
+const byteLength = (v: string) => new TextEncoder().encode(v).length
+const tooLarge = (max: number) => `That is larger than the ${max.toLocaleString()}-byte limit. Nothing was stored.`
+
+function FieldControl({ field, id, value, error, disabled, hasSecretHandler, secret, replacing, onReplace, onFieldError, onChange }: FieldControlProps) {
   const describedBy = fieldDescribedBy(id, { hint: field.description != null || field.kind === 'fallback' || field.kind === 'secret', error: error != null })
   const common = { id, disabled, 'aria-invalid': error ? true : undefined, 'aria-describedby': describedBy } as const
   const text = value == null ? '' : String(value)
@@ -360,11 +423,37 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, onC
       )
       break
     }
-    case 'secret':
-      control = (
+    case 'secret': {
+      if (secret?.fingerprint != null && !replacing) {
+        // The stored value is never shown; the fingerprint says which one it is.
+        control = (
+          <div id={id} data-slot="secret-stored" className="flex min-w-0 items-center gap-3 text-control text-fg-secondary">
+            <span className="min-w-0 [overflow-wrap:anywhere]">
+              Stored · <code className="font-mono">{secret.fingerprint}</code>
+            </span>
+            <Button type="button" variant="outline" size="sm" disabled={disabled} className="max-sm:min-h-11" onClick={onReplace}>
+              Replace
+            </Button>
+          </div>
+        )
+        break
+      }
+      const off = disabled || !hasSecretHandler
+      const entry = secret?.multiline ? (
+        <Textarea
+          {...common}
+          disabled={off}
+          autoComplete="off"
+          spellCheck={false}
+          value={text}
+          onChange={(e) => onChange(e.target.value)}
+          style={{ WebkitTextSecurity: 'disc' } as React.CSSProperties}
+          className={CONTROL}
+        />
+      ) : (
         <Input
           {...common}
-          disabled={disabled || !hasSecretHandler}
+          disabled={off}
           type="password"
           autoComplete="off"
           value={text}
@@ -372,7 +461,32 @@ function FieldControl({ field, id, value, error, disabled, hasSecretHandler, onC
           className={`${CONTROL} max-sm:min-h-11`}
         />
       )
+      control = secret?.allowFile ? (
+        <div className="flex min-w-0 flex-col gap-1.5">
+          {entry}
+          <input
+            type="file"
+            aria-label={`${field.title}: upload file`}
+            disabled={off}
+            className="text-caption text-fg-muted"
+            onChange={async (e) => {
+              const file = e.target.files?.[0]
+              e.target.value = ''
+              if (!file) return
+              if (secret.maxBytes != null && file.size > secret.maxBytes) {
+                onFieldError(tooLarge(secret.maxBytes))
+                return
+              }
+              onFieldError(null)
+              onChange(await readText(file))
+            }}
+          />
+        </div>
+      ) : (
+        entry
+      )
       break
+    }
     case 'number':
     case 'integer':
       control = (

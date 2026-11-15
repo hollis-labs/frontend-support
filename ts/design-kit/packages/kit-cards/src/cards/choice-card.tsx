@@ -1,6 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { ListChecks } from 'lucide-react'
 import { Button, Checkbox, Input } from '@hollis-labs/design-components'
+import { cardKeyHandler, FallbackLink, HeldBar, RecommendedTag, useHeldDecision } from '../decision-extras'
 import { AnswerableNotices, ResolvedFooter } from '../answerable'
 import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
 import { ActionBar } from '../layout'
@@ -38,6 +39,15 @@ export interface ChoiceCardProps extends AnswerableStateProps {
   readonly onOtherChange?: (value: string) => void
   readonly onRespond: CardResponder
   readonly submitLabel?: ReactNode
+  /** Hold the answer for this many ms with an Undo button before `onRespond` runs. Unset or 0 sends at once. */
+  readonly undoMs?: number
+  /** Keys while focus is in the card: 1-9 pick that option, Cmd/Ctrl+Z undoes a held answer. */
+  readonly shortcuts?: boolean
+  /** The id of the option to mark "Recommended". */
+  readonly recommended?: string
+  /** Where to answer when the card cannot be answered inline. Shows a link beside the actions. */
+  readonly fallbackHref?: string
+  readonly fallbackLabel?: ReactNode
   readonly className?: string
 }
 
@@ -56,6 +66,11 @@ export function ChoiceCard({
   onOtherChange,
   onRespond,
   submitLabel = 'Submit',
+  undoMs,
+  shortcuts = false,
+  recommended,
+  fallbackHref,
+  fallbackLabel,
   priorStatus,
   busy,
   stale,
@@ -76,8 +91,7 @@ export function ChoiceCard({
     else onValueChange(checked ? [id] : [])
   }
 
-  async function submit() {
-    if (!complete) return
+  async function send() {
     setError(null)
     try {
       await a.run(() =>
@@ -96,16 +110,34 @@ export function ChoiceCard({
     }
   }
 
+  const hold = useHeldDecision<true>(undoMs, send)
+
+  function submit() {
+    if (!complete || a.disabled || hold.held) return
+    hold.start(true)
+  }
+
   const rows: { id: string; label: ReactNode; description?: ReactNode }[] = [
     ...options,
     ...(allowOther ? [{ id: OTHER, label: 'Other' }] : []),
   ]
 
+  const onKeyDown = cardKeyHandler(shortcuts && a.live && !elevation, {
+    onKey(key) {
+      if (hold.held || a.disabled) return
+      const option = /^[1-9]$/.test(key) ? rows[Number(key) - 1] : undefined
+      if (!option) return
+      toggle(option.id, multiple ? !value.includes(option.id) : true)
+    },
+    onUndo: () => hold.undo(),
+  })
+
   return (
+    <div style={{ display: 'contents' }} onKeyDown={onKeyDown}>
     <Envelope accent={a.live ? 'info' : undefined} muted={!a.live} className={className}>
       <EnvelopeHeader icon={ListChecks} tone="info" label="Choice" />
       <EnvelopeBody title={title} description={description}>
-        <fieldset className="m-0 min-w-0 border-0 p-0" disabled={a.disabled} aria-describedby={error ? `${group}-error` : undefined}>
+        <fieldset className="m-0 min-w-0 border-0 p-0" disabled={a.disabled || hold.held != null} aria-describedby={error ? `${group}-error` : undefined}>
           <legend className="sr-only">{typeof title === 'string' ? title : 'Choose'}</legend>
           <ul className="flex flex-col gap-1">
             {rows.map((option) => {
@@ -138,6 +170,7 @@ export function ChoiceCard({
                     )}
                     <span className="min-w-0 text-control text-fg">
                       {option.label}
+                      {recommended === option.id ? <RecommendedTag /> : null}
                       {option.description != null ? (
                         <span className="block text-caption text-fg-muted">{option.description}</span>
                       ) : null}
@@ -168,17 +201,25 @@ export function ChoiceCard({
         <EnvelopeFooter>
           {a.busy ? <span role="status" className="text-caption text-fg-muted">Submitting…</span> : null}
           <ActionBar>
-            <Button type="button" variant="ghost" size="sm" disabled={a.disabled} className="max-sm:min-h-11" onClick={() => void a.run(() => onRespond({ status: 'canceled' }))}>
-              Dismiss
-            </Button>
-            <Button type="button" size="sm" disabled={a.disabled || !complete} className="max-sm:min-h-11" onClick={() => void submit()}>
-              {submitLabel}
-            </Button>
+            {fallbackHref && !hold.held ? <FallbackLink href={fallbackHref}>{fallbackLabel}</FallbackLink> : null}
+            {hold.held ? (
+              <HeldBar label={submitLabel} secondsLeft={hold.secondsLeft} onUndo={hold.undo} disabled={a.busy} />
+            ) : (
+              <>
+                <Button type="button" variant="ghost" size="sm" disabled={a.disabled} className="max-sm:min-h-11" onClick={() => void a.run(() => onRespond({ status: 'canceled' }))}>
+                  Dismiss
+                </Button>
+                <Button type="button" size="sm" disabled={a.disabled || !complete} className="max-sm:min-h-11" onClick={submit}>
+                  {submitLabel}
+                </Button>
+              </>
+            )}
           </ActionBar>
         </EnvelopeFooter>
       ) : a.live ? null : (
         <ResolvedFooter state={a.state} receipt={receipt} supersededBy={supersededBy} focusOnMount={a.transitioned} />
       )}
     </Envelope>
+    </div>
   )
 }

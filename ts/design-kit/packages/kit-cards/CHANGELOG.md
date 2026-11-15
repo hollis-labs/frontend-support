@@ -1,5 +1,24 @@
 # @hollis-labs/kit-cards
 
+## 0.3.1 (CW-20261115-0031)
+
+Additive; every new prop is optional and off by default, so existing cards render and behave as before. Published as a
+patch so the `^0.3.0` ranges in kit-chat keep resolving.
+
+- `ApprovalCard` and `ChoiceCard`: `undoMs` (hold the answer with an Undo button, then respond; unmount cancels),
+  `shortcuts` (keys act while focus is inside the card; Approval: Y approves, N denies; Choice: 1-9 pick an option;
+  Cmd/Ctrl+Z undoes a held answer), `recommended` (id of the action/option to tag "Recommended"), `fallbackHref` and
+  `fallbackLabel` (a link beside the actions for a card that cannot be decided inline).
+- `ApprovalCard` only: `note` (optional or `{ required }`; sent as `decisions[0].note`), `rememberChoice` ("Always in
+  this chat"; sends `data.remember: true`), `mediumRiskConfirm={false}` (one click on medium risk instead of a second
+  confirmation; combine with `undoMs`).
+- `FormCard`: `idempotencyKey` (passed to `storeSecret` as its third argument, `{ idempotencyKey }`), and `secrets`, a
+  per-field map of `SecretFieldOptions`: `allowFile`, `maxBytes` (clear message for a typed value or file over the
+  limit), `multiline` (masked textarea), `fingerprint` + `onReplace` (shows the fingerprint and Replace instead of the
+  value; nothing is submitted for the field until it is replaced).
+- Not in this release: the typed "access needed, input kept" state (the existing `elevation` and `stale` states already
+  keep input), and `note`/`rememberChoice` on `ChoiceCard`.
+
 ## 0.3.0 (CW-20261113-0024)
 
 - Dependency range only, no source change: `@hollis-labs/design-bindings` `^0.2.0` → `^0.3.0`, the contract app-shell

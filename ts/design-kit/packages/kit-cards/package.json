@@ -1,6 +1,6 @@
 {
   "name": "@hollis-labs/kit-cards",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Cards kit — the Envelope chassis, card shapes, answerable cards, a headless lifecycle engine and a renderer registry. Props down, outcomes up: no transport, no wire.",
   "keywords": [
     "react",
