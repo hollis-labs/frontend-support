@@ -45,4 +45,12 @@ describe('dashboard planner controls', () => {
     expect(screen.getByRole('tab', { name: 'Inbox 3' }).getAttribute('aria-selected')).toBe('true')
     expect(screen.getByRole('tab', { name: 'Board' }).getAttribute('aria-selected')).toBe('false')
   })
+  it('segments can be disabled per item and drawn bare (CW-20261115-0033)', () => {
+    const { container } = render(<DashboardViewTabs variant="segments" bare label="Views" value="board" onChange={() => {}} items={[
+      { value: 'board', label: 'Board' },
+      { value: 'soon', label: 'Soon', disabled: true },
+    ]} />)
+    expect(screen.getByRole('tab', { name: 'Soon' }).hasAttribute('disabled') || screen.getByRole('tab', { name: 'Soon' }).getAttribute('aria-disabled') === 'true').toBe(true)
+    expect((container.firstElementChild as HTMLElement).className).not.toMatch(/border-b|bg-panel/)
+  })
 })

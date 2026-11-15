@@ -1,5 +1,13 @@
 # @hollis-labs/design-components
 
+## 0.5.2 (CW-20261115-0033)
+
+Additive. Published as a patch so the `^0.5.0` ranges across the kits keep resolving.
+
+- `SheetContent` stacks above an open `Dialog`: it takes the dialog layer (`z-[60]`) automatically while a `DialogContent` is mounted, and stays on `z-50` otherwise. New `raised?: boolean` forces (`true`) or opts out of (`false`) the layer. Fixes a Sheet opened from inside a Dialog rendering underneath it.
+- `Pill`: `tone="faint"` (quiet, no fill) and `case="none"` to keep the original case. `Tone` itself is unchanged.
+- New `KeyHint` (`keys` is a label or a chord array), a presentational keycap.
+
 ## Unreleased — CW-20261010-0092
 
 - Add optional fullscreen chrome, reset-on-open sizing, session persistence and admitted `returnFocus` to public modal wrappers, preserving native focus and legacy defaults.
