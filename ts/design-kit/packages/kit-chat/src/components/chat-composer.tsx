@@ -3,7 +3,7 @@ import { ChatInput, type ChatInputProps } from './chat-input'
 import type { SuggestionItem } from '../lib/suggestion'
 
 export interface ChatComposerProps<TItem extends SuggestionItem = SuggestionItem>
-  extends Omit<ChatInputProps<TItem>, 'value' | 'onValueChange' | 'onSubmit'> {
+  extends Omit<ChatInputProps<TItem>, 'value' | 'onValueChange' | 'onSubmit' | 'onRetry'> {
   readonly defaultValue?: string
   /**
    * Called with the trimmed draft; empty drafts are not submitted. The draft clears
@@ -13,6 +13,8 @@ export interface ChatComposerProps<TItem extends SuggestionItem = SuggestionItem
   readonly onSubmit: (value: string) => boolean | void | Promise<boolean | void>
   /** Reports each edit, for hosts that persist a draft. Optional; never required to type. */
   readonly onDraftChange?: (value: string) => void
+  /** The Retry button on `error`. Receives the current draft, which the composer kept. */
+  readonly onRetry?: (draft: string) => void
 }
 
 /**
@@ -30,6 +32,7 @@ function ChatComposerImpl<TItem extends SuggestionItem = SuggestionItem>({
   defaultValue = '',
   onSubmit,
   onDraftChange,
+  onRetry,
   ...input
 }: ChatComposerProps<TItem>) {
   const [draft, setDraft] = useState(defaultValue)
@@ -67,7 +70,8 @@ function ChatComposerImpl<TItem extends SuggestionItem = SuggestionItem>({
     if (result instanceof Promise) void result.then((ok) => { if (ok !== false) clear() }, () => undefined)
     else if (result !== false) clear()
   }, [onSubmit])
-  return <ChatInput {...input} value={draft} onValueChange={change} onSubmit={submit} />
+  const retry = useCallback(() => onRetry?.(draftRef.current), [onRetry])
+  return <ChatInput {...input} onRetry={onRetry ? retry : undefined} value={draft} onValueChange={change} onSubmit={submit} />
 }
 
 export const ChatComposer = memo(ChatComposerImpl) as typeof ChatComposerImpl

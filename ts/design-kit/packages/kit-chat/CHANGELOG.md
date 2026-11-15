@@ -1,5 +1,19 @@
 # @hollis-labs/kit-chat
 
+## 0.8.1 (CW-20261115-0032)
+
+Additive; every new prop is optional. `ChatComposer` takes them too, as it extends `ChatInputProps`. Published as a patch so the
+`^0.8.0` ranges keep resolving.
+
+- `ChatInput`: `above` and `footer` slots; `stopping` (a disabled "Stopping…" button between Stop and stopped);
+  `error` + `onRetry` (inline alert with Retry; the draft is never cleared by the component); `menu` (a + button opening
+  items with optional key hints, `ChatInputMenuItem`); `toggles` (toolbar buttons with `aria-pressed`, `ChatInputToggle`).
+- `ChatStream`: `messageActions.custom`, host actions rendered after Copy/Download/Details (`ChatMessageActionItem`).
+- `stopping` only takes effect while `busy`; "Responding…" is hidden while stopping; Retry is disabled while `busy`;
+  `ChatComposer`'s `onRetry` receives the kept draft.
+- Not changed: tachyon's modal `/` palette with modes. `CommandTrigger` stays an inline list. The inline
+  list is kept; a modal palette would be a separate opt-in later.
+
 ## 0.8.0 (CW-20261113-0024)
 
 - Dependency ranges only, no source change: `@hollis-labs/design-bindings` `^0.2.0` → `^0.3.0` and

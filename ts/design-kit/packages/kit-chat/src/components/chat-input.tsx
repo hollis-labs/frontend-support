@@ -1,6 +1,6 @@
 import { useCallback, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import type { KeyboardEvent, ReactNode, Ref } from 'react'
-import { ArrowUp, Square } from 'lucide-react'
+import { ArrowUp, Plus, Square } from 'lucide-react'
 import {
   cn,
   Button,
@@ -9,7 +9,13 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
   Textarea,
+  type IconComponent,
 } from '@hollis-labs/design-components'
 import {
   applyReference,
@@ -20,6 +26,27 @@ import {
   type ChatTrigger,
   type SuggestionItem,
 } from '../lib/suggestion'
+
+/** One entry in the composer's + menu. */
+export interface ChatInputMenuItem {
+  readonly id: string
+  readonly label: ReactNode
+  /** Key hint shown at the end of the row, e.g. `⌘U`. Display only; the host binds the key. */
+  readonly hint?: string
+  readonly icon?: IconComponent
+  readonly disabled?: boolean
+  readonly onSelect: () => void
+}
+
+/** A toolbar toggle button, e.g. a drawer toggle. */
+export interface ChatInputToggle {
+  readonly id: string
+  readonly label: string
+  readonly icon?: IconComponent
+  readonly pressed: boolean
+  readonly onToggle: (pressed: boolean) => void
+  readonly disabled?: boolean
+}
 
 export interface ChatInputProps<TItem extends SuggestionItem = SuggestionItem> {
   /** Controlled. This component holds no draft of its own. */
@@ -67,6 +94,24 @@ export interface ChatInputProps<TItem extends SuggestionItem = SuggestionItem> {
    */
   readonly menuSide?: 'top' | 'bottom'
 
+  /** A stop was requested and is not confirmed yet. While `busy`, replaces Stop with a disabled "Stopping…"; ignored when not busy. */
+  readonly stopping?: boolean
+  /**
+   * The last send or stop failed. Shown inline with a Retry button when `onRetry` is given (disabled while `busy`).
+   * The draft is not touched: this component never clears it.
+   */
+  readonly error?: ReactNode
+  readonly onRetry?: () => void
+
+  /** Slot above the textarea, e.g. an attachment strip. */
+  readonly above?: ReactNode
+  /** Slot below the toolbar, e.g. a disclaimer line. */
+  readonly footer?: ReactNode
+  /** The + menu: a button at the start of the toolbar opening these items, each with an optional key hint. */
+  readonly menu?: { readonly label?: string; readonly items: readonly ChatInputMenuItem[] }
+  /** Toggle buttons with a pressed state, after the + menu. */
+  readonly toggles?: readonly ChatInputToggle[]
+
   readonly toolbarStart?: ReactNode
   readonly toolbarEnd?: ReactNode
   readonly className?: string
@@ -105,6 +150,13 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
   disabled = false,
   busy = false,
   onStop,
+  stopping = false,
+  error,
+  onRetry,
+  above,
+  footer,
+  menu,
+  toggles,
   showSubmitButton = true,
   triggers,
   history,
@@ -311,6 +363,8 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
         </div>
       ) : null}
 
+      {above ? <div data-slot="chat-input-above" className="min-w-0">{above}</div> : null}
+
       <Textarea
         ref={innerRef}
         value={value}
@@ -332,14 +386,68 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
         onBlur={() => setActive(null)}
       />
 
-      {toolbarStart || toolbarEnd || showSubmitButton ? (
+      {error ? (
+        <div role="alert" data-slot="chat-input-error" className="flex min-w-0 items-center gap-2 text-control text-danger">
+          <span className="min-w-0 [overflow-wrap:anywhere]">{error}</span>
+          {onRetry ? (
+            <Button type="button" variant="outline" size="sm" disabled={busy} onClick={onRetry}>
+              Retry
+            </Button>
+          ) : null}
+        </div>
+      ) : null}
+
+      {toolbarStart || toolbarEnd || showSubmitButton || menu || (toggles && toggles.length > 0) ? (
         <div className="flex min-w-0 flex-wrap items-center gap-2" data-slot="chat-input-toolbar">
+          {menu && menu.items.length > 0 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={<Button type="button" variant="ghost" size="icon-sm" disabled={disabled} aria-label={menu.label ?? 'More options'} />}
+              >
+                <Plus className="size-4" aria-hidden />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="min-w-48">
+                {menu.items.map((item) => {
+                  const Icon = item.icon
+                  return (
+                    <DropdownMenuItem key={item.id} disabled={item.disabled} onClick={item.onSelect}>
+                      {Icon ? <Icon className="size-4" aria-hidden /> : null}
+                      {item.label}
+                      {item.hint ? <DropdownMenuShortcut>{item.hint}</DropdownMenuShortcut> : null}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
+          {toggles?.map((toggle) => {
+            const Icon = toggle.icon
+            return (
+              <Button
+                key={toggle.id}
+                type="button"
+                variant={toggle.pressed ? 'secondary' : 'ghost'}
+                size="sm"
+                aria-pressed={toggle.pressed}
+                disabled={disabled || toggle.disabled}
+                onClick={() => toggle.onToggle(!toggle.pressed)}
+              >
+                {Icon ? <Icon className="size-4" aria-hidden /> : null}
+                {toggle.label}
+              </Button>
+            )
+          })}
           {toolbarStart}
           <div className="ml-auto flex items-center gap-2">
-            {busy ? <span className="text-caption text-fg-muted" role="status">Responding…</span> : null}
+            {busy && !stopping ? <span className="text-caption text-fg-muted" role="status">Responding…</span> : null}
             {toolbarEnd}
             {showSubmitButton ? (
-              busy && onStop ? (
+              busy && stopping ? (
+                <Button type="button" variant="outline" size="sm" disabled aria-label="Stopping response">
+                  <Square className="size-3.5" aria-hidden />
+                  Stopping…
+                </Button>
+              ) : busy && onStop ? (
                 <Button type="button" variant="outline" size="sm" disabled={disabled} onClick={onStop} aria-label="Stop response">
                   <Square className="size-3.5" aria-hidden />
                   Stop
@@ -354,6 +462,8 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
           </div>
         </div>
       ) : null}
+
+      {footer ? <div data-slot="chat-input-footer" className="min-w-0 text-caption text-fg-muted">{footer}</div> : null}
     </div>
   )
 }
