@@ -77,7 +77,7 @@ function DialogContent({
   /** Bounded scaffolds own body scrolling; raw long content may scroll the viewport. */
   scrollMode?: "body" | "viewport"
 }) {
-  useRegisterOpenDialog()
+  useRegisterOpenDialog(React.useContext(DialogOpenContext))
   const { popupRef, fullscreen, toggle, finalFocus: admittedFinalFocus } = useDialogOptions({ fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus }, props.ref)
   return (
     <DialogPortal>

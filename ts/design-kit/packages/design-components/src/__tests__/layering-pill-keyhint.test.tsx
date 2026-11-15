@@ -1,8 +1,15 @@
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import { useRegisterOpenDialog } from '../lib/dialog-layer'
 import { Dialog, DialogContent, DialogTitle, KeyHint, Pill, Sheet, SheetContent, SheetTitle } from '..'
 
 afterEach(cleanup)
+
+// A DialogContent that is rendered while its Dialog is closed registers nothing.
+function ClosedDialogStandIn() {
+  useRegisterOpenDialog(false)
+  return null
+}
 
 const sheetClasses = () => {
   const popup = document.querySelector('[data-slot="sheet-content"]')!
@@ -53,6 +60,18 @@ describe('Sheet stacking (CW-20261115-0033)', () => {
     )
     await new Promise((resolve) => setTimeout(resolve, 100))
     expect(sheetClasses().popup).toMatch(/z-\[60\]/)
+  })
+
+  it('a closed Dialog does not raise a Sheet', () => {
+    render(
+      <>
+        <ClosedDialogStandIn />
+        <Sheet open>
+          <SheetContent><SheetTitle>S</SheetTitle></SheetContent>
+        </Sheet>
+      </>,
+    )
+    expect(sheetClasses().popup).toMatch(/(^|\s)z-50(\s|$)/)
   })
 
   it('raised={false} opts out and raised forces the dialog layer', () => {
