@@ -34,6 +34,8 @@ export { notifyError, notifySuccess } from './lib/toast'
  * Components. Tone-carrying primitives share one scale; see lib/tone.
  */
 export { Pill } from './components/pill'
+export { KeyHint } from './components/key-hint'
+export type { KeyHintProps } from './components/key-hint'
 export { LiveDot } from './components/live-dot'
 export { Callout } from './components/callout'
 export { CopyableId } from './components/copyable-id'

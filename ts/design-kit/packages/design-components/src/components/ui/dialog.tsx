@@ -16,6 +16,7 @@ import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
 import { Maximize2, Minimize2, XIcon } from "lucide-react"
+import { useRegisterOpenDialog } from '../../lib/dialog-layer'
 import { DialogOpenContext, useDialogOptions, type DialogOptions } from '../../hooks/use-dialog-options'
 
 function Dialog({ children, onOpenChange, ...props }: DialogPrimitive.Root.Props) {
@@ -76,6 +77,7 @@ function DialogContent({
   /** Bounded scaffolds own body scrolling; raw long content may scroll the viewport. */
   scrollMode?: "body" | "viewport"
 }) {
+  useRegisterOpenDialog(React.useContext(DialogOpenContext))
   const { popupRef, fullscreen, toggle, finalFocus: admittedFinalFocus } = useDialogOptions({ fullscreen: controlledFullscreen, onFullscreenChange, fullscreenSessionKey, returnFocus, finalFocus }, props.ref)
   return (
     <DialogPortal>

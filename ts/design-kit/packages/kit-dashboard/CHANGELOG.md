@@ -1,5 +1,9 @@
 # @hollis-labs/kit-dashboard
 
+## 0.6.4 (CW-20261115-0033)
+
+- `DashboardViewTabs`: items take `disabled`, and a `bare` prop drops the strip's own bottom border and panel fill. Both work with `variant="segments"` and `"pills"`; the defaults are unchanged.
+
 ## 0.6.3 (CW-20261115-0026)
 
 - `PageHeader` takes `as?: 'h1' | 'h2'` (default `'h1'`). Under `app-shell`, whose page frame already renders the surface title as the page's h1, pass `as="h2"` so the page has one h1. Additive: existing callers render the same h1.
