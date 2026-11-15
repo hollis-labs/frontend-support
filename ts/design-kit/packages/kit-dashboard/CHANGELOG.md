@@ -1,5 +1,9 @@
 # @hollis-labs/kit-dashboard
 
+## 0.6.3 (CW-20261115-0026)
+
+- `PageHeader` takes `as?: 'h1' | 'h2'` (default `'h1'`). Under `app-shell`, whose page frame already renders the surface title as the page's h1, pass `as="h2"` so the page has one h1. Additive: existing callers render the same h1.
+
 ## 0.6.2 (CW-20261112-0113)
 
 - New token `--dash-search-min-height` for `.dash-search-field` and the FilterBar search adapter. The default is

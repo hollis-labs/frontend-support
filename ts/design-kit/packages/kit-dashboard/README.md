@@ -267,6 +267,8 @@ Default Sysop app shape:
 - transport/client imports: `@hollis-labs/design-app-runtime`
 - optional heavy domains: `charts` only where needed
 
+`PageHeader` renders its title as an `h1`. Inside `app-shell`, whose page frame already renders the surface title as the h1, pass `as="h2"`.
+
 Minimal shell example:
 
 ```tsx
