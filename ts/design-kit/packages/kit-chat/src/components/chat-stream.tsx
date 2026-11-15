@@ -12,6 +12,16 @@ import type {
   ChatStreamStatus,
 } from '../lib/types'
 
+/** A host-supplied per-message action. */
+export interface ChatMessageActionItem {
+  readonly id: string
+  /** Accessible name. Also the tooltip unless `tooltip` is set. */
+  readonly label: string
+  readonly icon: ReactNode
+  readonly tooltip?: string
+  readonly onSelect: (item: ChatMessageItem) => void
+}
+
 export interface ChatStreamProps {
   /** Ordered oldest-first. The host owns this list; this component never mutates it. */
   readonly items: readonly ChatItem[]
@@ -39,6 +49,8 @@ export interface ChatStreamProps {
     readonly copy?: boolean
     readonly download?: boolean
     readonly onDetails?: (item: ChatMessageItem) => void
+    /** Host actions after the built-ins (bookmark, copy link, …). Keep the array stable: the rows memoise on it. */
+    readonly custom?: readonly ChatMessageActionItem[]
   }
 
   /** Shown when `items` is empty and nothing is streaming. */
@@ -103,12 +115,15 @@ function DefaultMessageActions({ item, actions }: { readonly item: ChatMessageIt
   }, [source])
   const showCopy = actions.copy && source !== undefined
   const showDownload = actions.download && source !== undefined
-  if (!showCopy && !showDownload && !actions.onDetails) return null
+  if (!showCopy && !showDownload && !actions.onDetails && !actions.custom?.length) return null
   return (
     <MessageActions data-slot="chat-message-actions">
       {showCopy ? <MessageAction label={copied ? 'Copied' : 'Copy message'} tooltip="Copy" onClick={onCopy}>{copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}</MessageAction> : null}
       {showDownload ? <MessageAction label="Download message as Markdown" tooltip="Download" onClick={() => downloadMarkdown(safeFileName(`${item.role}-${item.id}`, 'message'), source ?? '')}><Download className="size-3.5" /></MessageAction> : null}
       {actions.onDetails ? <MessageAction label="Message details" tooltip="Details" onClick={() => actions.onDetails?.(item)}><Info className="size-3.5" /></MessageAction> : null}
+      {actions.custom?.map((action) => (
+        <MessageAction key={action.id} label={action.label} tooltip={action.tooltip ?? action.label} onClick={() => action.onSelect(item)}>{action.icon}</MessageAction>
+      ))}
     </MessageActions>
   )
 }
@@ -277,7 +292,7 @@ export function ChatStream({
 }: ChatStreamProps) {
   const render = useMemo(
     () => renderItem ?? ((item: ChatItem) => renderDefault(item, messageActions)),
-    [renderItem, messageActions?.copy, messageActions?.download, messageActions?.onDetails], // eslint-disable-line react-hooks/exhaustive-deps
+    [renderItem, messageActions?.copy, messageActions?.download, messageActions?.onDetails, messageActions?.custom], // eslint-disable-line react-hooks/exhaustive-deps
   )
   const showEmpty = !loading && !history?.error && items.length === 0 && status.status === 'idle'
 
