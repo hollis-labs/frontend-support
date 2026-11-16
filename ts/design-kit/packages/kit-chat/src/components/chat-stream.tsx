@@ -22,6 +22,13 @@ export interface ChatMessageActionItem {
   readonly onSelect: (item: ChatMessageItem) => void
 }
 
+/** Override one row kind while keeping the kit renderer for the others. */
+export interface ChatStreamRenderers {
+  readonly message?: (item: ChatMessageItem) => ReactNode
+  readonly marker?: (item: ChatMarkerItem) => ReactNode
+  readonly card?: (item: ChatCardItem) => ReactNode
+}
+
 export interface ChatStreamProps {
   /** Ordered oldest-first. The host owns this list; this component never mutates it. */
   readonly items: readonly ChatItem[]
@@ -38,6 +45,8 @@ export interface ChatStreamProps {
    * uses to draw a card when it adds `ChatCardItem` to the union.
    */
   readonly renderItem?: (item: ChatItem) => ReactNode
+  /** Per-kind extension slots. `renderItem`, when given, takes precedence. */
+  readonly renderers?: ChatStreamRenderers
 
   /**
    * Built-in per-message actions for the default renderer: Copy and Download
@@ -279,6 +288,7 @@ export function ChatStream({
   items,
   status = { status: 'idle' },
   renderItem,
+  renderers,
   messageActions,
   empty,
   loading = false,
@@ -291,8 +301,13 @@ export function ChatStream({
   'aria-label': ariaLabel = 'Conversation',
 }: ChatStreamProps) {
   const render = useMemo(
-    () => renderItem ?? ((item: ChatItem) => renderDefault(item, messageActions)),
-    [renderItem, messageActions?.copy, messageActions?.download, messageActions?.onDetails, messageActions?.custom], // eslint-disable-line react-hooks/exhaustive-deps
+    () => renderItem ?? ((item: ChatItem) => {
+      if (item.kind === 'message' && renderers?.message) return renderers.message(item)
+      if (item.kind === 'marker' && renderers?.marker) return renderers.marker(item)
+      if (item.kind === 'card' && renderers?.card) return renderers.card(item)
+      return renderDefault(item, messageActions)
+    }),
+    [renderItem, renderers, messageActions?.copy, messageActions?.download, messageActions?.onDetails, messageActions?.custom], // eslint-disable-line react-hooks/exhaustive-deps
   )
   const showEmpty = !loading && !history?.error && items.length === 0 && status.status === 'idle'
 

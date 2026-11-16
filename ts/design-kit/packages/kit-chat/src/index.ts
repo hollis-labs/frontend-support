@@ -14,13 +14,18 @@
  */
 
 export { ChatInput } from './components/chat-input'
-export type { ChatInputMenuItem, ChatInputProps, ChatInputToggle } from './components/chat-input'
+export type { ChatComposerEditorProps, ChatInputMenuItem, ChatInputProps, ChatInputToggle } from './components/chat-input'
 
 export { ChatComposer } from './components/chat-composer'
 export type { ChatComposerProps } from './components/chat-composer'
 
 export { ChatStream } from './components/chat-stream'
-export type { ChatMessageActionItem, ChatStreamProps } from './components/chat-stream'
+export type { ChatMessageActionItem, ChatStreamProps, ChatStreamRenderers } from './components/chat-stream'
+
+export { ChatContextChips, ChatSharedItemsStrip, ChatDrawerToggles, ChatSlotPicker } from './components/chat-extensions'
+export type { ChatContextChip, ChatSharedItem, ChatDrawerToggle, ChatSlotOption } from './components/chat-extensions'
+export { ChatNotice, ChatStepsFold } from './components/stream-extensions'
+export type { ChatNoticeProps, ChatStepItem, ChatStepsFoldProps } from './components/stream-extensions'
 
 export { ResizableChatPanel } from './components/resizable-chat-panel'
 export type { ResizableChatPanelProps } from './components/resizable-chat-panel'
