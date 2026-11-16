@@ -1,0 +1,26 @@
+{
+  "name": "ade",
+  "version": "0.0.0",
+  "private": true,
+  "description": "ADE: the contract between a person, an agent and an application over shared state, with its browser agent client and React bindings.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/ade"
+  },
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @hollis-labs/ade-core -w @hollis-labs/ade-agent -w @hollis-labs/ade-react",
+    "test": "npm test -w @hollis-labs/ade-core",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "typescript": "5.9.3"
+  }
+}
