@@ -58,4 +58,10 @@ describe('GateApprovalCard', () => {
     expect(onReconcile).toHaveBeenCalledTimes(1)
     expect(onSelect).not.toHaveBeenCalled()
   })
+
+  it('locks a pending interaction with no native choices', () => {
+    const { container } = render(<GateApprovalCard {...base} state={{ kind: 'pending' }} options={[]} />)
+    expect(container.textContent).toMatch(/gate-missing-options/)
+    expect([...container.querySelectorAll('button')].filter((button) => !button.disabled)).toHaveLength(0)
+  })
 })

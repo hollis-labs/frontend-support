@@ -61,7 +61,8 @@ export function GateApprovalCard({
 
   const priorStatus = state.kind === 'approved' || state.kind === 'denied'
     ? 'submitted'
-    : state.kind === 'expired' ? 'expired' : state.kind === 'unknown' ? 'gate-unknown' : undefined
+    : state.kind === 'expired' ? 'expired' : state.kind === 'unknown' ? 'gate-unknown'
+      : state.kind === 'pending' && options.length === 0 ? 'gate-missing-options' : undefined
   const receipt = state.kind === 'approved'
     ? { summary: <>Approved · {state.scope} · Decision {state.decisionId}{state.receiptId ? <> · Receipt {state.receiptId}</> : null}</> }
     : state.kind === 'denied'
@@ -84,7 +85,7 @@ export function GateApprovalCard({
     requester={requester}
     actions={actions}
     priorStatus={priorStatus}
-    stale={state.kind === 'stale' || (state.kind === 'pending' && options.length === 0)}
+    stale={state.kind === 'stale'}
     onReload={onReconcile}
     receipt={receipt}
     onRespond={(outcome) => {
