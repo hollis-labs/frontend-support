@@ -77,6 +77,8 @@ export type { ErrorCardProps, StatusBannerProps } from './error-card'
 
 export { ToolCard, ToolResultContent } from './tool-card'
 export type { ToolCardProps, ToolContentPart, ToolOutcome, ToolResultContentProps, ToolResultView } from './tool-card'
+export { GateToolCard } from './gate-tool-card'
+export type { GateToolCardProps, GateToolEvidence } from './gate-tool-card'
 export { toToolResultView } from './tool-result-adapter'
 export type { ResultenvEnvelope, ResultenvOutcome } from './resultenv.generated'
 
