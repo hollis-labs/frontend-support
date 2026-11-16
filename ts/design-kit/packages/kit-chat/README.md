@@ -96,6 +96,11 @@ function Chat() {
 }
 ```
 
+App-owned context chips, shared items, drawers, context-slot selection, rich editors
+and transcript rows use the [extension slots](docs/extension-slots.md). The
+[adoption parity checklist](docs/adoption-parity.md) records the source-backed
+work still needed in five apps.
+
 ---
 
 ## `ChatInput`
