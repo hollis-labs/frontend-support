@@ -8,6 +8,7 @@ import {
 /** Tiny contenteditable adapter: the host decides how rich markup flattens to text. */
 function RichEditor({ value, onValueChange, onSubmit, placeholder, disabled, busy, 'aria-label': ariaLabel }: ChatComposerEditorProps) {
   const editor = useRef<HTMLDivElement>(null)
+  const composing = useRef(false)
   useLayoutEffect(() => {
     if (editor.current && editor.current.textContent !== value) editor.current.textContent = value
   }, [value])
@@ -21,7 +22,14 @@ function RichEditor({ value, onValueChange, onSubmit, placeholder, disabled, bus
       suppressContentEditableWarning
       data-placeholder={placeholder}
       onInput={(event) => onValueChange(event.currentTarget.textContent ?? '')}
-      onKeyDown={(event) => { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); onSubmit() } }}
+      onCompositionStart={() => { composing.current = true }}
+      onCompositionEnd={() => { composing.current = false }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' && !event.shiftKey && !composing.current && !event.nativeEvent.isComposing && event.keyCode !== 229) {
+          event.preventDefault()
+          onSubmit()
+        }
+      }}
     />
     <button type="button" disabled={disabled || busy || !value.trim()} onClick={onSubmit}>Send rich text</button>
   </div>

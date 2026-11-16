@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { ChatComposer } from '../components/chat-composer'
 import { ChatStream } from '../components/chat-stream'
@@ -77,5 +77,28 @@ describe('host extension slots', () => {
     expect(screen.getByText('2 steps')).toBeTruthy()
     fireEvent.click(screen.getByRole('button', { name: 'Use rich editor' }))
     expect(screen.getByRole('textbox', { name: 'Message' })).toBeTruthy()
+  })
+
+  it('the contenteditable fixture keeps an IME draft and sends after composition ends', async () => {
+    render(<ExtensionSlotsDemo />)
+    fireEvent.click(screen.getByRole('button', { name: 'Use rich editor' }))
+    const editor = screen.getByRole('textbox', { name: 'Message' })
+    const sentCopies = () => screen.queryAllByText('composing draft').filter((node) => node !== editor)
+    editor.textContent = 'composing draft'
+    fireEvent.input(editor)
+    fireEvent.compositionStart(editor)
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 229, isComposing: true })
+    expect(sentCopies()).toHaveLength(0)
+    expect(editor.textContent).toBe('composing draft')
+    fireEvent.keyDown(editor, { key: 'Enter' })
+    expect(sentCopies()).toHaveLength(0)
+    fireEvent.compositionEnd(editor)
+    fireEvent.keyDown(editor, { key: 'Enter', keyCode: 229 })
+    expect(sentCopies()).toHaveLength(0)
+    fireEvent.keyDown(editor, { key: 'Enter', isComposing: true })
+    expect(sentCopies()).toHaveLength(0)
+    fireEvent.keyDown(editor, { key: 'Enter' })
+    await waitFor(() => expect(editor.textContent).toBe(''))
+    expect(sentCopies()).toHaveLength(1)
   })
 })
