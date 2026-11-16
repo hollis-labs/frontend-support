@@ -1,0 +1,264 @@
+/* @hollis-labs/ade-react: the attention layer, the guide bar and the plain chat panel.
+   Colours come from custom properties, so an application sets its own. */
+:root {
+  --ade-agent: #e2a53b;
+  --ade-user: #4c9df0;
+  --ade-bg: #16181c;
+  --ade-fg: #e8e6e1;
+  --ade-soft: #9aa0a8;
+  --ade-border: #2c3038;
+  --ade-dim: rgb(0 0 0 / 0.55);
+}
+
+.ade-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2147483000;
+}
+.ade-layer-svg {
+  position: absolute;
+  inset: 0;
+}
+.ade-dim {
+  fill: var(--ade-dim);
+}
+.ade-arrow {
+  stroke: var(--ade-agent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  opacity: 0.92;
+}
+.ade-arrow-head {
+  fill: var(--ade-agent);
+}
+.ade-ring {
+  position: absolute;
+  box-sizing: border-box;
+  border-radius: 6px;
+  border: 3px solid var(--ade-agent);
+  box-shadow: 0 0 0 3px rgb(0 0 0 / 0.25);
+}
+.ade-ring[data-actor="user"] {
+  border-color: var(--ade-user);
+  border-style: dashed;
+}
+.ade-ring[data-style="arrow"] {
+  border-width: 2px;
+}
+.ade-ring[data-actor="agent"][data-style="highlight"] {
+  animation: ade-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ade-pulse {
+  50% {
+    box-shadow: 0 0 0 8px rgb(226 165 59 / 0.25);
+  }
+}
+.ade-note {
+  position: absolute;
+  max-width: 260px;
+  padding: 5px 9px;
+  border-radius: 6px;
+  background: var(--ade-bg);
+  color: var(--ade-fg);
+  border: 1px solid var(--ade-agent);
+  font:
+    12px / 1.35 system-ui,
+    sans-serif;
+}
+.ade-note strong {
+  color: var(--ade-agent);
+  margin-right: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ade-ring[data-actor="agent"][data-style="highlight"] {
+    animation: none;
+  }
+}
+
+.ade-guide,
+.ade-chat {
+  font:
+    13px / 1.45 system-ui,
+    sans-serif;
+  color: var(--ade-fg);
+  background: var(--ade-bg);
+  border: 1px solid var(--ade-border);
+  border-radius: 8px;
+}
+.ade-guide {
+  padding: 10px 12px;
+  border-color: var(--ade-agent);
+}
+.ade-guide header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--ade-soft);
+}
+.ade-guide header strong {
+  color: var(--ade-agent);
+}
+.ade-guide-say {
+  margin: 8px 0 4px;
+  font-size: 15px;
+}
+.ade-guide-wait,
+.ade-guide-hint {
+  margin: 2px 0;
+  font-size: 12px;
+  color: var(--ade-soft);
+}
+.ade-guide-hint {
+  color: var(--ade-agent);
+}
+.ade-guide footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.ade-guide button,
+.ade-chat button {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--ade-border);
+  background: transparent;
+  color: var(--ade-fg);
+  cursor: pointer;
+}
+.ade-guide button:disabled,
+.ade-chat button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ade-guide button[data-primary],
+.ade-chat button[data-primary] {
+  background: var(--ade-agent);
+  border-color: var(--ade-agent);
+  color: #1a1407;
+  font-weight: 600;
+}
+.ade-guide button:focus-visible,
+.ade-chat button:focus-visible,
+.ade-chat textarea:focus-visible {
+  outline: 2px solid var(--ade-user);
+  outline-offset: 1px;
+}
+
+.ade-chat {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+.ade-chat > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ade-border);
+}
+.ade-chat > header span {
+  flex: 1;
+  font-size: 11px;
+  color: var(--ade-soft);
+}
+.ade-chat-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ade-chat-user {
+  align-self: flex-end;
+  max-width: 85%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #26303d;
+  white-space: pre-wrap;
+}
+.ade-chat-text {
+  white-space: pre-wrap;
+}
+.ade-chat-auto {
+  align-self: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--ade-soft);
+  border: 1px solid var(--ade-border);
+}
+.ade-chat-tool {
+  font-size: 12px;
+  color: var(--ade-soft);
+}
+.ade-chat-tool summary {
+  cursor: pointer;
+  list-style: none;
+}
+.ade-chat-tool summary span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: var(--ade-soft);
+}
+.ade-chat-tool summary span[data-running] {
+  background: var(--ade-agent);
+}
+.ade-chat-tool[data-error] summary {
+  color: #e0705f;
+}
+.ade-chat-tool pre {
+  margin: 4px 0 0 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 11px;
+  max-height: 160px;
+  overflow: auto;
+}
+.ade-chat-notice {
+  font-size: 12px;
+  color: var(--ade-soft);
+}
+.ade-chat-notice[data-tone="error"] {
+  color: #e0705f;
+}
+.ade-chat-ask {
+  margin: 0 10px 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--ade-agent);
+  border-radius: 8px;
+}
+.ade-chat-ask p {
+  margin: 0 0 6px;
+}
+.ade-chat-ask div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ade-chat form {
+  display: flex;
+  gap: 6px;
+  padding: 8px 10px;
+  border-top: 1px solid var(--ade-border);
+}
+.ade-chat textarea {
+  flex: 1;
+  resize: none;
+  font: inherit;
+  color: inherit;
+  background: #0f1114;
+  border: 1px solid var(--ade-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+}
