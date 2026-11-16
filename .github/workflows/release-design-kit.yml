@@ -1,7 +1,7 @@
 # Manual npm release for the ts/design-kit packages. Never runs on push or tag.
 # Publishing needs approval of the `npm-release` environment, and reads NPM_TOKEN
 # from a secret reference only. Packages publish in dependency order; a version
-# that is already on npm is skipped.
+# that is already on npm is skipped. `only` narrows a run to the named packages.
 name: release-design-kit
 
 on:
@@ -11,6 +11,10 @@ on:
         description: "Run npm publish --dry-run instead of publishing"
         type: boolean
         default: true
+      only:
+        description: "Publish only these packages (directory names, space separated). Empty publishes every package whose version is not on npm."
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -34,7 +38,7 @@ jobs:
         kit-cards kit-account kit-code kit-voice kit-workflow
         kit-chat kit-identity
         kit-dashboard kit-observe kit-settings kit-admin plugin-host-ui
-        app-shell
+        app-shell genui
     defaults:
       run:
         working-directory: ts/design-kit
@@ -62,9 +66,22 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run }}
+          ONLY: ${{ inputs.only }}
         run: |
           set -euo pipefail
+          for o in $ONLY; do
+            case " $(echo $PACKAGES) " in
+              *" $o "*) ;;
+              *) echo "unknown package in 'only': $o" >&2; exit 1 ;;
+            esac
+          done
           for p in $PACKAGES; do
+            if [ -n "$ONLY" ]; then
+              case " $(echo $ONLY) " in
+                *" $p "*) ;;
+                *) echo "skip $p (not in 'only')"; continue ;;
+              esac
+            fi
             dir="packages/$p"
             name=$(node -p "require('./$dir/package.json').name")
             version=$(node -p "require('./$dir/package.json').version")

@@ -1,6 +1,6 @@
 # GenUI
 
-`@hollis-labs/genui` renders complete, reviewed declarative surfaces and coordinates host-owned actions. This experimental package requires an explicit owner-managed release. It supports `approval`, `form`, and `list_detail`; it does not execute publisher code or load remote components.
+`@hollis-labs/genui` renders complete, reviewed declarative surfaces and coordinates host-owned actions. It is experimental; `0.1.0` is on npm, and each release is the owner's step. It supports `approval`, `form`, and `list_detail`; it does not execute publisher code or load remote components.
 
 The wire contract is owned by [Substrate GenUI](https://github.com/hollis-labs/substrate/tree/main/genui). The copied schema, catalog and fixtures live in `contract/`; `contract/provenance.json` records the exact source commit and hashes. TypeScript wire aliases and standalone validators are generated mechanically from that schema. Validation does not compile schemas or require unsafe-eval in the browser. One `genuiBinding` declaration integrates with the existing `@hollis-labs/design-bindings` owner; hosts still decide isolation and admission.
 
