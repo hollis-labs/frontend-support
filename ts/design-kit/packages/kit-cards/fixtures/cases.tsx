@@ -9,6 +9,8 @@ import {
   ReviewCard,
   StatusBanner,
   StepperCard,
+  ToolCard,
+  type ResultenvEnvelope,
   type AnswerableStateProps,
   type ApprovalCardProps,
   type ChoiceCardProps,
@@ -30,6 +32,7 @@ import prompt from './golden/prompt.json'
 import review from './golden/review.json'
 import status from './golden/status.json'
 import stepper from './golden/stepper.json'
+import toolResults from './shared-resultenv/fixtures.json'
 
 /**
  * One fixture per card kind x state. Every value is synthetic. The same list feeds the
@@ -151,6 +154,10 @@ function answerableCases(): CardCase[] {
 function staticCases(): CardCase[] {
   const e = error.data
   return [
+    ...toolResults.map((fixture) => ({
+      id: `tool:${fixture.name}`, card: 'tool', state: fixture.name,
+      element: <ToolCard toolName="sample-tool" envelope={fixture.envelope as ResultenvEnvelope} onLoadMore={noop} />,
+    })),
     {
       id: 'approval-live:interactive', card: 'approval-live', state: 'interactive',
       element: <LiveApproval {...approvalData} risk="low" />,
