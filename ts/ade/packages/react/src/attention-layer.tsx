@@ -1,4 +1,4 @@
-import type { Anchor, Attention, Rect } from "@hollis-labs/ade-core"
+import type { Anchor, Attention, Hub, Rect } from "@hollis-labs/ade-core"
 import { useEffect, useId, useState } from "react"
 import { useAttention, useHub } from "./hooks.js"
 
@@ -17,9 +17,15 @@ const mid = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
  * (pointer events pass through), so it can never cover a control the person needs.
  * Mount it once, anywhere under AdeProvider.
  */
-export function AttentionLayer({ agentLabel = "Agent" }: { agentLabel?: string }) {
-  const hub = useHub()
-  const attention = useAttention()
+export function AttentionLayer({
+  agentLabel = "Agent",
+  hub: given,
+}: {
+  agentLabel?: string
+  hub?: Hub
+}) {
+  const hub = useHub(given)
+  const attention = useAttention(given)
   const maskId = useId()
   const [, setTick] = useState(0)
 

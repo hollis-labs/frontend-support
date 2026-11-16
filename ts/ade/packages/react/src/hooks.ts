@@ -10,10 +10,14 @@ import { createContext, useContext, useEffect, useMemo, useRef, useSyncExternalS
 
 export const HubContext = createContext<Hub | null>(null)
 
-/** The hub given by AdeProvider. */
-export function useHub(): Hub {
+/**
+ * The hub: the one given here, or the one from AdeProvider. An application with one hub
+ * for its whole window may pass it instead of wrapping everything in a provider.
+ */
+export function useHub(given?: Hub): Hub {
   const hub = useContext(HubContext)
-  if (!hub) throw new Error("useHub needs an <AdeProvider>.")
+  if (given) return given
+  if (!hub) throw new Error("useHub needs an <AdeProvider>, or a hub passed to it.")
   return hub
 }
 
@@ -32,8 +36,8 @@ export function useHubVersion(hub: Hub): number {
  * always answers with the latest. Call the returned handle's changed() after the content
  * changes by itself (not through an action), and moved() when the layout does.
  */
-export function useSurface(make: () => SurfaceAdapter): SurfaceHandle {
-  const hub = useHub()
+export function useSurface(make: () => SurfaceAdapter, given?: Hub): SurfaceHandle {
+  const hub = useHub(given)
   const latest = useRef(make)
   latest.current = make
   const first = useMemo(() => make().info, []) // biome-ignore lint/correctness/useExhaustiveDependencies: a surface's identity is fixed when it mounts
@@ -72,15 +76,15 @@ export function useSurface(make: () => SurfaceAdapter): SurfaceHandle {
 }
 
 /** Everything pointed at now. */
-export function useAttention(): Attention[] {
-  const hub = useHub()
+export function useAttention(given?: Hub): Attention[] {
+  const hub = useHub(given)
   const v = useHubVersion(hub)
   return useMemo(() => hub.attentionNow(), [hub, v]) // biome-ignore lint/correctness/useExhaustiveDependencies: v is the hub's change counter
 }
 
 /** The guide, or null. */
-export function useGuide(): GuideState | null {
-  const hub = useHub()
+export function useGuide(given?: Hub): GuideState | null {
+  const hub = useHub(given)
   useHubVersion(hub)
   return hub.guideState()
 }

@@ -1,4 +1,4 @@
-import type { GuideStep } from "@hollis-labs/ade-core"
+import type { GuideStep, Hub } from "@hollis-labs/ade-core"
 import { useState } from "react"
 import { useGuide, useHub } from "./hooks.js"
 
@@ -13,9 +13,9 @@ const waits = (step: GuideStep): string => {
  * person's say over it (back, go on or skip, pause, take over, stop). Everything is a
  * button, so it works from the keyboard; the caption is announced when it changes.
  */
-export function GuideBar({ onAsk }: { onAsk?: (step: GuideStep) => void }) {
-  const hub = useHub()
-  const g = useGuide()
+export function GuideBar({ onAsk, hub: given }: { onAsk?: (step: GuideStep) => void; hub?: Hub }) {
+  const hub = useHub(given)
+  const g = useGuide(given)
   const [hint, setHint] = useState("")
   if (!g || g.status === "stopped") return null
   const step = g.guide.steps[g.index] as GuideStep
