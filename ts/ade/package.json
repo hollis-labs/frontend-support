@@ -1,0 +1,16 @@
+{
+  "name": "ade",
+  "private": true,
+  "type": "module",
+  "workspaces": ["packages/*", "examples/*/frontend"],
+  "scripts": {
+    "build": "npm run build -w @hollis-labs/ade-core -w @hollis-labs/ade-agent -w @hollis-labs/ade-react",
+    "test": "npm test -w @hollis-labs/ade-core",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "typescript": "5.9.3"
+  }
+}
