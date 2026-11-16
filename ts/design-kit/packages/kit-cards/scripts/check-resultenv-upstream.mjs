@@ -21,7 +21,7 @@ for (const [key, localName, upstreamPath] of paths) {
   const digest = createHash('sha256').update(local).digest('hex')
   if (digest !== provenance[key]) throw new Error(`${localName} differs from pinned SDK source; refresh provenance and review adapter`)
   if (sdkRoot) {
-    const upstream = readFileSync(resolve(sdkRoot, upstreamPath))
-    if (!local.equals(upstream)) throw new Error(`${localName} differs from SDK head ${provenance.commit}`)
+    const upstream = execFileSync('git', ['-C', sdkRoot, 'show', `${provenance.commit}:${upstreamPath}`])
+    if (!local.equals(upstream)) throw new Error(`${localName} differs from immutable SDK commit ${provenance.commit}`)
   }
 }

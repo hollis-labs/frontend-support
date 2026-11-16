@@ -9,5 +9,6 @@ The schema and provenance checks run during the kit-cards build and typecheck.
 They reject a changed local snapshot until its contract, adapter, and source
 commit are reviewed. The shared fixtures feed the gallery and DOM tests.
 Before integration, run `npm run check:resultenv-upstream -- --sdk-root <libs-checkout>`
-against the exact reviewed libs head. The command fails if that head or either
-copied file differs from `provenance.json`.
+against the exact reviewed libs head. The command fails if that head differs
+from the pinned commit or either copied file differs from the bytes returned by
+`git show <commit>:<path>` and recorded in `provenance.json`.
