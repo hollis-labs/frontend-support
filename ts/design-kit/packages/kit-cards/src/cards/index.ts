@@ -75,6 +75,8 @@ export type { ErrorCardProps, StatusBannerProps } from './error-card'
 
 export { ToolCard, ToolResultContent } from './tool-card'
 export type { ToolCardProps, ToolContentPart, ToolOutcome, ToolResultContentProps, ToolResultView } from './tool-card'
+export { toToolResultView } from './tool-result-adapter'
+export type { ResultenvEnvelope, ResultenvOutcome } from './resultenv.generated'
 
 export { GroupCard, StepperCard } from './group-card'
 export type { GroupCardProps, StepperCardProps } from './group-card'

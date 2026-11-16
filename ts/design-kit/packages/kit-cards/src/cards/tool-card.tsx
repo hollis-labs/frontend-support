@@ -2,20 +2,25 @@ import { useState, type HTMLAttributes, type ReactNode } from 'react'
 import { AlertTriangle, CheckCircle2, CircleHelp, Clock3, OctagonX, Wrench } from 'lucide-react'
 import { Button, cn, type Accent } from '@hollis-labs/design-components'
 import { Envelope, EnvelopeBody, EnvelopeHeader } from './envelope'
+import type { ResultenvEnvelope, ResultenvOutcome } from './resultenv.generated'
+import { toToolResultView } from './tool-result-adapter'
 
 /** Display contract. Hosts adapt their receipt schema to this shape; no transport lives here. */
-export type ToolOutcome = 'success' | 'nonzero_exit' | 'error' | 'timeout' | 'cancelled' | 'unknown'
+export type ToolOutcome = ResultenvOutcome
 
 export type ToolContentPart =
   | { readonly type: 'text'; readonly text: string }
   | { readonly type: 'image'; readonly src?: string; readonly mimeType?: string; readonly alt?: string }
   | { readonly type: 'audio'; readonly src?: string; readonly mimeType?: string }
-  | { readonly type: 'resource'; readonly uri: string; readonly name?: string; readonly mimeType?: string }
+  | { readonly type: 'resource'; readonly uri: string; readonly name?: string; readonly mimeType?: string; readonly text?: string }
   | { readonly type: 'other'; readonly mimeType?: string; readonly value: unknown }
 
 export interface ToolResultView {
   readonly outcome: ToolOutcome
   readonly exitCode?: number | null
+  readonly signal?: string
+  readonly cancelRequested?: boolean
+  readonly cancelConfirmed?: boolean
   readonly stdout?: string
   readonly stderr?: string
   readonly error?: string
@@ -29,15 +34,19 @@ export interface ToolResultView {
 const outcomePresentation: Record<ToolOutcome, { label: string; detail: string; tone: Accent; icon: typeof CheckCircle2 }> = {
   success: { label: 'Succeeded', detail: 'Tool completed successfully.', tone: 'success', icon: CheckCircle2 },
   nonzero_exit: { label: 'Nonzero exit', detail: 'The process exited with an error status.', tone: 'danger', icon: OctagonX },
-  error: { label: 'Tool error', detail: 'The tool reported an error.', tone: 'danger', icon: AlertTriangle },
+  signal: { label: 'Stopped by signal', detail: 'The process ended after receiving a signal.', tone: 'danger', icon: OctagonX },
+  tool_error: { label: 'Tool error', detail: 'The tool reported an error.', tone: 'danger', icon: AlertTriangle },
+  transport_error: { label: 'Transport error', detail: 'The result could not be delivered; check whether an effect occurred.', tone: 'danger', icon: AlertTriangle },
   timeout: { label: 'Timed out', detail: 'The operation timed out; its effect may need checking.', tone: 'warning', icon: Clock3 },
   cancelled: { label: 'Cancelled', detail: 'Cancellation was reported; check the receipt for effects.', tone: 'warning', icon: OctagonX },
   unknown: { label: 'Outcome unknown', detail: 'Result not recorded; an effect is possible.', tone: 'warning', icon: CircleHelp },
+  not_run: { label: 'Not run', detail: 'The operation was not invoked.', tone: 'neutral', icon: CircleHelp },
 }
 
 /** A conservative DOM budget. A host can fetch more with the opaque cursor. */
 const TEXT_LIMIT = 4096
 const JSON_LIMIT = 4096
+const CONTENT_LIMIT = 20
 
 function bounded(text: string, limit = TEXT_LIMIT) {
   return text.length > limit ? `${text.slice(0, limit)}\n… Preview limited to ${limit} characters` : text
@@ -71,7 +80,7 @@ function ContentPart({ part, index }: { part: ToolContentPart; index: number }):
       {part.src ? <audio controls src={part.src} className="max-w-full" /> : <p className="text-caption text-fg-muted">Audio available in receipt</p>}
     </section>
     case 'resource': return <section aria-label={`Resource content ${index + 1}`} className="text-caption text-fg-secondary">
-      <span className="font-medium">{part.name ?? 'Resource'}</span>{part.mimeType ? ` · ${part.mimeType}` : ''}<code className="block break-all">{bounded(part.uri, 512)}</code>
+      <span className="font-medium">{part.name ?? 'Resource'}</span>{part.mimeType ? ` · ${part.mimeType}` : ''}<code className="block break-all">{bounded(part.uri, 512)}</code>{part.text !== undefined ? <pre className="max-h-64 overflow-auto whitespace-pre-wrap">{bounded(part.text)}</pre> : null}
     </section>
     case 'other': return <TextSection label={`Other content ${index + 1}${part.mimeType ? ` · ${part.mimeType}` : ''}`} value={jsonPreview(part.value)} />
   }
@@ -86,14 +95,18 @@ export interface ToolResultContentProps extends HTMLAttributes<HTMLDivElement> {
 export function ToolResultContent({ result, onLoadMore, className, ...rest }: ToolResultContentProps) {
   const [expanded, setExpanded] = useState(false)
   const presentation = outcomePresentation[result.outcome]
-  const hasDetail = result.stdout !== undefined || result.stderr !== undefined || result.error !== undefined ||
+  const hasDetail = result.stdout !== undefined || result.stderr !== undefined || result.error !== undefined || result.signal !== undefined || result.cancelRequested !== undefined || result.cancelConfirmed !== undefined ||
     Boolean(result.content?.length) || result.structuredContent !== undefined || result.metadata !== undefined || result.outputSchemaRef !== undefined
   const detail = <div className="space-y-3">
     {result.exitCode !== undefined && result.exitCode !== null ? <p className="text-caption">Exit code: <code>{result.exitCode}</code></p> : null}
+    {result.signal !== undefined ? <p className="text-caption">Signal: <code>{result.signal}</code></p> : null}
+    {result.cancelRequested !== undefined ? <p className="text-caption">Cancellation requested: {result.cancelRequested ? 'yes' : 'no'}</p> : null}
+    {result.cancelConfirmed !== undefined ? <p className="text-caption">Cancellation confirmed: {result.cancelConfirmed ? 'yes' : 'no'}</p> : null}
     {result.stdout !== undefined ? <TextSection label="stdout" value={result.stdout} /> : null}
     {result.stderr !== undefined ? <TextSection label="stderr" value={result.stderr} /> : null}
     {result.error !== undefined ? <TextSection label="Error detail" value={result.error} /> : null}
-    {result.content?.map((part, index) => <ContentPart key={index} part={part} index={index} />)}
+    {result.content?.slice(0, CONTENT_LIMIT).map((part, index) => <ContentPart key={index} part={part} index={index} />)}
+    {(result.content?.length ?? 0) > CONTENT_LIMIT ? <p className="text-caption text-fg-muted">Only the first {CONTENT_LIMIT} content items are shown. Open the receipt for the rest.</p> : null}
     {result.structuredContent !== undefined ? <TextSection label="Structured content" value={jsonPreview(result.structuredContent)} /> : null}
     {result.metadata !== undefined ? <TextSection label="Metadata" value={jsonPreview(result.metadata)} /> : null}
     {result.outputSchemaRef !== undefined ? <p className="break-all text-caption text-fg-secondary">Output schema: <code>{bounded(result.outputSchemaRef, 512)}</code></p> : null}
@@ -109,13 +122,14 @@ export function ToolResultContent({ result, onLoadMore, className, ...rest }: To
 
 export interface ToolCardProps {
   readonly toolName: string
-  readonly result: ToolResultView
+  readonly envelope: ResultenvEnvelope
   readonly onLoadMore?: (cursor: string) => void
   readonly className?: string
 }
 
 /** Shared card shape. Kit-chat reuses ToolResultContent inside its existing Tool row. */
-export function ToolCard({ toolName, result, onLoadMore, className }: ToolCardProps) {
+export function ToolCard({ toolName, envelope, onLoadMore, className }: ToolCardProps) {
+  const result = toToolResultView(envelope)
   const presentation = outcomePresentation[result.outcome]
   return <Envelope accent={presentation.tone} className={className} data-slot="tool-card">
     <EnvelopeHeader icon={Wrench} label={toolName} meta={presentation.label} tone={presentation.tone} />

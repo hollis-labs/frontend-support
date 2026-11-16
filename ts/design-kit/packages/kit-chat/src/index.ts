@@ -54,6 +54,7 @@ export {
   TimelineCard,
   ToolCard,
   ToolResultContent,
+  toToolResultView,
 } from '@hollis-labs/kit-cards'
 export type {
   ArtifactCardProps,
@@ -62,6 +63,8 @@ export type {
   ToolOutcome,
   ToolResultContentProps,
   ToolResultView,
+  ResultenvEnvelope,
+  ResultenvOutcome,
   DocumentCardProps,
   PromptCardProps,
   CardBoundaryProps,
