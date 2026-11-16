@@ -5,6 +5,7 @@ import { GateApprovalCard, type GateApprovalState } from '../cards/gate-approval
 const base = {
   enabled: true,
   ticketId: 'hitl-item-1',
+  ticketRevision: 7,
   operationDigest: 'sha256:exact-operation',
   title: 'Run the prepared operation',
   risk: 'low' as const,
@@ -29,7 +30,7 @@ describe('GateApprovalCard', () => {
     const onDismiss = vi.fn()
     render(<GateApprovalCard {...base} state={{ kind: 'pending' }} onSelect={onSelect} onDismiss={onDismiss} />)
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Allow once' })) })
-    expect(onSelect).toHaveBeenCalledWith({ ticketId: 'hitl-item-1', operationDigest: 'sha256:exact-operation', optionId: 'provider-allow-once' })
+    expect(onSelect).toHaveBeenCalledWith({ ticketId: 'hitl-item-1', ticketRevision: 7, operationDigest: 'sha256:exact-operation', optionId: 'provider-allow-once' })
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: 'Dismiss' })) })
     expect(onDismiss).toHaveBeenCalledTimes(1)
     expect(onSelect).toHaveBeenCalledTimes(1)
@@ -49,12 +50,12 @@ describe('GateApprovalCard', () => {
   }
 
   it('stale is locked and can reload for authoritative reconciliation', async () => {
-    const onReload = vi.fn()
+    const onReconcile = vi.fn()
     const onSelect = vi.fn()
-    render(<GateApprovalCard {...base} state={{ kind: 'stale' }} onReload={onReload} onSelect={onSelect} />)
+    render(<GateApprovalCard {...base} state={{ kind: 'stale' }} onReconcile={onReconcile} onSelect={onSelect} />)
     expect((screen.getByRole('button', { name: 'Allow once' }) as HTMLButtonElement).disabled).toBe(true)
     await act(async () => { fireEvent.click(screen.getByRole('button', { name: /Reload, keep my answers/ })) })
-    expect(onReload).toHaveBeenCalledTimes(1)
+    expect(onReconcile).toHaveBeenCalledTimes(1)
     expect(onSelect).not.toHaveBeenCalled()
   })
 })

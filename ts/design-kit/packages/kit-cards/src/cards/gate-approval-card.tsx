@@ -23,6 +23,7 @@ export interface GateApprovalCardProps {
   readonly enabled?: boolean
   readonly state: GateApprovalState
   readonly ticketId: string
+  readonly ticketRevision: number
   readonly operationDigest: string
   readonly title: ReactNode
   readonly description?: ReactNode
@@ -31,16 +32,19 @@ export interface GateApprovalCardProps {
   readonly options: readonly GateApprovalOption[]
   readonly expiresAt?: ReactNode
   readonly requester?: ReactNode
-  readonly onSelect: (choice: { readonly ticketId: string; readonly operationDigest: string; readonly optionId: string }) => void | Promise<void>
+  /** The host rechecks this revision and answers through Gatecrasher. */
+  readonly onSelect: (choice: { readonly ticketId: string; readonly ticketRevision: number; readonly operationDigest: string; readonly optionId: string }) => void | Promise<void>
   /** Dismissing the view does not cancel the authoritative interaction. */
   readonly onDismiss: () => void | Promise<void>
-  readonly onReload?: () => void
+  /** Reload authoritative Gatecrasher state after reconnect or a stale response. */
+  readonly onReconcile?: () => void
 }
 
 export function GateApprovalCard({
   enabled = false,
   state,
   ticketId,
+  ticketRevision,
   operationDigest,
   title,
   description,
@@ -51,7 +55,7 @@ export function GateApprovalCard({
   requester,
   onSelect,
   onDismiss,
-  onReload,
+  onReconcile,
 }: GateApprovalCardProps) {
   if (!enabled) return null
 
@@ -81,13 +85,13 @@ export function GateApprovalCard({
     actions={actions}
     priorStatus={priorStatus}
     stale={state.kind === 'stale' || (state.kind === 'pending' && options.length === 0)}
-    onReload={onReload}
+    onReload={onReconcile}
     receipt={receipt}
     onRespond={(outcome) => {
       if (outcome.status === 'canceled') return onDismiss()
       const optionId = outcome.decisions?.[0]?.action
       if (optionId == null || !options.some((option) => option.id === optionId)) return
-      return onSelect({ ticketId, operationDigest, optionId })
+      return onSelect({ ticketId, ticketRevision, operationDigest, optionId })
     }}
   />
 }
