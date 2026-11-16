@@ -6,12 +6,11 @@ const record = (value: unknown): Record<string, unknown> | undefined =>
 const string = (value: unknown): string | undefined => typeof value === 'string' ? value : undefined
 
 /** Redaction is a display boundary; the host keeps the unmodified receipt. */
-function redactedMcp(envelope: ResultenvEnvelope): Record<string, unknown> {
-  const source = envelope.mcp_result ?? {}
-  const copy = JSON.parse(JSON.stringify(source)) as Record<string, unknown>
+function redactedEnvelope(envelope: ResultenvEnvelope): Record<string, unknown> {
+  const copy = JSON.parse(JSON.stringify(envelope)) as Record<string, unknown>
   for (const pointer of envelope.redact ?? []) {
+    if (!pointer.startsWith('/')) continue
     const path = pointer.split('/').slice(1).map(segment => segment.replace(/~1/g, '/').replace(/~0/g, '~'))
-    if (path.shift() !== 'mcp_result' || path.length === 0) continue
     let parent: Record<string, unknown> | unknown[] | undefined = copy
     for (const segment of path.slice(0, -1)) {
       const next: unknown = Array.isArray(parent) ? parent[Number(segment)] : parent?.[segment]
@@ -20,7 +19,7 @@ function redactedMcp(envelope: ResultenvEnvelope): Record<string, unknown> {
     }
     if (parent) {
       const leaf = path[path.length - 1]
-      if (Object.prototype.hasOwnProperty.call(parent, leaf)) (parent as Record<string, unknown>)[leaf] = '[redacted]'
+      if (Object.prototype.hasOwnProperty.call(parent, leaf)) (parent as Record<string, unknown>)[leaf] = '[REDACTED]'
     }
   }
   return copy
@@ -50,7 +49,8 @@ function contentPart(value: unknown): ToolContentPart {
 
 /** The only mapping from the shared receipt shape to the transport-free card shape. */
 export function toToolResultView(envelope: ResultenvEnvelope): ToolResultView {
-  const mcp = redactedMcp(envelope)
+  const display = redactedEnvelope(envelope)
+  const mcp = record(display.mcp_result) ?? {}
   const content = Array.isArray(mcp.content) ? mcp.content.map(contentPart) : []
   const metadata: Record<string, unknown> = {}
   for (const [key, value] of Object.entries(mcp)) {
@@ -64,19 +64,19 @@ export function toToolResultView(envelope: ResultenvEnvelope): ToolResultView {
     if (detail.some(item => item.annotations !== undefined || item._meta !== undefined)) metadata.content = detail
   }
   return {
-    outcome: envelope.outcome,
-    exitCode: envelope.exit_code,
-    signal: envelope.signal,
-    cancelRequested: envelope.cancel_requested,
-    cancelConfirmed: envelope.cancel_confirmed,
-    stdout: envelope.stdout,
-    stderr: envelope.stderr,
-    combinedOutput: envelope.combined_output,
-    error: envelope.error ? `${envelope.error.code}: ${envelope.error.message}` : undefined,
+    outcome: display.outcome === '[REDACTED]' ? 'unknown' : envelope.outcome,
+    exitCode: typeof display.exit_code === 'number' ? display.exit_code : undefined,
+    signal: string(display.signal),
+    cancelRequested: typeof display.cancel_requested === 'boolean' ? display.cancel_requested : undefined,
+    cancelConfirmed: typeof display.cancel_confirmed === 'boolean' ? display.cancel_confirmed : undefined,
+    stdout: string(display.stdout),
+    stderr: string(display.stderr),
+    combinedOutput: string(display.combined_output),
+    error: display.error === '[REDACTED]' ? '[REDACTED]' : record(display.error) ? `${record(display.error)?.code}: ${record(display.error)?.message}` : undefined,
     content,
     structuredContent: mcp.structuredContent,
     metadata: Object.keys(metadata).length ? metadata : undefined,
-    outputSchemaRef: envelope.output_schema_ref,
-    truncation: envelope.truncation?.truncated && envelope.truncation.cursor ? { cursor: envelope.truncation.cursor } : undefined,
+    outputSchemaRef: string(display.output_schema_ref),
+    truncation: record(display.truncation)?.truncated === true ? { cursor: string(record(display.truncation)?.cursor) } : undefined,
   }
 }

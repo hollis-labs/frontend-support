@@ -29,7 +29,7 @@ export interface ToolResultView {
   readonly structuredContent?: unknown
   readonly metadata?: unknown
   readonly outputSchemaRef?: string
-  readonly truncation?: { readonly cursor: string; readonly reason?: string }
+  readonly truncation?: { readonly cursor?: string; readonly reason?: string }
 }
 
 const outcomePresentation: Record<ToolOutcome, { label: string; detail: string; tone: Accent; icon: typeof CheckCircle2 }> = {
@@ -96,7 +96,7 @@ export interface ToolResultContentProps extends HTMLAttributes<HTMLDivElement> {
 export function ToolResultContent({ result, onLoadMore, className, ...rest }: ToolResultContentProps) {
   const [expanded, setExpanded] = useState(false)
   const presentation = outcomePresentation[result.outcome]
-  const hasDetail = result.stdout !== undefined || result.stderr !== undefined || result.combinedOutput !== undefined || result.error !== undefined || result.signal !== undefined || result.cancelRequested !== undefined || result.cancelConfirmed !== undefined ||
+  const hasDetail = result.exitCode !== undefined && result.exitCode !== null || result.stdout !== undefined || result.stderr !== undefined || result.combinedOutput !== undefined || result.error !== undefined || result.signal !== undefined || result.cancelRequested !== undefined || result.cancelConfirmed !== undefined ||
     Boolean(result.content?.length) || result.structuredContent !== undefined || result.metadata !== undefined || result.outputSchemaRef !== undefined
   const detail = <div className="space-y-3">
     {result.exitCode !== undefined && result.exitCode !== null ? <p className="text-caption">Exit code: <code>{result.exitCode}</code></p> : null}
@@ -118,7 +118,7 @@ export function ToolResultContent({ result, onLoadMore, className, ...rest }: To
       <div><strong className="font-semibold">{presentation.label}</strong><p className="text-caption text-fg-secondary">{presentation.detail}</p></div>
     </div>
     {hasDetail ? <div><Button type="button" variant="outline" size="sm" className="max-sm:min-h-11" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Hide result details' : 'Show result details'}</Button>{expanded ? <div className="mt-3">{detail}</div> : null}</div> : null}
-    {result.truncation ? <div className="space-y-1 text-caption"><p>Output truncated{result.truncation.reason ? `: ${result.truncation.reason}` : '.'}</p>{onLoadMore ? <Button type="button" variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => onLoadMore(result.truncation!.cursor)}>Load more</Button> : null}</div> : null}
+    {result.truncation ? <div className="space-y-1 text-caption"><p>Output truncated{result.truncation.reason ? `: ${result.truncation.reason}` : '.'}</p>{onLoadMore && result.truncation.cursor ? <Button type="button" variant="outline" size="sm" className="max-sm:min-h-11" onClick={() => onLoadMore(result.truncation!.cursor!)}>Load more</Button> : null}</div> : null}
   </div>
 }
 

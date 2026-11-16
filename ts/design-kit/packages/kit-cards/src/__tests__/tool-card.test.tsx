@@ -33,7 +33,7 @@ describe('tool result card', () => {
     expect(imageView.content?.map(part => part.type)).toEqual(['image', 'resource', 'resource'])
     const secretView = toToolResultView(secret.envelope as ResultenvEnvelope)
     expect(JSON.stringify(secretView.metadata)).not.toContain('fixture-hidden')
-    expect(JSON.stringify(secretView.metadata)).toContain('[redacted]')
+    expect(JSON.stringify(secretView.metadata)).toContain('[REDACTED]')
     expect(secretView.content?.[0]).toEqual({ type: 'text', text: 'safe text' })
   })
 
@@ -44,6 +44,36 @@ describe('tool result card', () => {
     expect(screen.getByRole('region', { name: 'Combined PTY output' }).textContent).toContain('stdout and stderr share one PTY stream')
     expect(screen.queryByRole('region', { name: 'stdout' })).toBeNull()
     expect(screen.queryByRole('region', { name: 'stderr' })).toBeNull()
+  })
+
+  it('redacts direct output and a whole MCP result before display without changing the receipt', () => {
+    const envelope: ResultenvEnvelope = {
+      version: 'resultenv/v1', outcome: 'success', exit_code: 0,
+      stdout: 'synthetic-secret-output',
+      mcp_result: { content: [{ type: 'text', text: 'synthetic-secret-mcp' }] },
+      redact: ['/stdout', '/mcp_result'],
+    }
+    const view = toToolResultView(envelope)
+    expect(view.stdout).toBe('[REDACTED]')
+    expect(view.content).toEqual([])
+    render(<ToolCard toolName="redacted" envelope={envelope} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show result details' }))
+    expect(screen.getByRole('region', { name: 'stdout' }).textContent).toContain('[REDACTED]')
+    expect(document.body.textContent).not.toContain('synthetic-secret')
+    expect(envelope.stdout).toBe('synthetic-secret-output')
+  })
+
+  it.each([0, 2])('shows an output-free exit code %i', (exitCode) => {
+    const outcome = exitCode === 0 ? 'success' : 'nonzero_exit'
+    render(<ToolCard toolName="exit-only" envelope={{ version: 'resultenv/v1', outcome, exit_code: exitCode } as ResultenvEnvelope} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show result details' }))
+    expect(screen.getByText(`Exit code:`).parentElement?.textContent).toContain(String(exitCode))
+  })
+
+  it('shows cursorless truncation without a load-more action', () => {
+    render(<ToolCard toolName="truncated" envelope={{ version: 'resultenv/v1', outcome: 'unknown', truncation: { truncated: true } }} onLoadMore={vi.fn()} />)
+    expect(screen.getByText('Output truncated.')).toBeTruthy()
+    expect(screen.queryByRole('button', { name: 'Load more' })).toBeNull()
   })
 
   it('bounds large output and passes the opaque load-more cursor unchanged', () => {
