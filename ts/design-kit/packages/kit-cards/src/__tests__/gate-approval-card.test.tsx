@@ -64,4 +64,24 @@ describe('GateApprovalCard', () => {
     expect(container.textContent).toMatch(/gate-missing-options/)
     expect([...container.querySelectorAll('button')].filter((button) => !button.disabled)).toHaveLength(0)
   })
+
+  it('locks high-risk approval when the host omits the confirmation phrase', async () => {
+    const onSelect = vi.fn()
+    const { container } = render(<GateApprovalCard {...base} risk="high" state={{ kind: 'pending' }} onSelect={onSelect} />)
+    expect(container.textContent).toMatch(/requires a confirmation phrase/i)
+    expect([...container.querySelectorAll('button')].filter((button) => !button.disabled)).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Allow once' })).toBeNull()
+    expect(onSelect).not.toHaveBeenCalled()
+  })
+
+  it('requires the exact host phrase before high-risk allow', async () => {
+    const onSelect = vi.fn()
+    render(<GateApprovalCard {...base} risk="high" confirmPhrase="APPROVE-7" state={{ kind: 'pending' }} onSelect={onSelect} />)
+    const allow = screen.getByRole('button', { name: 'Allow once' }) as HTMLButtonElement
+    expect(allow.disabled).toBe(true)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'APPROVE-7' } })
+    expect(allow.disabled).toBe(false)
+    await act(async () => { fireEvent.click(allow) })
+    expect(onSelect).toHaveBeenCalledWith({ ticketId: 'hitl-item-1', ticketRevision: 7, operationDigest: 'sha256:exact-operation', optionId: 'provider-allow-once' })
+  })
 })

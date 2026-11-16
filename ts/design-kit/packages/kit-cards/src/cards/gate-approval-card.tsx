@@ -28,6 +28,8 @@ export interface GateApprovalCardProps {
   readonly title: ReactNode
   readonly description?: ReactNode
   readonly risk: ApprovalRisk
+  /** Required for an actionable high-risk request; supplied by the host. */
+  readonly confirmPhrase?: string
   readonly effects?: readonly ApprovalEffect[]
   readonly options: readonly GateApprovalOption[]
   readonly expiresAt?: ReactNode
@@ -49,6 +51,7 @@ export function GateApprovalCard({
   title,
   description,
   risk,
+  confirmPhrase,
   effects,
   options,
   expiresAt,
@@ -58,6 +61,8 @@ export function GateApprovalCard({
   onReconcile,
 }: GateApprovalCardProps) {
   if (!enabled) return null
+
+  const highRiskLocked = risk === 'high' && !confirmPhrase?.trim()
 
   const priorStatus = state.kind === 'approved' || state.kind === 'denied'
     ? 'submitted'
@@ -78,6 +83,8 @@ export function GateApprovalCard({
     title={title}
     description={description}
     risk={risk}
+    confirmPhrase={highRiskLocked ? undefined : confirmPhrase}
+    elevation={highRiskLocked ? { reason: 'High-risk approval requires a confirmation phrase from the host.' } : undefined}
     id={ticketId}
     digest={operationDigest}
     effects={effects}
@@ -89,6 +96,7 @@ export function GateApprovalCard({
     onReload={onReconcile}
     receipt={receipt}
     onRespond={(outcome) => {
+      if (highRiskLocked) return
       if (outcome.status === 'canceled') return onDismiss()
       const optionId = outcome.decisions?.[0]?.action
       if (optionId == null || !options.some((option) => option.id === optionId)) return
