@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "React bindings for ADE: surfaces, the attention layer, the guide bar and a plain agent panel.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/ade-core.git",
+    "directory": "packages/react"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

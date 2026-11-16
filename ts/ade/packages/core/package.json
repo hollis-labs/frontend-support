@@ -3,6 +3,15 @@
   "version": "0.1.0",
   "description": "The contract between a person, an agent and an application over shared state: surfaces, observations, anchors, actions, attention and guides.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/ade-core.git",
+    "directory": "packages/core"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",

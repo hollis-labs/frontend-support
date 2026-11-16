@@ -1,8 +1,11 @@
 {
-  "name": "ade",
+  "name": "ade-core-workspace",
   "private": true,
   "type": "module",
-  "workspaces": ["packages/*", "examples/*/frontend"],
+  "workspaces": [
+    "packages/*",
+    "examples/*/frontend"
+  ],
   "scripts": {
     "build": "npm run build -w @hollis-labs/ade-core -w @hollis-labs/ade-agent -w @hollis-labs/ade-react",
     "test": "npm test -w @hollis-labs/ade-core",
