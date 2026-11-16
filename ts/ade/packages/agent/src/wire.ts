@@ -82,7 +82,9 @@ export class HostError extends Error {
 export interface HostOptions {
   /** Where the host is mounted. Default "/api/agent". */
   base?: string
-  /** For tests, or to add headers. Default: fetch with same-origin credentials. */
+  /** Sent with every request: what the application's server asks of a page (a CSRF header). */
+  headers?: Record<string, string>
+  /** For tests. Default: fetch with same-origin credentials. */
   fetch?: typeof fetch
 }
 
@@ -96,9 +98,11 @@ export function hostApi(opts: HostOptions = {}) {
   async function request<T>(path: string, method = "GET", body?: unknown): Promise<T> {
     const res = await doFetch(`${base}${path}`, {
       method,
-      ...(body !== undefined
-        ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
-        : {}),
+      headers: {
+        ...(opts.headers ?? {}),
+        ...(body !== undefined ? { "Content-Type": "application/json" } : {}),
+      },
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
     })
     if (!res.ok) {
       let message = `The agent host answered ${res.status}.`
@@ -164,7 +168,10 @@ export function hostApi(opts: HostOptions = {}) {
         if (signal.aborted) return
         try {
           const res = await doFetch(`${base}/runs/${run}/events`, {
-            headers: last ? { "Last-Event-ID": String(last) } : {},
+            headers: {
+              ...(opts.headers ?? {}),
+              ...(last ? { "Last-Event-ID": String(last) } : {}),
+            },
             signal,
           })
           if (res.status === 410 || res.status === 404) return // long over: the thread has it
