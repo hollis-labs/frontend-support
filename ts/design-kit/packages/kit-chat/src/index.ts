@@ -106,6 +106,8 @@ export type {
 export { useStallDetector } from './lib/use-stall-detector'
 
 export { useChatHistory } from './lib/use-chat-history'
+export { createChatStreamBinding, useChatStreamBinding } from './lib/chatstream-binding'
+export type { ChatStreamBinding, ChatStreamBindingCheckpoint, ChatStreamBindingOptions, ChatStreamBindingSnapshot } from './lib/chatstream-binding'
 export type {
   ChatHistoryCursor,
   ChatHistoryPage,

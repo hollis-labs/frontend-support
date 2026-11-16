@@ -192,6 +192,33 @@ includes integration, cursor rules and the prepend fix.
 `ChatStream` delegates cursors, deduplication and request state to the host or
 the headless hook above; its history prop remains presentation only.
 
+### Optional chatstream binding
+
+`createChatStreamBinding({ client, initialItems, cursor })` connects the existing
+`chatstream-client` and `chatstream-reducer` packages to `ChatItem` values. The host
+owns the binding and passes `useChatStreamBinding(binding).items/status` to
+`ChatStream`. Call `binding.start()` when the view attaches and `binding.stop()`
+when it detaches. For recorded streams, call `binding.consume(event)` directly.
+Persist `snapshot.checkpoint` and pass it back as `checkpoint` when reattaching
+inside an open run. It carries the cursor, partial reducer state, and row order;
+the cursor alone cannot reconstruct a partially received text or tool part.
+The binding batches reducer projections into one update per animation frame and
+preserves existing history item objects. `renderTool` and `renderApproval` can
+provide app-specific cards; without them, the transcript shows readable cards.
+Consumers that supply their own items can continue using `ChatStream` unchanged.
+
+The headless browser fixture at `docs/fixtures/typing-latency.tsx` measures 50
+scripted keystrokes while a 2,000-row transcript (including markdown and tool
+rows) receives a 300-delta reply. Run `npm run bench:typing -w
+@hollis-labs/kit-chat` from `ts/design-kit` after installing dependencies and
+building `@hollis-labs/design-tokens`. The runner reports p50/p95 time from
+input to the next paint opportunity, history-row render counts, and binding
+publication counts for per-event and frame-batched modes. It fails when batched p95
+exceeds 100 ms, history rows rerender while typing, or batching does not reduce
+publication count. The first measured result is committed in
+`docs/fixtures/typing-latency.baseline.json`; latency is reported as measured,
+and this initial run showed fewer commits without lower typing latency.
+
 ### Scroll is the hard part and this package does not own it
 
 `@shadcn/react`'s `MessageScroller` handles it: anchoring a turn, releasing the view

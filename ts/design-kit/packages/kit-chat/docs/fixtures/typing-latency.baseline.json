@@ -1,0 +1,10 @@
+{
+  "recordedAt": "2026-11-16T23:35:00Z",
+  "environment": "Linux x86_64, 16 logical CPUs, Node 24.21.0, headless Google Chrome 156.0.8078.47, 1280x900",
+  "fixture": "kit-chat/docs/fixtures/typing-latency.tsx",
+  "budget": { "p95Ms": 100, "extraRowRenders": 0 },
+  "results": [
+    { "mode": "unbatched", "items": 2000, "keystrokes": 50, "p50Ms": 9.6, "p95Ms": 18.7, "rowRenders": 2000, "extraRowRenders": 0, "bindingPublications": 306, "pageErrors": [] },
+    { "mode": "batched", "items": 2000, "keystrokes": 50, "p50Ms": 11.7, "p95Ms": 17.4, "rowRenders": 2000, "extraRowRenders": 0, "bindingPublications": 69, "pageErrors": [] }
+  ]
+}
