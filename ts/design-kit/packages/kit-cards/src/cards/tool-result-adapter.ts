@@ -71,6 +71,7 @@ export function toToolResultView(envelope: ResultenvEnvelope): ToolResultView {
     cancelConfirmed: envelope.cancel_confirmed,
     stdout: envelope.stdout,
     stderr: envelope.stderr,
+    combinedOutput: envelope.combined_output,
     error: envelope.error ? `${envelope.error.code}: ${envelope.error.message}` : undefined,
     content,
     structuredContent: mcp.structuredContent,

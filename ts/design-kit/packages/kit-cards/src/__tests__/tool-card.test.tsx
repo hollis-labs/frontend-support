@@ -37,6 +37,15 @@ describe('tool result card', () => {
     expect(secretView.content?.[0]).toEqual({ type: 'text', text: 'safe text' })
   })
 
+  it('labels PTY output as a combined stream', () => {
+    const fixture = fixtures.find(item => item.name === 'pty_combined_output')!
+    render(<ToolCard toolName="terminal" envelope={fixture.envelope as ResultenvEnvelope} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Show result details' }))
+    expect(screen.getByRole('region', { name: 'Combined PTY output' }).textContent).toContain('stdout and stderr share one PTY stream')
+    expect(screen.queryByRole('region', { name: 'stdout' })).toBeNull()
+    expect(screen.queryByRole('region', { name: 'stderr' })).toBeNull()
+  })
+
   it('bounds large output and passes the opaque load-more cursor unchanged', () => {
     const onLoadMore = vi.fn()
     render(<ToolResultContent result={{ outcome: 'unknown', stdout: 'x'.repeat(10000), truncation: { cursor: 'opaque:next' } }} onLoadMore={onLoadMore} />)

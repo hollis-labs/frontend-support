@@ -23,6 +23,7 @@ export interface ToolResultView {
   readonly cancelConfirmed?: boolean
   readonly stdout?: string
   readonly stderr?: string
+  readonly combinedOutput?: string
   readonly error?: string
   readonly content?: readonly ToolContentPart[]
   readonly structuredContent?: unknown
@@ -95,7 +96,7 @@ export interface ToolResultContentProps extends HTMLAttributes<HTMLDivElement> {
 export function ToolResultContent({ result, onLoadMore, className, ...rest }: ToolResultContentProps) {
   const [expanded, setExpanded] = useState(false)
   const presentation = outcomePresentation[result.outcome]
-  const hasDetail = result.stdout !== undefined || result.stderr !== undefined || result.error !== undefined || result.signal !== undefined || result.cancelRequested !== undefined || result.cancelConfirmed !== undefined ||
+  const hasDetail = result.stdout !== undefined || result.stderr !== undefined || result.combinedOutput !== undefined || result.error !== undefined || result.signal !== undefined || result.cancelRequested !== undefined || result.cancelConfirmed !== undefined ||
     Boolean(result.content?.length) || result.structuredContent !== undefined || result.metadata !== undefined || result.outputSchemaRef !== undefined
   const detail = <div className="space-y-3">
     {result.exitCode !== undefined && result.exitCode !== null ? <p className="text-caption">Exit code: <code>{result.exitCode}</code></p> : null}
@@ -104,6 +105,7 @@ export function ToolResultContent({ result, onLoadMore, className, ...rest }: To
     {result.cancelConfirmed !== undefined ? <p className="text-caption">Cancellation confirmed: {result.cancelConfirmed ? 'yes' : 'no'}</p> : null}
     {result.stdout !== undefined ? <TextSection label="stdout" value={result.stdout} /> : null}
     {result.stderr !== undefined ? <TextSection label="stderr" value={result.stderr} /> : null}
+    {result.combinedOutput !== undefined ? <TextSection label="Combined PTY output" value={result.combinedOutput} /> : null}
     {result.error !== undefined ? <TextSection label="Error detail" value={result.error} /> : null}
     {result.content?.slice(0, CONTENT_LIMIT).map((part, index) => <ContentPart key={index} part={part} index={index} />)}
     {(result.content?.length ?? 0) > CONTENT_LIMIT ? <p className="text-caption text-fg-muted">Only the first {CONTENT_LIMIT} content items are shown. Open the receipt for the rest.</p> : null}

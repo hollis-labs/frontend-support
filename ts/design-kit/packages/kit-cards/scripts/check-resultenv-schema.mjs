@@ -5,7 +5,7 @@ const root = new URL('../', import.meta.url)
 const schemaSource = readFileSync(new URL('fixtures/shared-resultenv/resultenv.schema.json', root), 'utf8')
 const schema = JSON.parse(schemaSource)
 const properties = schema.properties
-const expected = ['version', 'outcome', 'mcp_result', 'output_schema_ref', 'truncation', 'exit_code', 'signal', 'cancel_requested', 'cancel_confirmed', 'stdout', 'stderr', 'error', 'redact']
+const expected = ['version', 'outcome', 'mcp_result', 'output_schema_ref', 'truncation', 'exit_code', 'signal', 'cancel_requested', 'cancel_confirmed', 'stdout', 'stderr', 'combined_output', 'error', 'redact']
 if (schema.$id !== 'https://github.com/hollis-labs/libs/agent/resultenv/schema/resultenv.schema.json' ||
     schema.additionalProperties !== false ||
     JSON.stringify(schema.required) !== JSON.stringify(['version', 'outcome']) ||
@@ -18,6 +18,7 @@ if (schema.$id !== 'https://github.com/hollis-labs/libs/agent/resultenv/schema/r
     properties.cancel_confirmed.type !== 'boolean' ||
     properties.stdout.type !== 'string' ||
     properties.stderr.type !== 'string' ||
+    properties.combined_output.type !== 'string' ||
     properties.output_schema_ref.type !== 'string' ||
     JSON.stringify(properties.truncation.required) !== JSON.stringify(['truncated']) ||
     JSON.stringify(properties.error.required) !== JSON.stringify(['code', 'message']) ||
@@ -43,6 +44,7 @@ const generated = `// Generated from fixtures/shared-resultenv/resultenv.schema.
   `  readonly cancel_confirmed?: boolean\n` +
   `  readonly stdout?: string\n` +
   `  readonly stderr?: string\n` +
+  `  readonly combined_output?: string\n` +
   `  readonly error?: { readonly code: string; readonly message: string }\n` +
   `  readonly redact?: readonly string[]\n` +
   `}\n`
