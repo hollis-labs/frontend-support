@@ -5,8 +5,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/ade-core.git",
-    "directory": "packages/agent"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/ade/packages/agent"
   },
   "publishConfig": {
     "access": "public",
@@ -31,5 +31,9 @@
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.build.json --noEmit",
     "prepack": "npm run build"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/ade/packages/agent#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   }
 }

@@ -46,22 +46,21 @@ const tools = adeTools(hub)   // ade_look, ade_point, ade_guide_start, chess_mov
 | `packages/core` | `@hollis-labs/ade-core`: the contract, the hub, the agent's tools. No DOM, no React. |
 | `packages/agent` | `@hollis-labs/ade-agent`: the page's side of a conversation with an agent host. The page declares its tools with each message and runs them itself. |
 | `packages/react` | `@hollis-labs/ade-react`: `useSurface`, the attention layer (rings, spotlight, arrows; takes no input), the guide bar, a plain agent panel. |
-| `go/agenthost` | The server's side of that conversation, for an application with no agent host of its own. |
-| `contracts/` | The wire between page and host, in words. |
-| `examples/chess-tutor` | A second consumer: a board, a guide and a tutor over one game. |
 
-Consumers today: Basalisk (its Diagram window, on a branch) and the chess tutor. A Folio
-preset (`app-ade`) that generates a consumer is in progress.
+The server's side of that conversation, for an application with no agent host of its own, is
+the Go module `github.com/hollis-labs/libs/agent/host`; the wire between page and host is its
+`WIRE.md`.
 
 ## Status
 
-Early. Built and used locally; not published. What is checked and how is in each package's
-tests and in `examples/chess-tutor/README.md`. Not started: screen capture and pointer or
+Early. What is checked is in each package's tests. Not started: screen capture and pointer or
 keyboard control with grants, terminal sessions, media anchors beyond the types.
 
 ## Develop
 
     npm install && npm run build && npm test
-    (cd go/agenthost && go vet ./... && go test ./...)
 
-`AGENTS.md` has the rules of the repository.
+## Release
+
+The `release-ade` workflow publishes the three packages in dependency order (manual, behind the
+`npm-release` environment). Publishing is the owner's step.

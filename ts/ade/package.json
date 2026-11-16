@@ -1,10 +1,17 @@
 {
-  "name": "ade-core-workspace",
+  "name": "ade",
+  "version": "0.0.0",
   "private": true,
+  "description": "ADE: the contract between a person, an agent and an application over shared state, with its browser agent client and React bindings.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/ade"
+  },
   "type": "module",
   "workspaces": [
-    "packages/*",
-    "examples/*/frontend"
+    "packages/*"
   ],
   "scripts": {
     "build": "npm run build -w @hollis-labs/ade-core -w @hollis-labs/ade-agent -w @hollis-labs/ade-react",

@@ -5,8 +5,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/ade-core.git",
-    "directory": "packages/core"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/ade/packages/core"
   },
   "publishConfig": {
     "access": "public",
@@ -35,5 +35,9 @@
   },
   "devDependencies": {
     "@types/node": "^26.6.4"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/ade/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   }
 }

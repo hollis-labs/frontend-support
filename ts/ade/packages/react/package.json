@@ -5,8 +5,8 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hollis-labs/ade-core.git",
-    "directory": "packages/react"
+    "url": "git+https://github.com/hollis-labs/frontend-support.git",
+    "directory": "ts/ade/packages/react"
   },
   "publishConfig": {
     "access": "public",
@@ -43,5 +43,9 @@
   "devDependencies": {
     "@types/react": "19.3.0",
     "react": "19.3.0"
+  },
+  "homepage": "https://github.com/hollis-labs/frontend-support/tree/main/ts/ade/packages/react#readme",
+  "bugs": {
+    "url": "https://github.com/hollis-labs/frontend-support/issues"
   }
 }
