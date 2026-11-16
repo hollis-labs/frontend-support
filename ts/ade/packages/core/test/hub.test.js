@@ -367,3 +367,38 @@ test("an action that completes a step is not held against the next one", async (
     "the move that finished step 1 is not a wrong move for step 2",
   )
 })
+
+test("a step can do its own part, once", async () => {
+  const hub = createHub()
+  const { adapter, on } = lamps()
+  hub.register(adapter)
+  const tools = Object.fromEntries(adeTools(hub).map((t) => [t.name, t]))
+  const ctx = { signal: new AbortController().signal }
+  tools.ade_guide_start.run(
+    {
+      title: "Turns",
+      steps: [
+        { say: "Switch on a.", wait: { kind: "state", check: "lit", args: { lamp: "a" } } },
+        { say: "I switch on b.", do: { action: "lamps_switch", input: { lamp: "b" } } },
+        { say: "I try a lamp that is not there.", do: { action: "switch", input: { lamp: "z" } } },
+      ],
+    },
+    ctx,
+  )
+  await hub.act({ actor: "user", surface: "lamps-1", action: "switch", input: { lamp: "a" } })
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(hub.guideState().index, 1)
+  assert.equal(on.b, true, "the guide did its own part")
+  hub.guideDo("back")
+  hub.guideDo("next")
+  await new Promise((r) => setTimeout(r, 5))
+  assert.equal(on.b, true, "and does not do it again on coming back to the step")
+  assert.equal(hub.guideState().index, 2, "the last step tried its own part")
+  assert.equal(hub.guideState().status, "paused")
+  assert.match(hub.guideState().stalled.reason, /no lamp z/)
+  assert.throws(
+    () =>
+      tools.ade_guide_start.run({ title: "x", steps: [{ say: "y", do: { action: "fly" } }] }, ctx),
+    /does not do/,
+  )
+})

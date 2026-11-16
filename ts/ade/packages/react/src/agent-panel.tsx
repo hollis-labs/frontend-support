@@ -6,6 +6,27 @@ export function useAgentSession(session: AgentSession) {
   return useSyncExternalStore(session.subscribe, session.get, session.get)
 }
 
+/** The little of markdown a model writes in a sentence: **bold**, *italic*, `code`. */
+function Inline({ text }: { text: string }) {
+  const parts = text.split(/(\*\*[^*\n]+\*\*|`[^`\n]+`|\*[^*\n]+\*)/g)
+  return (
+    <>
+      {parts.map((p, i) => {
+        // biome-ignore lint/suspicious/noArrayIndexKey: pieces of one string, in order
+        if (p.startsWith("**") && p.endsWith("**") && p.length > 4)
+          return <strong key={i}>{p.slice(2, -2)}</strong>
+        // biome-ignore lint/suspicious/noArrayIndexKey: pieces of one string, in order
+        if (p.startsWith("`") && p.endsWith("`") && p.length > 2)
+          return <code key={i}>{p.slice(1, -1)}</code>
+        // biome-ignore lint/suspicious/noArrayIndexKey: pieces of one string, in order
+        if (p.startsWith("*") && p.endsWith("*") && p.length > 2)
+          return <em key={i}>{p.slice(1, -1)}</em>
+        return p
+      })}
+    </>
+  )
+}
+
 function Row({
   item,
   describe,
@@ -21,7 +42,11 @@ function Row({
         <div className="ade-chat-user">{item.text}</div>
       )
     case "text":
-      return item.text ? <div className="ade-chat-text">{item.text}</div> : null
+      return item.text ? (
+        <div className="ade-chat-text">
+          <Inline text={item.text} />
+        </div>
+      ) : null
     case "tool":
       return (
         <details className="ade-chat-tool" data-error={item.isError ? "true" : undefined}>

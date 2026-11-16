@@ -274,6 +274,11 @@ export interface GuideStep {
   anchors?: Anchor[]
   style?: Exclude<AttentionStyle, "select" | "cursor">
   from?: Anchor
+  /**
+   * Something the guide does itself when it reaches this step, as the agent: the other
+   * side's reply, a demonstration. If it is refused the guide pauses and says why.
+   */
+  do?: { action: string; input?: Record<string, unknown> }
   /** What it waits for. Absent: the person says to go on. */
   await?: GuideAwait
   /** Shown if the person asks for a hint, or does something else. */
@@ -304,6 +309,10 @@ export interface GuideState {
   history: { step: string; how: "done" | "skipped" | "back"; at: string }[]
   /** Set when the person did something other than what the step waits for. */
   offPath?: { action: string; at: string }
+  /** Steps whose own action has been done, so going back or resuming does not do it twice. */
+  did?: string[]
+  /** Set when a step's own action was refused: the guide is paused on it. */
+  stalled?: { step: string; reason: string }
 }
 
 /** What the hub tells its listeners. */
@@ -321,6 +330,7 @@ export type GuideEventKind =
   | "paused"
   | "resumed"
   | "off_path"
+  | "stalled"
   | "done"
   | "stopped"
   | "restored"

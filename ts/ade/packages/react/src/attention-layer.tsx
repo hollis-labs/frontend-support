@@ -105,22 +105,24 @@ export function AttentionLayer({ agentLabel = "Agent" }: { agentLabel?: string }
         )}
         {drawn.flatMap((d) =>
           d.a.style === "arrow" && d.from
-            ? d.rects.map((r, i) => {
-                const a = mid(d.from as Rect)
-                const b = mid(r)
-                return (
-                  <line
-                    // biome-ignore lint/suspicious/noArrayIndexKey: rects have no identity of their own
-                    key={`${d.key}:${i}`}
-                    className="ade-arrow"
-                    x1={a.x}
-                    y1={a.y}
-                    x2={b.x}
-                    y2={b.y}
-                    markerEnd={`url(#${maskId}-head)`}
-                  />
-                )
-              })
+            ? d.rects
+                .filter((r) => r.x !== d.from?.x || r.y !== d.from?.y) // not from a part to itself
+                .map((r, i) => {
+                  const a = mid(d.from as Rect)
+                  const b = mid(r)
+                  return (
+                    <line
+                      // biome-ignore lint/suspicious/noArrayIndexKey: rects have no identity of their own
+                      key={`${d.key}:${i}`}
+                      className="ade-arrow"
+                      x1={a.x}
+                      y1={a.y}
+                      x2={b.x}
+                      y2={b.y}
+                      markerEnd={`url(#${maskId}-head)`}
+                    />
+                  )
+                })
             : [],
         )}
       </svg>

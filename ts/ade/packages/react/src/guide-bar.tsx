@@ -52,6 +52,9 @@ export function GuideBar({ onAsk }: { onAsk?: (step: GuideStep) => void }) {
         {step.say}
       </p>
       {g.status === "running" && real && <p className="ade-guide-wait">{waits(step)}</p>}
+      {g.stalled && (
+        <p className="ade-guide-hint">The guide could not do its own part: {g.stalled.reason}</p>
+      )}
       {g.status === "running" && showHint && (
         <p className="ade-guide-hint">
           {g.offPath ? "That was not this step. " : ""}

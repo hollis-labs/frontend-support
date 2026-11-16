@@ -224,6 +224,19 @@ export function adeTools(hub: Hub, opts: AdeToolOptions = {}): AdeTool[] {
                   required: ["kind"],
                   additionalProperties: false,
                 },
+                do: {
+                  type: "object",
+                  description:
+                    "Something the guide does itself when it reaches this step, with one of the surface's actions: the other side's reply, a demonstration. It is done once, then the step waits as usual. If it is refused the guide pauses and you are told.",
+                  properties: {
+                    action: str(
+                      "The action's name, as the surface lists it (without the application's prefix).",
+                    ),
+                    input: { type: "object" },
+                  },
+                  required: ["action"],
+                  additionalProperties: false,
+                },
                 hint: str("Shown if the person asks for a hint or does something else."),
               },
               required: ["say"],
@@ -238,6 +251,19 @@ export function adeTools(hub: Hub, opts: AdeToolOptions = {}): AdeTool[] {
       run: (input, ctx) => {
         const surface = pick(input)
         const raw = Array.isArray(input.steps) ? (input.steps as Record<string, unknown>[]) : []
+        const seen = hub.observe(surface)
+        const own = (d: GuideStep["do"], i: number): GuideStep["do"] => {
+          if (!d) return undefined
+          // The model knows the action by its tool's name (chess_move); the surface by its own.
+          const name = d.action.startsWith(`${seen.app}_`)
+            ? d.action.slice(seen.app.length + 1)
+            : d.action
+          if (!seen.actions.some((a) => a.name === name))
+            throw new Error(
+              `Step ${i + 1} does "${d.action}", which this surface does not do. It does: ${seen.actions.map((a) => a.name).join(", ")}.`,
+            )
+          return { ...d, action: name }
+        }
         const steps: GuideStep[] = raw.map((s, i) => {
           const wait = s.wait as Record<string, unknown> | undefined
           let await_: GuideAwait | undefined
@@ -265,6 +291,7 @@ export function adeTools(hub: Hub, opts: AdeToolOptions = {}): AdeTool[] {
             anchors: anchors(surface, s.targets),
             ...(style ? { style } : {}),
             ...(s.from ? { from: anchors(surface, [s.from])[0] } : {}),
+            ...(doOf(s.do) ? { do: own(doOf(s.do), i) } : {}),
             ...(await_ ? { await: await_ } : {}),
             ...(typeof s.hint === "string" ? { hint: s.hint.slice(0, 300) } : {}),
           }
@@ -361,6 +388,18 @@ export function adeTools(hub: Hub, opts: AdeToolOptions = {}): AdeTool[] {
   return tools
 }
 
+/** A step's own action, as the model wrote it (the application's prefix is forgiven). */
+function doOf(raw: unknown): GuideStep["do"] | undefined {
+  const d = raw as { action?: unknown; input?: unknown } | undefined
+  if (!d || typeof d.action !== "string" || !d.action) return undefined
+  return {
+    action: d.action,
+    ...(d.input && typeof d.input === "object"
+      ? { input: d.input as Record<string, unknown> }
+      : {}),
+  }
+}
+
 const strip = ({ rev: _rev, surface: _surface, ...rest }: Record<string, unknown>) => rest
 
 /** The guide as an agent is told it. */
@@ -380,6 +419,7 @@ function guideBrief(hub: Hub) {
     ...(g.controller === "user"
       ? { note: "The person took over; it waits for them to resume." }
       : {}),
+    ...(g.stalled ? { stalled: `The step's own action was refused: ${g.stalled.reason}` } : {}),
     ...(g.offPath
       ? { off_path: `The person did "${g.offPath.action}" instead of what this step waits for.` }
       : {}),

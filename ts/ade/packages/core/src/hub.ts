@@ -532,7 +532,7 @@ export class Hub {
         return this.guide
       case "resume":
         if (g.status !== "paused") return g
-        this.guide = { ...g, status: "running", offPath: undefined }
+        this.guide = { ...g, status: "running", offPath: undefined, stalled: undefined }
         this.showStep()
         this.emitGuide("resumed")
         this.guideCheck()
@@ -566,6 +566,7 @@ export class Hub {
       }
       case "next":
       case "skip": {
+        if (g.status !== "running") return g // paused: resume first
         // "next" is the person's go-ahead on a step that waits for it; on a step that waits
         // for something real it is a skip, and is recorded as one.
         const how =
@@ -609,11 +610,44 @@ export class Hub {
     } catch {
       rev = undefined
     }
-    this.guide = { ...g, revAtStep: rev }
+    this.guide = { ...g, revAtStep: rev, stalled: undefined }
     this.showStep()
     this.emitGuide(what)
+    const step = g.guide.steps[g.index] as GuideStep
+    if (step.do && !g.did?.includes(step.id)) {
+      void this.stepDo(step)
+      return
+    }
     // A step may already be true when it begins (the person was ahead of the guide).
     this.guideCheck()
+  }
+
+  /** Do a step's own action, as the agent. Refused: the guide pauses and says why. */
+  private async stepDo(step: GuideStep) {
+    const g = this.guide
+    if (!g || !step.do) return
+    const key = this.guideStepKey()
+    this.guide = { ...g, did: [...(g.did ?? []), step.id] }
+    const r = await this.act({
+      actor: "agent",
+      surface: g.guide.surface,
+      action: step.do.action,
+      input: step.do.input ?? {},
+      correlation: g.guide.id,
+    })
+    const now = this.guide
+    if (!now || now.guide.id !== g.guide.id || now.index !== g.index) return
+    if (r.outcome === "applied") {
+      if (this.guideStepKey() === key) this.guideCheck()
+      return
+    }
+    this.guide = {
+      ...now,
+      status: "paused",
+      stalled: { step: step.id, reason: r.reason ?? `"${step.do.action}" was ${r.outcome}.` },
+    }
+    this.clearAttention("agent", "guide")
+    this.emitGuide("stalled")
   }
 
   private advance(how: "done" | "skipped", _by: Actor) {
