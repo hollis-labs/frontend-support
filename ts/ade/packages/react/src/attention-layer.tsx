@@ -20,12 +20,16 @@ const mid = (r: Rect) => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })
 export function AttentionLayer({
   agentLabel = "Agent",
   hub: given,
+  drawUser = true,
 }: {
   agentLabel?: string
   hub?: Hub
+  /** False when the application already shows the person's selection its own way. */
+  drawUser?: boolean
 }) {
   const hub = useHub(given)
-  const attention = useAttention(given)
+  const all = useAttention(given)
+  const attention = drawUser ? all : all.filter((a) => a.actor !== "user")
   const maskId = useId()
   const [, setTick] = useState(0)
 
