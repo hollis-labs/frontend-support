@@ -54,6 +54,13 @@ export function useSurface(make: () => SurfaceAdapter): SurfaceHandle {
       resolve: (anchor) => latest.current().resolve?.(anchor) ?? null,
       check: (name, args) => latest.current().check?.(name, args) ?? false,
       describe: (anchor) => latest.current().describe?.(anchor) ?? "",
+      bounds: () => latest.current().bounds?.() ?? null,
+      has: (target) => {
+        const now = latest.current()
+        if (now.has) return now.has(target)
+        const listed = now.observe().targets
+        return listed ? listed.some((t) => t.kind === target.kind && t.id === target.id) : true
+      },
     }
     handle.current = hub.register(adapter)
     return () => {

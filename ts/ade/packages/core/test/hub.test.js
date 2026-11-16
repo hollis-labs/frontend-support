@@ -329,3 +329,41 @@ test("the agent's tools", async () => {
     /./,
   )
 })
+
+test("an action that completes a step is not held against the next one", async () => {
+  const hub = createHub()
+  const { adapter } = lamps()
+  const handle = hub.register(adapter)
+  // The application tells the hub of its own changes, as a real one does, while it acts.
+  const act = adapter.act
+  adapter.act = (action, input, ctx) => {
+    const out = act(action, input, ctx)
+    handle.changed()
+    return out
+  }
+  hub.startGuide({
+    id: "g",
+    title: "t",
+    surface: "lamps-1",
+    steps: [
+      {
+        id: "s1",
+        say: "Switch on b.",
+        await: { kind: "state", check: "lit", args: { lamp: "b" } },
+      },
+      {
+        id: "s2",
+        say: "Now c.",
+        await: { kind: "action", action: "switch", input: { lamp: "c" } },
+      },
+      { id: "s3", say: "Done." },
+    ],
+  })
+  await hub.act({ actor: "user", surface: "lamps-1", action: "switch", input: { lamp: "b" } })
+  assert.equal(hub.guideState().index, 1)
+  assert.equal(
+    hub.guideState().offPath,
+    undefined,
+    "the move that finished step 1 is not a wrong move for step 2",
+  )
+})

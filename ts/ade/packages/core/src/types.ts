@@ -220,11 +220,18 @@ export interface SurfaceAdapter {
    * no longer exists. Without it nothing can be drawn at an anchor.
    */
   resolve?(anchor: Anchor): Rect | null
+  /** Where the whole surface is on screen now, in viewport pixels. A spotlight dims inside it. */
+  bounds?(): Rect | null
   /**
    * Whether something named is true of the surface now (a guide's "the knight is on f3").
    * The application owns the truth: a guide moves on when this says so, not when a model does.
    */
   check?(name: string, args: Record<string, unknown>): boolean
+  /**
+   * Whether the surface has this part. For a surface with too many parts to list in every
+   * observation (a board's squares, a long document's lines).
+   */
+  has?(target: TargetRef): boolean
   /** Describe an anchor in a few words, when it has no label of its own. */
   describe?(anchor: Anchor): string
 }

@@ -125,16 +125,11 @@ export function adeTools(hub: Hub, opts: AdeToolOptions = {}): AdeTool[] {
         const list = anchors(surface, input.targets)
         if (!list.length)
           throw new Error("Give at least one target: {kind, id}, as the surface lists them.")
-        const known = hub.observe(surface).targets
-        if (known) {
-          const missing = list.filter(
-            (a) => !known.some((t) => t.kind === a.target?.kind && t.id === a.target?.id),
+        const missing = list.filter((a) => !hub.hasTarget(surface, a.target as TargetRef))
+        if (missing.length)
+          throw new Error(
+            `The surface has no ${missing.map((a) => `${a.target?.kind} "${a.target?.id}"`).join(", ")}. Look at it for the parts it has.`,
           )
-          if (missing.length)
-            throw new Error(
-              `The surface has no ${missing.map((a) => `${a.target?.kind} "${a.target?.id}"`).join(", ")}. Look at it for the parts it has.`,
-            )
-        }
         const style =
           (["highlight", "spotlight", "arrow"] as const).find((s) => s === input.style) ??
           "highlight"

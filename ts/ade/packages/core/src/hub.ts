@@ -22,6 +22,7 @@ import type {
   Rect,
   SurfaceAdapter,
   SurfaceInfo,
+  TargetRef,
 } from "./types.js"
 
 /** What registering a surface gives back. */
@@ -162,6 +163,28 @@ export class Hub {
     }
   }
 
+  /** Where a surface is on screen now, or null when it cannot say. */
+  bounds(surface: string): Rect | null {
+    try {
+      return this.surfaces.get(surface)?.adapter.bounds?.() ?? null
+    } catch {
+      return null
+    }
+  }
+
+  /** Whether a surface has a part: by its listed targets, or by asking it. */
+  hasTarget(surface: string, target: TargetRef): boolean {
+    const adapter = this.surfaces.get(surface)?.adapter
+    if (!adapter) return false
+    try {
+      if (adapter.has) return adapter.has(target)
+      const listed = adapter.observe().targets
+      return listed ? listed.some((t) => t.kind === target.kind && t.id === target.id) : true
+    } catch {
+      return false
+    }
+  }
+
   /** An anchor in a few words. */
   describe(anchor: Anchor): string {
     if (anchor.label) return anchor.label
@@ -259,6 +282,8 @@ export class Hub {
     if (signal.aborted)
       return done({ outcome: "cancelled", reason: "It was stopped before it began." })
     const before = view.resource?.rev
+    // The step the guide was on when this began: what the action did counts for that step only.
+    const stepBefore = this.guideStepKey()
     let out: ActOutcome
     try {
       out = await entry.adapter.act(req.action, req.input ?? {}, {
@@ -285,7 +310,7 @@ export class Hub {
     const result = done(out)
     if (out.outcome === "applied" || out.outcome === "unknown") {
       this.detachMarks(req.surface)
-      this.guideCheck(result)
+      if (this.guideStepKey() === stepBefore) this.guideCheck(result)
     }
     return result
   }
@@ -438,6 +463,11 @@ export class Hub {
 
   // --- the guide ---------------------------------------------------------------------
 
+  private guideStepKey(): string {
+    const g = this.guide
+    return g ? `${g.guide.id}:${g.index}:${g.status}` : ""
+  }
+
   guideState(): GuideState | null {
     return this.guide
   }
@@ -467,6 +497,8 @@ export class Hub {
           `Step "${s.id}" waits on "${s.await.check}", and this surface has no checks.`,
         )
     }
+    // What the agent was pointing at before belongs to the conversation, not to the guide.
+    this.clearAttention("agent", "point")
     this.guide = { guide, index: 0, status: "running", controller, history: [] }
     this.enterStep("started")
     return this.guide

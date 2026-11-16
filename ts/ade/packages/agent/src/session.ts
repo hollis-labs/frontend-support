@@ -253,14 +253,12 @@ export function createAgentSession(opts: SessionOptions) {
         text,
         client_id: client,
         ...(context !== undefined ? { context } : {}),
-        tools: opts
-          .tools()
-          .map(({ name, description, input_schema, level }) => ({
-            name,
-            description,
-            input_schema,
-            level,
-          })),
+        tools: opts.tools().map(({ name, description, input_schema, level }) => ({
+          name,
+          description,
+          input_schema,
+          level,
+        })),
         ...(how.auto ? { auto: how.auto } : {}),
       })
       void follow(run_id)

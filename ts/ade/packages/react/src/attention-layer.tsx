@@ -50,6 +50,9 @@ export function AttentionLayer({ agentLabel = "Agent" }: { agentLabel?: string }
   const spot = drawn.find((d) => d.a.style === "spotlight")
   const w = window.innerWidth
   const h = window.innerHeight
+  // A spotlight dims the surface it is on, not the whole window: the guide's words and the
+  // controls beside it stay readable.
+  const area = (spot && hub.bounds(spot.a.anchors[0]?.surface ?? "")) || { x: 0, y: 0, w, h }
 
   return (
     <div className="ade-layer" aria-hidden="true">
@@ -74,7 +77,7 @@ export function AttentionLayer({ agentLabel = "Agent" }: { agentLabel?: string }
           </marker>
           {spot && (
             <mask id={`${maskId}-spot`}>
-              <rect x="0" y="0" width={w} height={h} fill="white" />
+              <rect x={area.x} y={area.y} width={area.w} height={area.h} fill="white" />
               {spot.rects.map((r, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: rects have no identity of their own
                 <rect
@@ -93,10 +96,10 @@ export function AttentionLayer({ agentLabel = "Agent" }: { agentLabel?: string }
         {spot && (
           <rect
             className="ade-dim"
-            x="0"
-            y="0"
-            width={w}
-            height={h}
+            x={area.x}
+            y={area.y}
+            width={area.w}
+            height={area.h}
             mask={`url(#${maskId}-spot)`}
           />
         )}
