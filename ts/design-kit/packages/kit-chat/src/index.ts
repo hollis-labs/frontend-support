@@ -52,9 +52,16 @@ export {
   ProgressCard,
   TableCard,
   TimelineCard,
+  ToolCard,
+  ToolResultContent,
 } from '@hollis-labs/kit-cards'
 export type {
   ArtifactCardProps,
+  ToolCardProps,
+  ToolContentPart,
+  ToolOutcome,
+  ToolResultContentProps,
+  ToolResultView,
   DocumentCardProps,
   PromptCardProps,
   CardBoundaryProps,

@@ -1,0 +1,8 @@
+[
+  {"outcome":"success","exitCode":0,"stdout":"ok","content":[{"type":"text","text":"sample text"},{"type":"image","mimeType":"image/png"},{"type":"audio","mimeType":"audio/wav"},{"type":"resource","uri":"receipt://sample/1","name":"sample receipt"},{"type":"other","mimeType":"application/octet-stream","value":{"ref":"opaque"}}],"structuredContent":{"count":2},"metadata":{"source":"fixture"},"outputSchemaRef":"schema://sample/output"},
+  {"outcome":"nonzero_exit","exitCode":3,"stdout":"partial","stderr":"failed"},
+  {"outcome":"error","error":"tool rejected input"},
+  {"outcome":"timeout","stderr":"deadline exceeded"},
+  {"outcome":"cancelled","error":"cancel requested"},
+  {"outcome":"unknown","truncation":{"cursor":"opaque:next","reason":"receipt incomplete"}}
+]

@@ -7,6 +7,13 @@ import { Queue, QueueItem, QueueItemAction, QueueItemActions, QueueItemContent, 
 
 afterEach(cleanup)
 describe('tool presentation', () => {
+  it('uses the recorded outcome in the header and the shared result body', () => {
+    const result = { outcome: 'unknown' as const, stderr: 'connection lost' }
+    render(<Tool defaultOpen><ToolHeader toolName="transfer" state="completed" result={result} /><ToolContent><ToolOutput result={result} /></ToolContent></Tool>)
+    expect(screen.getByRole('button', { name: /transfer/ }).textContent).toContain('Outcome unknown')
+    expect(screen.getByRole('status').textContent).toContain('Result not recorded; an effect is possible.')
+    expect(screen.queryByText('Succeeded')).toBeNull()
+  })
   it.each<[ToolState, string]>([['pending','Pending'],['running','Running'],['awaiting-confirmation','Awaiting confirmation'],['confirmed','Confirmed'],['completed','Completed'],['denied','Denied'],['error','Error']])('presents host-mapped %s without SDK wire vocabulary', (state, label) => {
     render(<Tool><ToolHeader toolName="file-search" state={state} /></Tool>)
     expect(screen.getByRole('button').textContent).toContain('file-search')

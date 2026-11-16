@@ -73,6 +73,9 @@ export type { ReviewCardProps } from './review-card'
 export { ErrorCard, StatusBanner } from './error-card'
 export type { ErrorCardProps, StatusBannerProps } from './error-card'
 
+export { ToolCard, ToolResultContent } from './tool-card'
+export type { ToolCardProps, ToolContentPart, ToolOutcome, ToolResultContentProps, ToolResultView } from './tool-card'
+
 export { GroupCard, StepperCard } from './group-card'
 export type { GroupCardProps, StepperCardProps } from './group-card'
 
