@@ -10,6 +10,14 @@ anything specific to it.
 
 ---
 
+## genui 0.1.0 (new) — 2026-11-16
+
+CW-20261114-0136. `@hollis-labs/genui` is new and versions on its own. It renders the reviewed `approval`, `form` and
+`list_detail` patterns of the Substrate GenUI contract and leaves every action with the host; the copied schema, catalog
+and fixtures are in its `contract/` with `provenance.json`. It is added to `release-design-kit`'s `PACKAGES`, after
+`app-shell`. The workflow gains an `only` input, so one package can be released without the others that are waiting.
+See its README and CHANGELOG.
+
 ## Unreleased — kit-identity 0.1.0 (new), kit-account (next minor)
 
 CW-20261112-0080. Not published; the owner publishes. `kit-identity` is new and versions on its own; it is added to

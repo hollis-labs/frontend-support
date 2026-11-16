@@ -36,6 +36,7 @@ available just relocates the drift somewhere harder to see.
 | `packages/kit-voice` | voice input and output components (speech input, microphone and voice selection, transcript, audio playback); private `0.0.0`, unpublished | MIT AND Apache-2.0 |
 | `packages/kit-workflow` | opt-in controlled workflow canvas; private `0.0.0`, unpublished | MIT AND Apache-2.0 |
 | `packages/kit-code` | code and developer presentation; private `0.0.0`, unpublished | MIT AND Apache-2.0 |
+| `packages/genui` | reviewed declarative surfaces (approval, form, list/detail) with host-owned actions, over the Substrate GenUI contract; release version `0.1.0` | MIT |
 | `packages/eslint-config-design` | the gate | MIT |
 
 Current releases: the six core packages (`design-tokens`, `design-components`,
