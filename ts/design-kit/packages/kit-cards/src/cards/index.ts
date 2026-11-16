@@ -63,6 +63,8 @@ export type { CardBoundaryProps } from './card-boundary'
 
 export { ApprovalCard } from './approval-card'
 export type { ApprovalCardProps, ApprovalEffect, ApprovalRisk } from './approval-card'
+export { GateApprovalCard } from './gate-approval-card'
+export type { GateApprovalCardProps, GateApprovalOption, GateApprovalState } from './gate-approval-card'
 
 export { ChoiceCard } from './choice-card'
 export type { ChoiceCardProps, ChoiceOption } from './choice-card'
