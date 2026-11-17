@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { createChatSessionBinding } from '../lib/chat-session'
-import type { ChatSessionAttachment, ChatSessionLease } from '../lib/chat-session'
+import type { ChatSessionAttachment, ChatSessionLease, ChatSessionRole } from '../lib/chat-session'
 import { SessionAttachDemo } from '../../demo/session-attach'
 import { FakeChatSessionAdapter } from '../../demo/fake-session-adapter'
 
@@ -128,6 +128,49 @@ describe('durable session attachment', () => {
     expect(secondView.getSnapshot().lease?.id).toBe('lease-2')
     await firstView.detach()
     await secondView.detach()
+  })
+
+  it('does not carry a cancelled viewer takeover onto a replacement attachment', async () => {
+    let releaseAttach: (() => void) | undefined
+    let signalStarted: (() => void) | undefined
+    const started = new Promise<void>((resolve) => { signalStarted = resolve })
+    class DelayedAdapter extends FakeChatSessionAdapter {
+      delayNextAttach = false
+      takeovers = 0
+      override async attach(role: ChatSessionRole): Promise<ChatSessionAttachment> {
+        const next = await super.attach(role)
+        if (!this.delayNextAttach) return next
+        this.delayNextAttach = false
+        return new Promise((resolve) => {
+          releaseAttach = () => resolve(next)
+          signalStarted?.()
+        })
+      }
+      override async takeover(attachment: ChatSessionAttachment) {
+        this.takeovers++
+        return super.takeover(attachment)
+      }
+    }
+    const adapter = new DelayedAdapter()
+    const owner = createChatSessionBinding(adapter)
+    const view = createChatSessionBinding(adapter)
+    await owner.attach('controller')
+    await view.attach('viewer')
+    adapter.delayNextAttach = true
+    const cancelled = view.requestTakeover()
+    const duplicate = view.requestTakeover()
+    expect(duplicate).toBe(cancelled)
+    await started
+    await view.detach()
+    await view.attach('controller')
+    expect(view.getSnapshot().access).toBe('waiting')
+    releaseAttach?.()
+    expect(await cancelled).toBe(false)
+    expect(adapter.takeovers).toBe(0)
+    expect(view.getSnapshot().access).toBe('waiting')
+    expect(owner.getSnapshot().access).toBe('controller')
+    await view.detach()
+    await owner.detach()
   })
 
   it('disables input when a lease expires while keeping the draft', async () => {

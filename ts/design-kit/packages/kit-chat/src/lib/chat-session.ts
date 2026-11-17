@@ -100,6 +100,7 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
   let expiryTimer: ReturnType<typeof setTimeout> | null = null
   let leaseChain: Promise<void> = Promise.resolve()
   let takeoverPromise: Promise<boolean> | null = null
+  let takeoverToken: object | null = null
   const initialItems = (initial.items ?? []).slice(-maxItems)
   let snapshot: ChatSessionSnapshot = {
     cursor: initial.cursor ?? '', items: initialItems, draft: initial.draft ?? '',
@@ -163,23 +164,26 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
     }
   }
 
-  async function detach() {
+  async function detach(preserveTakeover = false) {
     const current = attachment
     epoch++ // A late read, acquire or submit cannot restore the old view.
     const requestEpoch = epoch
     attachment = null
     leaseChain = Promise.resolve()
-    takeoverPromise = null
+    if (!preserveTakeover) {
+      takeoverPromise = null
+      takeoverToken = null
+    }
     if (expiryTimer) clearTimeout(expiryTimer)
     expiryTimer = null
-    publish({ access: 'detached', role: null, lease: null, presence: [], pending: false, takeoverPending: false })
+    publish({ access: 'detached', role: null, lease: null, presence: [], pending: false, takeoverPending: preserveTakeover && snapshot.takeoverPending })
     if (current) {
       try { await adapter.detach(current) } catch (reason) { if (requestEpoch === epoch) publish({ error: errorMessage(reason) }) }
     }
   }
 
-  async function attach(role: ChatSessionRole, cursor = snapshot.cursor) {
-    if (attachment) await detach()
+  async function attach(role: ChatSessionRole, cursor = snapshot.cursor, preserveTakeover = false) {
+    if (attachment) await detach(preserveTakeover)
     position(cursor)
     const requestEpoch = ++epoch
     publish({ cursor, access: 'detached', role: null, lease: null, pending: true, error: null })
@@ -215,8 +219,14 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
 
   function requestTakeover(): Promise<boolean> {
     if (takeoverPromise) return takeoverPromise
+    const token = {}
+    takeoverToken = token
     const run = (async () => {
-      if (attachment?.role === 'viewer') await attach('controller')
+      if (attachment?.role === 'viewer') {
+        await attach('controller', snapshot.cursor, true)
+        // A caller may have detached or replaced this view while attach awaited the host.
+        if (takeoverToken !== token) return false
+      }
       if (snapshot.access === 'controller' && snapshot.lease) return true
       const current = attachment
       const requestEpoch = epoch
@@ -239,6 +249,7 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
     void run.then(() => {
       if (takeoverPromise === run) {
         takeoverPromise = null
+        takeoverToken = null
         publish({ takeoverPending: false })
       }
     })
