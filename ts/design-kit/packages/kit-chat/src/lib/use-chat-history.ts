@@ -86,8 +86,17 @@ class HistoryController<Item extends { readonly id: string }, Cursor extends Cha
     this.update({ pending: null })
   }
 
-  append = (items: readonly Item[]) => {
-    if (this.active) this.update({ items: mergeItems(this.snapshot.items, items) })
+  append = (items: readonly Item[], reloadOlderCursor?: Cursor) => {
+    if (!this.active) return
+    const merged = mergeItems(this.snapshot.items, items)
+    if (this.maxItems !== undefined && merged.length > this.maxItems) {
+      if (reloadOlderCursor === undefined || this.snapshot.newerCursor !== null) {
+        throw new Error('Appending beyond maxItems requires a reloadOlderCursor at the latest window.')
+      }
+      this.update({ items: merged.slice(-this.maxItems), olderCursor: reloadOlderCursor })
+      return
+    }
+    this.update({ items: merged })
   }
 
   async load(loadPage: UseChatHistoryOptions<Item, Cursor>['loadPage'], initialOnly = false) {
@@ -131,13 +140,14 @@ class HistoryController<Item extends { readonly id: string }, Cursor extends Cha
     const cursor = this.snapshot.newerCursor
     if (!this.active || this.request || cursor === null || this.maxItems === undefined) return
     const request = new AbortController()
+    const requestedTailId = this.snapshot.items.at(-1)?.id
     this.request = request
     this.update({ pending: 'newer', error: null })
     try {
       const page = await loadPage({ cursor, signal: request.signal, direction: 'newer' })
       if (!this.active || this.request !== request) return
       if (page.newerCursor === cursor) throw new Error('Newer history cursor did not advance.')
-      const merged = mergeItems(this.snapshot.items, page.items)
+      const merged = mergeNewerItems(this.snapshot.items, page.items, requestedTailId)
       const evictsOlder = merged.length > this.maxItems
       if (evictsOlder && page.olderCursor === null) {
         throw new Error('A newer page needs olderCursor before bounded history can evict older items.')
@@ -164,6 +174,35 @@ function mergeItems<Item extends { readonly id: string }>(first: readonly Item[]
   for (const item of first) items.set(item.id, item)
   for (const item of second) items.set(item.id, item)
   return [...items.values()]
+}
+
+/** Insert forward pages in order while keeping in-flight live values for overlapping IDs. */
+function mergeNewerItems<Item extends { readonly id: string }>(current: readonly Item[], page: readonly Item[], requestedTailId?: string): Item[] {
+  const positions = new Map(current.map((item, index) => [item.id, index]))
+  const result: Item[] = []
+  const firstOverlap = page.map((item) => positions.get(item.id)).find((index) => index !== undefined)
+  let nextCurrent = firstOverlap ?? 0
+  if (firstOverlap !== undefined) result.push(...current.slice(0, firstOverlap))
+  let sawOverlap = false
+  for (const item of page) {
+    const index = positions.get(item.id)
+    if (index !== undefined) {
+      sawOverlap = true
+      if (index >= nextCurrent) {
+        result.push(...current.slice(nextCurrent, index + 1))
+        nextCurrent = index + 1
+      }
+    } else {
+      result.push(item)
+    }
+  }
+  if (!sawOverlap && requestedTailId !== undefined) {
+    const tailIndex = positions.get(requestedTailId)
+    if (tailIndex !== undefined) {
+      return [...current.slice(0, tailIndex + 1), ...result, ...current.slice(tailIndex + 1)]
+    }
+  }
+  return sawOverlap ? [...result, ...current.slice(nextCurrent)] : [...current, ...result]
 }
 
 /**

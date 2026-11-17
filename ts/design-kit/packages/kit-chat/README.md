@@ -223,6 +223,9 @@ evicted at the same time. For bounded loaded data, pass `maxItems` and
 return `newerCursor`; newer pages must return `olderCursor` when they evict the
 older edge. The hook retains those cursors so the reader can page in either
 direction. Without `maxItems`, existing unbounded paging behavior remains.
+When a live `append` would exceed `maxItems`, the host passes a
+`reloadOlderCursor` as its second argument so evicted rows remain pageable.
+Without that cursor the hook rejects the append and retains its current window.
 The 10,000-item headless fixture checks a same-length prepend/tail eviction,
 mounted row count, scroll anchor shift, typing latency against the 100 ms
 budget, and history-row render count: `npm run bench:virtual -w @hollis-labs/kit-chat`.
