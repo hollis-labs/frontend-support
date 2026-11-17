@@ -18,6 +18,8 @@ export type { ChatComposerEditorProps, ChatInputMenuItem, ChatInputProps, ChatIn
 
 export { ChatComposer } from './components/chat-composer'
 export type { ChatComposerProps } from './components/chat-composer'
+export { ChatSessionComposer, ChatSessionPresence } from './components/chat-session'
+export type { ChatSessionComposerProps } from './components/chat-session'
 
 export { ChatStream } from './components/chat-stream'
 export type { ChatMessageActionItem, ChatStreamProps, ChatStreamRenderers } from './components/chat-stream'
@@ -119,6 +121,8 @@ export { useStallDetector } from './lib/use-stall-detector'
 export { useChatHistory } from './lib/use-chat-history'
 export { useBusyChatQueue } from './lib/use-busy-chat-queue'
 export type { QueuedChatMessage, UseBusyChatQueueOptions } from './lib/use-busy-chat-queue'
+export { createChatSessionBinding, useChatSessionBinding } from './lib/chat-session'
+export type { ChatSessionAdapter, ChatSessionAttachment, ChatSessionBinding, ChatSessionCheckpoint, ChatSessionCursor, ChatSessionEvent, ChatSessionLease, ChatSessionPresence as ChatSessionPresenceMember, ChatSessionRole, ChatSessionSnapshot } from './lib/chat-session'
 export { createChatStreamBinding, useChatStreamBinding } from './lib/chatstream-binding'
 export type { ChatStreamBinding, ChatStreamBindingCheckpoint, ChatStreamBindingOptions, ChatStreamBindingSnapshot } from './lib/chatstream-binding'
 export type {
