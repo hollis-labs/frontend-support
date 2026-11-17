@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mkdtemp, writeFile } from 'node:fs/promises'
+import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -12,7 +12,11 @@ const entry = path.join(root, 'docs/fixtures/typing-latency.tsx')
 await build({ entryPoints: [entry], outfile: path.join(output, 'fixture.js'), bundle: true, platform: 'browser', format: 'iife', jsx: 'automatic', loader: { '.css': 'empty' } })
 await writeFile(path.join(output, 'index.html'), '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;font:14px sans-serif}textarea{width:95%;height:60px}</style></head><body><div id="root"></div><script src="fixture.js"></script></body></html>')
 
-const budget = { p95Ms: Number(process.env.P95_BUDGET_MS ?? 100), extraRowRenders: 0 }
+const baseline = JSON.parse(await readFile(path.join(root, 'docs/fixtures/typing-latency.baseline.json'), 'utf8'))
+const baselineBatchedP95Ms = baseline.results.find((result) => result.mode === 'batched')?.p95Ms
+assert.ok(Number.isFinite(baselineBatchedP95Ms) && baselineBatchedP95Ms > 0, 'committed batched p95 baseline is required')
+const baselineMultiplier = 3
+const budget = { p95Ms: Number(process.env.P95_BUDGET_MS ?? Math.ceil(baselineBatchedP95Ms * baselineMultiplier)), baselineBatchedP95Ms, baselineMultiplier, extraRowRenders: 0 }
 const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || '/usr/bin/google-chrome' })
 const results = []
 try {

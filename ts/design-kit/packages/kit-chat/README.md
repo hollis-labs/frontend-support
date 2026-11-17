@@ -212,6 +212,35 @@ preserves existing history item objects. `renderTool` and `renderApproval` can
 provide app-specific cards; without them, the transcript shows readable cards.
 Consumers that supply their own items can continue using `ChatStream` unchanged.
 
+### Long history and busy agents
+
+`VirtualChatStream` is an opt-in transcript for long histories. It takes
+the same host-owned `ChatItem[]` and `history` paging contract, mounts only the
+visible rows plus overscan, measures variable row heights, and restores the
+visible row after older items are prepended, including when newer items are
+evicted at the same time. For bounded loaded data, pass `maxItems` and
+`loadNewerPage` to `useChatHistory`. Older pages that exceed the bound must
+return `newerCursor`; newer pages must return `olderCursor` when they evict the
+older edge. The hook retains those cursors so the reader can page in either
+direction. Without `maxItems`, existing unbounded paging behavior remains.
+When a live `append` would exceed `maxItems`, the host passes a
+`reloadOlderCursor` as its second argument so evicted rows remain pageable.
+Without that cursor the hook rejects the append and retains its current window.
+The 10,000-item headless fixture checks a same-length prepend/tail eviction,
+mounted row count, scroll anchor shift, typing latency against the 100 ms
+budget, and history-row render count: `npm run bench:virtual -w @hollis-labs/kit-chat`.
+
+`useBusyChatQueue({ busy, send })` supplies `submit` for `ChatComposer.onSubmit`.
+Busy sends enter a local queue and flush in order when `busy` becomes false.
+`BusyChatQueue` renders editable, reorderable, cancellable messages and Retry
+for a failed queued send. An immediate send failure returns `false` to
+`ChatComposer`, preserving its draft. The host still owns transport and decides
+when an agent is busy.
+
+`ChatSessionList` takes a plain `sessions` array and `onSelect`, with optional
+unread and presence renderers. It searches title and agent and supports arrow,
+Home, End, and Enter keyboard selection without a store or backend dependency.
+
 The headless browser fixture at `docs/fixtures/typing-latency.tsx` measures 50
 scripted keystrokes while a 2,000-row transcript (including markdown and tool
 rows) receives a 300-delta reply. Run `npm run bench:typing -w
@@ -219,8 +248,10 @@ rows) receives a 300-delta reply. Run `npm run bench:typing -w
 building `@hollis-labs/design-tokens`. The runner reports p50/p95 time from
 input to the next paint opportunity, history-row render counts, and binding
 publication counts for per-event and frame-batched modes. It fails when batched p95
-exceeds 100 ms, history rows rerender while typing, or batching does not reduce
-publication count. The first measured result is committed in
+exceeds three times the committed batched p95 baseline (rounded up to the next
+millisecond), history rows rerender while typing, or batching does not reduce
+publication count. The current baseline is 17.4 ms, so the default gate is 53 ms;
+`P95_BUDGET_MS` can override it for a local negative check. The first measured result is committed in
 `docs/fixtures/typing-latency.baseline.json`; latency is reported as measured,
 and this initial run showed fewer commits without lower typing latency.
 

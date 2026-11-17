@@ -21,6 +21,12 @@ export type { ChatComposerProps } from './components/chat-composer'
 
 export { ChatStream } from './components/chat-stream'
 export type { ChatMessageActionItem, ChatStreamProps, ChatStreamRenderers } from './components/chat-stream'
+export { VirtualChatStream } from './components/virtual-chat-stream'
+export type { VirtualChatStreamProps } from './components/virtual-chat-stream'
+export { ChatSessionList } from './components/chat-session-list'
+export type { ChatSession, ChatSessionListProps } from './components/chat-session-list'
+export { BusyChatQueue } from './components/busy-chat-queue'
+export type { BusyChatQueueProps } from './components/busy-chat-queue'
 
 export { ChatContextChips, ChatSharedItemsStrip, ChatDrawerToggles, ChatSlotPicker } from './components/chat-extensions'
 export type { ChatContextChip, ChatSharedItem, ChatDrawerToggle, ChatSlotOption } from './components/chat-extensions'
@@ -111,6 +117,8 @@ export type {
 export { useStallDetector } from './lib/use-stall-detector'
 
 export { useChatHistory } from './lib/use-chat-history'
+export { useBusyChatQueue } from './lib/use-busy-chat-queue'
+export type { QueuedChatMessage, UseBusyChatQueueOptions } from './lib/use-busy-chat-queue'
 export { createChatStreamBinding, useChatStreamBinding } from './lib/chatstream-binding'
 export type { ChatStreamBinding, ChatStreamBindingCheckpoint, ChatStreamBindingOptions, ChatStreamBindingSnapshot } from './lib/chatstream-binding'
 export type {

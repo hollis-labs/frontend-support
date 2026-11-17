@@ -2,9 +2,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createRoot } from 'react-dom/client'
 import { ChatStream, createChatStreamBinding, useChatStreamBinding, type ChatItem } from '../../src/index'
 import { ChatMarkdown } from '../../src/markdown'
+import { VirtualChatStream } from '../../src/components/virtual-chat-stream'
 
 const count = Number(new URLSearchParams(location.search).get('items') ?? 2000)
 const mode = new URLSearchParams(location.search).get('mode') ?? 'batched'
+const virtual = new URLSearchParams(location.search).get('virtual') === 'true'
 const rows: ChatItem[] = Array.from({ length: count }, (_, i) => {
   if (i % 20 === 0) return { kind: 'card', id: `tool-${i}`, wireKind: 'tool', content: <div>Tool result {i}: found matching files</div> }
   const source = i % 10 === 0 ? `**Result ${i}** with a [reference](https://example.com) and a short list:\n- first\n- second` : `Message ${i}: a short conversation row`
@@ -23,6 +25,7 @@ const binding = createChatStreamBinding({
 export function App() {
   const view = useChatStreamBinding(binding)
   const [draft, setDraft] = useState('')
+  const [older, setOlder] = useState<ChatItem[]>([])
   const pending = useRef<number[]>([])
   const renderItem = useCallback((item: ChatItem) => {
     if (item.id.startsWith('message-') || item.id.startsWith('tool-')) window.__typingPerf.rowRenders++
@@ -41,9 +44,14 @@ export function App() {
     })
   }, [draft])
   useEffect(() => { window.__typingPerf.commits = view.commits }, [view.commits])
-  return <main style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+  return <main data-older-count={older.length} style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
     <div data-testid="ready">Ready: {count} items</div>
-    <ChatStream items={view.items} status={view.status} renderItem={renderItem} />
+    {virtual ? <VirtualChatStream items={[...older, ...view.items].slice(0, count)} status={view.status} renderItem={renderItem}
+      history={{ hasOlder: true, loading: false, onLoadOlder: () => setOlder((old) => [
+        ...Array.from({ length: 100 }, (_, i): ChatItem => ({ kind: 'message', id: `older-${old.length + i}`, role: 'user', content: `Older message ${old.length + i}` })),
+        ...old,
+      ]) }} />
+      : <ChatStream items={view.items} status={view.status} renderItem={renderItem} />}
     <label>Draft <textarea aria-label="Draft" value={draft} onChange={(event) => {
       pending.current.push(performance.now())
       setDraft(event.target.value)

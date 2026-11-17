@@ -130,4 +130,66 @@ describe('useChatHistory', () => {
     expect(result.current.items).toEqual(seed.items)
     expect(result.current.loading).toBe(false)
   })
+
+  it('evicts loaded rows at both edges while preserving older and newer paging', async () => {
+    const loadPage = vi.fn().mockResolvedValue({
+      items: [item('m1'), item('m2'), item('m3')], olderCursor: null, newerCursor: 2,
+    })
+    const loadNewerPage = vi.fn().mockResolvedValue({
+      items: [item('m5'), item('m6'), item('m7')], olderCursor: 1, newerCursor: null,
+    })
+    const { result } = renderHook(() => useChatHistory<Item, number>({
+      initialPage: { items: [item('m4'), item('m5'), item('m6'), item('m7')], olderCursor: 1 },
+      maxItems: 4, loadPage, loadNewerPage,
+    }))
+    await act(() => result.current.loadOlder())
+    expect(result.current.items.map((row) => row.id)).toEqual(['m1', 'm2', 'm3', 'm4'])
+    expect(result.current.history.hasOlder).toBe(false)
+    expect(result.current.history.hasNewer).toBe(true)
+    await act(() => result.current.loadNewer())
+    expect(loadNewerPage.mock.calls[0][0]).toMatchObject({ cursor: 2, direction: 'newer' })
+    expect(result.current.items.map((row) => row.id)).toEqual(['m4', 'm5', 'm6', 'm7'])
+    expect(result.current.history.hasOlder).toBe(true)
+    expect(result.current.history.hasNewer).toBe(false)
+    await act(() => result.current.loadOlder())
+    expect(loadPage.mock.calls.map(([request]) => request.cursor)).toEqual([1, 1])
+    expect(result.current.items.map((row) => row.id)).toEqual(['m1', 'm2', 'm3', 'm4'])
+  })
+
+  it('keeps the loaded window when an older page lacks a reload cursor', async () => {
+    const loadPage = vi.fn().mockResolvedValue({ items: [item('m1'), item('m2')], olderCursor: null })
+    const { result } = renderHook(() => useChatHistory<Item, number>({
+      initialPage: { items: [item('m3'), item('m4')], olderCursor: 1 },
+      maxItems: 2, loadPage, loadNewerPage: vi.fn(),
+    }))
+    await act(() => result.current.loadOlder())
+    expect(result.current.items.map((row) => row.id)).toEqual(['m3', 'm4'])
+    expect(result.current.history.error).toMatch(/newerCursor/)
+    expect(result.current.history.hasOlder).toBe(true)
+  })
+
+  it('rejects a live append that would bypass the bound until a reload cursor is supplied', () => {
+    const { result } = renderHook(() => useChatHistory<Item, number>({
+      initialPage: { items: [item('m1'), item('m2')], olderCursor: null },
+      maxItems: 2, loadPage: vi.fn(), loadNewerPage: vi.fn(),
+    }))
+    expect(() => act(() => result.current.append([item('m3'), item('m4'), item('m5')]))).toThrow(/reloadOlderCursor/)
+    expect(result.current.items.map((row) => row.id)).toEqual(['m1', 'm2'])
+    act(() => result.current.append([item('m3'), item('m4'), item('m5')], 0))
+    expect(result.current.items.map((row) => row.id)).toEqual(['m4', 'm5'])
+    expect(result.current.history.hasOlder).toBe(true)
+  })
+
+  it('keeps in-flight live values and chronology when a newer page overlaps', async () => {
+    const page = deferred<Page>()
+    const loadNewerPage = vi.fn(() => page.promise)
+    const { result } = renderHook(() => useChatHistory<Item, number>({
+      initialPage: { items: [item('m1'), item('m2', 'old')], olderCursor: null, newerCursor: 2 },
+      maxItems: 3, loadPage: vi.fn(), loadNewerPage,
+    }))
+    act(() => { void result.current.loadNewer() })
+    act(() => result.current.append([item('m2', 'LIVE')]))
+    await act(async () => page.resolve({ items: [item('m2', 'stale'), item('m3')], olderCursor: null, newerCursor: null }))
+    expect(result.current.items).toEqual([item('m1'), item('m2', 'LIVE'), item('m3')])
+  })
 })
