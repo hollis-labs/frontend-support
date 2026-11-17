@@ -84,4 +84,12 @@ describe('GateApprovalCard', () => {
     await act(async () => { fireEvent.click(allow) })
     expect(onSelect).toHaveBeenCalledWith({ ticketId: 'hitl-item-1', ticketRevision: 7, operationDigest: 'sha256:exact-operation', optionId: 'provider-allow-once' })
   })
+
+  it('clears a typed phrase when the exact ticket revision changes', () => {
+    const { rerender } = render(<GateApprovalCard {...base} risk="high" confirmPhrase="APPROVE-7" state={{ kind: 'pending' }} />)
+    fireEvent.change(screen.getByRole('textbox'), { target: { value: 'APPROVE-7' } })
+    expect((screen.getByRole('button', { name: 'Allow once' }) as HTMLButtonElement).disabled).toBe(false)
+    rerender(<GateApprovalCard {...base} risk="high" confirmPhrase="APPROVE-7" ticketRevision={8} state={{ kind: 'pending' }} />)
+    expect((screen.getByRole('button', { name: 'Allow once' }) as HTMLButtonElement).disabled).toBe(true)
+  })
 })

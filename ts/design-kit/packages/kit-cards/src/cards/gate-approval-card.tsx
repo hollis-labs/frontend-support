@@ -80,6 +80,7 @@ export function GateApprovalCard({
   }))
 
   return <ApprovalCard
+    key={`${ticketId}:${ticketRevision}:${operationDigest}`}
     title={title}
     description={description}
     risk={risk}
