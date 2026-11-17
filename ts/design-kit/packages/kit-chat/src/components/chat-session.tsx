@@ -15,7 +15,7 @@ export function ChatSessionComposer({ binding, renderPresence, ...input }: ChatS
   return <section data-slot="chat-session-composer" className="flex min-w-0 flex-col gap-2">
     <div className="flex min-w-0 flex-wrap items-center gap-2 text-caption text-fg-muted">
       <span role="status">{state.access === 'controller' ? 'You control this conversation' : state.access === 'viewer' ? 'Viewing only' : state.access === 'waiting' ? 'Another view controls input' : 'Detached'}</span>
-      {state.access === 'viewer' || state.access === 'waiting' ? <button type="button" onClick={() => { void binding.requestTakeover() }} className="text-info underline">Take control</button> : null}
+      {state.access === 'viewer' || state.access === 'waiting' ? <button type="button" onClick={() => { void binding.requestTakeover() }} disabled={state.takeoverPending} className="text-info underline">Take control</button> : null}
     </div>
     {renderPresence ? renderPresence(state.presence) : <ChatSessionPresence members={state.presence} />}
     <ChatInput {...input} value={state.draft} onValueChange={binding.setDraft} onSubmit={(text) => { void binding.submit(text) }} disabled={!canType} busy={state.pending || input.busy} error={state.error} />

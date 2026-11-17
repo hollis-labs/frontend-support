@@ -58,6 +58,7 @@ export interface ChatSessionSnapshot {
   readonly lease: ChatSessionLease | null
   readonly presence: readonly ChatSessionPresence[]
   readonly pending: boolean
+  readonly takeoverPending: boolean
   readonly error: string | null
   readonly checkpoint: ChatSessionCheckpoint
 }
@@ -97,10 +98,21 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
   let nextInputId = 0
   const inputPrefix = globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
   let expiryTimer: ReturnType<typeof setTimeout> | null = null
+  let leaseChain: Promise<void> = Promise.resolve()
+  let takeoverPromise: Promise<boolean> | null = null
+  const initialItems = (initial.items ?? []).slice(-maxItems)
   let snapshot: ChatSessionSnapshot = {
-    cursor: initial.cursor ?? '', items: initial.items ?? [], draft: initial.draft ?? '',
-    access: 'detached', role: null, lease: null, presence: [], pending: false, error: null,
-    checkpoint: { cursor: initial.cursor ?? '', items: initial.items ?? [], draft: initial.draft ?? '' },
+    cursor: initial.cursor ?? '', items: initialItems, draft: initial.draft ?? '',
+    access: 'detached', role: null, lease: null, presence: [], pending: false, takeoverPending: false, error: null,
+    checkpoint: { cursor: initial.cursor ?? '', items: initialItems, draft: initial.draft ?? '' },
+  }
+
+  // Lease-changing host calls must finish in issue order for one attachment.
+  // Otherwise a delayed response can put an already replaced lease back in the UI.
+  function serializeLease<T>(operation: () => Promise<T>): Promise<T> {
+    const result = leaseChain.then(operation, operation)
+    leaseChain = result.then(() => undefined, () => undefined)
+    return result
   }
 
   function publish(patch: Partial<ChatSessionSnapshot>) {
@@ -156,9 +168,11 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
     epoch++ // A late read, acquire or submit cannot restore the old view.
     const requestEpoch = epoch
     attachment = null
+    leaseChain = Promise.resolve()
+    takeoverPromise = null
     if (expiryTimer) clearTimeout(expiryTimer)
     expiryTimer = null
-    publish({ access: 'detached', role: null, lease: null, presence: [], pending: false })
+    publish({ access: 'detached', role: null, lease: null, presence: [], pending: false, takeoverPending: false })
     if (current) {
       try { await adapter.detach(current) } catch (reason) { if (requestEpoch === epoch) publish({ error: errorMessage(reason) }) }
     }
@@ -181,54 +195,75 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
     }
   }
 
-  async function acquire(): Promise<boolean> {
+  function acquire(): Promise<boolean> {
     const current = attachment
     const requestEpoch = epoch
-    if (!current || current.role !== 'controller') return false
-    try {
-      const lease = await adapter.acquire(current)
-      if (requestEpoch !== epoch || attachment !== current) return false
-      setLease(lease, 'controller')
-      return true
-    } catch (reason) {
-      if (requestEpoch === epoch) publish({ lease: null, access: 'waiting', error: errorMessage(reason) })
-      return false
-    }
-  }
-
-  async function requestTakeover(): Promise<boolean> {
-    if (attachment?.role === 'viewer') await attach('controller')
-    if (snapshot.access === 'controller') return true
-    const current = attachment
-    const requestEpoch = epoch
-    if (!current || current.role !== 'controller') return false
-    try {
-      const lease = await adapter.takeover(current)
-      if (requestEpoch !== epoch || attachment !== current) return false
-      setLease(lease, 'controller')
-      return true
-    } catch (reason) {
-      if (requestEpoch === epoch) publish({ lease: null, access: 'waiting', error: errorMessage(reason) })
-      return false
-    }
-  }
-
-  async function renewLease(): Promise<boolean> {
-    const lease = snapshot.lease
-    const requestEpoch = epoch
-    if (!lease || !adapter.renew) return false
-    try {
-      const renewed = await adapter.renew(lease)
-      if (requestEpoch !== epoch || snapshot.lease !== lease) return false
-      setLease(renewed, 'controller')
-      return true
-    } catch (reason) {
-      if (requestEpoch === epoch && snapshot.lease === lease) {
-        setLease(null, 'waiting')
-        publish({ error: errorMessage(reason) })
+    return serializeLease(async () => {
+      if (!current || current.role !== 'controller' || requestEpoch !== epoch || attachment !== current) return false
+      if (snapshot.access === 'controller' && snapshot.lease) return true
+      try {
+        const lease = await adapter.acquire(current)
+        if (requestEpoch !== epoch || attachment !== current) return false
+        setLease(lease, 'controller')
+        return true
+      } catch (reason) {
+        if (requestEpoch === epoch && attachment === current) publish({ lease: null, access: 'waiting', error: errorMessage(reason) })
+        return false
       }
-      return false
-    }
+    })
+  }
+
+  function requestTakeover(): Promise<boolean> {
+    if (takeoverPromise) return takeoverPromise
+    const run = (async () => {
+      if (attachment?.role === 'viewer') await attach('controller')
+      if (snapshot.access === 'controller' && snapshot.lease) return true
+      const current = attachment
+      const requestEpoch = epoch
+      return serializeLease(async () => {
+        if (!current || current.role !== 'controller' || requestEpoch !== epoch || attachment !== current) return false
+        if (snapshot.access === 'controller' && snapshot.lease) return true
+        try {
+          const lease = await adapter.takeover(current)
+          if (requestEpoch !== epoch || attachment !== current) return false
+          setLease(lease, 'controller')
+          return true
+        } catch (reason) {
+          if (requestEpoch === epoch && attachment === current) publish({ lease: null, access: 'waiting', error: errorMessage(reason) })
+          return false
+        }
+      })
+    })()
+    takeoverPromise = run
+    publish({ takeoverPending: true })
+    void run.then(() => {
+      if (takeoverPromise === run) {
+        takeoverPromise = null
+        publish({ takeoverPending: false })
+      }
+    })
+    return run
+  }
+
+  function renewLease(): Promise<boolean> {
+    const requestEpoch = epoch
+    const current = attachment
+    return serializeLease(async () => {
+      const lease = snapshot.lease
+      if (!lease || !adapter.renew || requestEpoch !== epoch || attachment !== current) return false
+      try {
+        const renewed = await adapter.renew(lease)
+        if (requestEpoch !== epoch || attachment !== current || snapshot.lease !== lease) return false
+        setLease(renewed, 'controller')
+        return true
+      } catch (reason) {
+        if (requestEpoch === epoch && attachment === current && snapshot.lease === lease) {
+          setLease(null, 'waiting')
+          publish({ error: errorMessage(reason) })
+        }
+        return false
+      }
+    })
   }
 
   async function submit(text = snapshot.draft): Promise<boolean> {
@@ -245,7 +280,10 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
       await refresh()
       return true
     } catch (reason) {
-      if (requestEpoch === epoch) publish({ lease: null, access: 'waiting', error: errorMessage(reason), pending: false })
+      if (requestEpoch === epoch) {
+        if (snapshot.lease === lease) publish({ lease: null, access: 'waiting', error: errorMessage(reason), pending: false })
+        else publish({ error: errorMessage(reason), pending: false })
+      }
       return false
     }
   }

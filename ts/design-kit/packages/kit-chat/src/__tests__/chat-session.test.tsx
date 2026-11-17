@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { createChatSessionBinding } from '../lib/chat-session'
-import type { ChatSessionAttachment } from '../lib/chat-session'
+import type { ChatSessionAttachment, ChatSessionLease } from '../lib/chat-session'
 import { SessionAttachDemo } from '../../demo/session-attach'
 import { FakeChatSessionAdapter } from '../../demo/fake-session-adapter'
 
@@ -85,6 +85,49 @@ describe('durable session attachment', () => {
     await restored.attach('viewer')
     expect(restored.getSnapshot().items.map((item) => item.id)).toEqual(['output-3', 'output-4'])
     expect(restored.getSnapshot().draft).toBe('remember me')
+
+    const largerCheckpoint = { ...checkpoint, items: [
+      { kind: 'message' as const, id: 'older', role: 'user' as const, content: 'older' },
+      ...checkpoint.items,
+    ] }
+    const smallerView = createChatSessionBinding(adapter, largerCheckpoint, 2)
+    expect(smallerView.getSnapshot().items.map((item) => item.id)).toEqual(['output-2', 'output-3'])
+    expect(smallerView.getSnapshot().checkpoint.items).toHaveLength(2)
+    expect(smallerView.getSnapshot().cursor).toBe(checkpoint.cursor)
+    expect(smallerView.getSnapshot().draft).toBe('remember me')
+  })
+
+  it('coalesces concurrent takeovers and keeps the granted lease during a queued renew', async () => {
+    let releaseTakeover: (() => void) | undefined
+    let takeovers = 0
+    class DelayedAdapter extends FakeChatSessionAdapter {
+      override async takeover(attachment: ChatSessionAttachment): Promise<ChatSessionLease> {
+        takeovers++
+        const lease = await super.takeover(attachment)
+        return new Promise((resolve) => { releaseTakeover = () => resolve(lease) })
+      }
+      override async renew(lease: ChatSessionLease): Promise<ChatSessionLease> {
+        return { ...lease, expiresAt: Date.now() + 60_000 }
+      }
+    }
+    const adapter = new DelayedAdapter()
+    const firstView = createChatSessionBinding(adapter)
+    const secondView = createChatSessionBinding(adapter)
+    await firstView.attach('controller')
+    await secondView.attach('controller')
+    const first = secondView.requestTakeover()
+    const second = secondView.requestTakeover()
+    expect(first).toBe(second)
+    expect(secondView.getSnapshot().takeoverPending).toBe(true)
+    await waitFor(() => expect(takeovers).toBe(1))
+    const renew = secondView.renewLease()
+    releaseTakeover?.()
+    expect(await first).toBe(true)
+    expect(await renew).toBe(true)
+    expect(secondView.getSnapshot().takeoverPending).toBe(false)
+    expect(secondView.getSnapshot().lease?.id).toBe('lease-2')
+    await firstView.detach()
+    await secondView.detach()
   })
 
   it('disables input when a lease expires while keeping the draft', async () => {

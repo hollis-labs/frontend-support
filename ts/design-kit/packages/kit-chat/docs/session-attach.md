@@ -4,7 +4,7 @@
 
 ## Verified server mapping
 
-[V] Read `hollis-labs/libs@190764babe23ece7b912fa0342a65f22ded4f309:agent/sdk/chathost/host.go`, `agent/sdk/chathost/README.md` and `agent/sdk/session/ports.go`. cs-chat-1 identified this as the current pushed CHAT-0 head; the attach API is stable. The host must bind every call to the exact active `runtimecontract.Binding` and authenticate the caller independently of request IDs. The frontend interface deliberately does not carry an authorization claim.
+[V] Read `hollis-labs/libs@190764babe23ece7b912fa0342a65f22ded4f309:agent/sdk/chathost/host.go`, `agent/sdk/chathost/README.md` and `agent/sdk/session/ports.go`. cs-chat-1 confirmed these API files and signatures are unchanged at reviewed head `bc1013d0655ebef8a4b2c6602467876986f464b7`, merged to libs main as `0728978f25ea377aa9e6724bb595ce394fa8b8c5`. The table maps the merged API. The host must bind every call to the exact active `runtimecontract.Binding` and authenticate the caller independently of request IDs. The frontend interface deliberately does not carry an authorization claim.
 
 | kit-chat call | chathost operation at the named SHA | Mapping |
 | --- | --- | --- |
@@ -29,3 +29,5 @@ Create one binding per view against the same host adapter. Call `attach('viewer'
 The default render window is 500 rows; pass a smaller `maxItems` to the binding factory when the surrounding view uses tighter retention. Dedupe uses committed cursor order. The adapter must return events in ascending committed order and use stable item IDs. On generation change, the host obtains a new exact binding and reattaches; stale leases and attachments are never silently upgraded.
 
 `ChatSessionComposer` disables the text editor for viewers, detached views, expired leases and controller attachments waiting for a lease. It does not clear a draft on failed or fenced input. Use `renderPresence` to replace the default presence line while keeping the same host-provided members.
+
+Lease-changing calls from one view are serialized, and concurrent takeover clicks share one operation. The Take control button is disabled while that operation is pending. A checkpoint restored with a smaller `maxItems` is trimmed immediately, before any attachment or replay.
