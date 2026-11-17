@@ -100,6 +100,8 @@ App-owned context chips, shared items, drawers, context-slot selection, rich edi
 and transcript rows use the [extension slots](docs/extension-slots.md). The
 [adoption parity checklist](docs/adoption-parity.md) records the source-backed
 work still needed in five apps.
+The [session attachment contract](docs/session-attach.md) shows viewer/controller
+leases, cursor replay, takeover, gap markers and presence with a transport-free fixture.
 
 ---
 
