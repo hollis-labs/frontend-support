@@ -95,6 +95,7 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
   const listeners = new Set<() => void>()
   let attachment: ChatSessionAttachment | null = null
   let epoch = 0
+  let attachGeneration = 0
   let nextInputId = 0
   const inputPrefix = globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2)
   let expiryTimer: ReturnType<typeof setTimeout> | null = null
@@ -164,8 +165,9 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
     }
   }
 
-  async function detach(preserveTakeover = false) {
+  async function detach(preserveTakeover = false, preserveAttach = false) {
     const current = attachment
+    if (!preserveAttach) attachGeneration++
     epoch++ // A late read, acquire or submit cannot restore the old view.
     const requestEpoch = epoch
     attachment = null
@@ -183,7 +185,15 @@ export function createChatSessionBinding(adapter: ChatSessionAdapter, initial: P
   }
 
   async function attach(role: ChatSessionRole, cursor = snapshot.cursor, preserveTakeover = false) {
-    if (attachment) await detach(preserveTakeover)
+    const generation = ++attachGeneration
+    if (!preserveTakeover) {
+      takeoverPromise = null
+      takeoverToken = null
+      if (snapshot.takeoverPending) publish({ takeoverPending: false })
+    }
+    if (attachment) await detach(preserveTakeover, true)
+    // A later attach/detach can supersede us while the old host detach awaits.
+    if (generation !== attachGeneration) return
     position(cursor)
     const requestEpoch = ++epoch
     publish({ cursor, access: 'detached', role: null, lease: null, pending: true, error: null })

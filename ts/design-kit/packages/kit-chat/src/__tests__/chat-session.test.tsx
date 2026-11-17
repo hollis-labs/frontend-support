@@ -130,7 +130,7 @@ describe('durable session attachment', () => {
     await secondView.detach()
   })
 
-  it('does not carry a cancelled viewer takeover onto a replacement attachment', async () => {
+  it.each([true, false])('does not carry a cancelled viewer takeover onto a replacement attachment (explicit detach: %s)', async (explicitDetach) => {
     let releaseAttach: (() => void) | undefined
     let signalStarted: (() => void) | undefined
     const started = new Promise<void>((resolve) => { signalStarted = resolve })
@@ -161,13 +161,59 @@ describe('durable session attachment', () => {
     const duplicate = view.requestTakeover()
     expect(duplicate).toBe(cancelled)
     await started
-    await view.detach()
+    if (explicitDetach) await view.detach()
     await view.attach('controller')
     expect(view.getSnapshot().access).toBe('waiting')
     releaseAttach?.()
     expect(await cancelled).toBe(false)
     expect(adapter.takeovers).toBe(0)
     expect(view.getSnapshot().access).toBe('waiting')
+    expect(owner.getSnapshot().access).toBe('controller')
+    await view.detach()
+    await owner.detach()
+  })
+
+  it('does not start a cancelled takeover attach after its old detach finishes', async () => {
+    let releaseDetach: (() => void) | undefined
+    let signalStarted: (() => void) | undefined
+    const started = new Promise<void>((resolve) => { signalStarted = resolve })
+    class DelayedDetachAdapter extends FakeChatSessionAdapter {
+      delayNextDetach = false
+      attaches = 0
+      takeovers = 0
+      override async attach(role: ChatSessionRole) {
+        this.attaches++
+        return super.attach(role)
+      }
+      override async detach(attachment: ChatSessionAttachment) {
+        if (this.delayNextDetach) {
+          this.delayNextDetach = false
+          await new Promise<void>((resolve) => {
+            releaseDetach = resolve
+            signalStarted?.()
+          })
+        }
+        return super.detach(attachment)
+      }
+      override async takeover(attachment: ChatSessionAttachment) {
+        this.takeovers++
+        return super.takeover(attachment)
+      }
+    }
+    const adapter = new DelayedDetachAdapter()
+    const owner = createChatSessionBinding(adapter)
+    const view = createChatSessionBinding(adapter)
+    await owner.attach('controller')
+    await view.attach('viewer')
+    adapter.delayNextDetach = true
+    const cancelled = view.requestTakeover()
+    await started
+    await view.attach('controller')
+    expect(view.getSnapshot().access).toBe('waiting')
+    releaseDetach?.()
+    expect(await cancelled).toBe(false)
+    expect(adapter.attaches).toBe(3) // owner, viewer, replacement; no cancelled host attach
+    expect(adapter.takeovers).toBe(0)
     expect(owner.getSnapshot().access).toBe('controller')
     await view.detach()
     await owner.detach()

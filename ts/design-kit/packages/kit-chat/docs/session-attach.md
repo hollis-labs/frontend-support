@@ -30,4 +30,4 @@ The default render window is 500 rows; pass a smaller `maxItems` to the binding 
 
 `ChatSessionComposer` disables the text editor for viewers, detached views, expired leases and controller attachments waiting for a lease. It does not clear a draft on failed or fenced input. Use `renderPresence` to replace the default presence line while keeping the same host-provided members.
 
-Lease-changing calls from one view are serialized, and concurrent takeover clicks share one operation. The Take control button is disabled while that operation is pending. A checkpoint restored with a smaller `maxItems` is trimmed immediately, before any attachment or replay.
+Lease-changing calls from one view are serialized, and concurrent takeover clicks share one operation. The Take control button is disabled while that operation is pending. An explicit detach or replacement attach cancels the pending takeover, including while its old detach or new attach awaits the host. A checkpoint restored with a smaller `maxItems` is trimmed immediately, before any attachment or replay.
