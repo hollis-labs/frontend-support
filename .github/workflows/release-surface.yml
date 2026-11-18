@@ -1,7 +1,7 @@
 # Manual npm release for Surface's packages. Never runs on push or tag.
 # The source is the public hollis-labs/surface repository at a release tag; this workflow lives
 # here so the portfolio's npm token stays in this repository's `npm-release` environment.
-# Publishing needs approval of that environment and reads NPM_TOKEN from a secret reference only.
+# The gate job decides who may publish (vars.RELEASE_ACTORS); NPM_TOKEN is read from a secret reference only.
 # Surface has one version line: the tag vX.Y.Z is the version of every package.
 # Packages publish in dependency order; a version already on npm is skipped.
 # No npm provenance: it requires package.json "repository" to name the repository whose workflow
@@ -28,8 +28,46 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Who may publish. npm-release has no human reviewer: this job is the gate. RELEASE_ACTORS is a
+  # repository variable (space-separated logins, e.g. "chrispian hollis-release-manager[bot]");
+  # unset means nobody. Both the actor and whoever re-ran the job must be on it.
+  gate:
+    name: release gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: dispatcher is allowed to release
+        env:
+          ALLOWED: ${{ vars.RELEASE_ACTORS }}
+          ACTOR: ${{ github.actor }}
+          TRIGGERING: ${{ github.triggering_actor }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          [ "$REF" = "refs/heads/main" ] || { echo "release workflows run from main, not $REF"; exit 1; }
+          for who in "$ACTOR" "$TRIGGERING"; do
+            case " $ALLOWED " in *" $who "*) ;; *) echo "$who may not release (RELEASE_ACTORS)"; exit 1 ;; esac
+          done
+          echo "released by $ACTOR"
+      # The tag must name a commit on Surface's main that passed Surface's CI.
+      - name: the tag is on surface main and its CI passed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "not a release tag: $TAG"; exit 1; }
+          sha=$(gh api "repos/hollis-labs/surface/commits/refs/tags/$TAG" --jq .sha)
+          status=$(gh api "repos/hollis-labs/surface/compare/$sha...main" --jq .status)
+          case "$status" in identical|ahead) ;; *) echo "$TAG ($sha) is not on surface main ($status)"; exit 1 ;; esac
+          ok=$(gh api "repos/hollis-labs/surface/actions/runs?head_sha=$sha&status=success" --jq '[.workflow_runs[] | select(.name=="ci")] | length')
+          [ "$ok" -gt 0 ] || { echo "no successful ci run on $sha"; exit 1; }
+          echo "$TAG = $sha, on main, ci passed"
+
   publish:
     name: publish surface packages
+    needs: gate
     runs-on: ubuntu-latest
     environment: npm-release
     permissions:
