@@ -1,5 +1,5 @@
 # Manual npm release for the ts/design-kit packages. Never runs on push or tag.
-# Publishing needs approval of the `npm-release` environment, and reads NPM_TOKEN
+# Publishing runs in the `npm-release` environment (no human reviewer; the gate job decides), and reads NPM_TOKEN
 # from a secret reference only. Packages publish in dependency order; a version
 # that is already on npm is skipped. `only` narrows a run to the named packages.
 name: release-design-kit
@@ -24,8 +24,32 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Who may publish. npm-release has no human reviewer: this job is the gate. RELEASE_ACTORS is a
+  # repository variable (space-separated logins, e.g. "chrispian hollis-release-manager[bot]");
+  # unset means nobody. Both the actor and whoever re-ran the job must be on it.
+  gate:
+    name: release gate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: dispatcher is allowed to release
+        env:
+          ALLOWED: ${{ vars.RELEASE_ACTORS }}
+          ACTOR: ${{ github.actor }}
+          TRIGGERING: ${{ github.triggering_actor }}
+          REF: ${{ github.ref }}
+        run: |
+          set -euo pipefail
+          [ "$REF" = "refs/heads/main" ] || { echo "release workflows run from main, not $REF"; exit 1; }
+          for who in "$ACTOR" "$TRIGGERING"; do
+            case " $ALLOWED " in *" $who "*) ;; *) echo "$who may not release (RELEASE_ACTORS)"; exit 1 ;; esac
+          done
+          echo "released by $ACTOR"
+
   publish:
     name: publish design-kit packages
+    needs: gate
     runs-on: ubuntu-latest
     environment: npm-release
     permissions:
