@@ -28,6 +28,9 @@ scripts/import-repo [--target DIR] <source> [<name>]
 - This repository is public. Nothing secret, no token, internal host name, internal address or personal path may enter a file,
   a commit message or CI config. Allowlist entries (`RULE-ID PATH-GLOB REASON`) are owner-reviewed and never quote a value.
 - Packages are versioned independently. Publishing to npm is the owner's step; this repository does not publish on its own.
+- One exception to "code arrives through import-repo": Surface's packages (`@hollis-labs/surface-*`) stay in the public
+  `hollis-labs/surface` repository, which versions them as one line. `release-surface.yml` publishes them from a Surface tag
+  so the npm token stays here; nothing of Surface is copied into this repository.
 - No Go modules here.
 
 ## Do Not

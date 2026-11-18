@@ -1,0 +1,93 @@
+# Manual npm release for Surface's packages. Never runs on push or tag.
+# The source is the public hollis-labs/surface repository at a release tag; this workflow lives
+# here so the portfolio's npm token stays in this repository's `npm-release` environment.
+# Publishing needs approval of that environment and reads NPM_TOKEN from a secret reference only.
+# Surface has one version line: the tag vX.Y.Z is the version of every package.
+# Packages publish in dependency order; a version already on npm is skipped.
+# No npm provenance: it requires package.json "repository" to name the repository whose workflow
+# publishes, and the packages truthfully name hollis-labs/surface.
+name: release-surface
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Surface release tag to publish (vX.Y.Z)"
+        type: string
+        required: true
+      dry_run:
+        description: "Run npm publish --dry-run instead of publishing"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-surface
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: publish surface packages
+    runs-on: ubuntu-latest
+    environment: npm-release
+    permissions:
+      contents: read
+    env:
+      PACKAGES: chat cards genui page ui
+    steps:
+      - name: the ref is a release tag
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          [[ "$REF" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "not a release tag: $REF"; exit 1; }
+
+      - uses: actions/checkout@v4
+        with:
+          repository: hollis-labs/surface
+          ref: refs/tags/${{ inputs.ref }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: every package is the tag's version
+        env:
+          REF: ${{ inputs.ref }}
+        run: |
+          set -euo pipefail
+          node scripts/version.mjs
+          v=$(node -p "require('./packages/page/package.json').version")
+          [ "v$v" = "$REF" ] || { echo "packages are $v, the tag is $REF"; exit 1; }
+
+      - name: install
+        run: npm ci
+
+      - name: build and check the tarballs
+        run: npm run pack-check
+
+      - name: publish in dependency order
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          for p in $PACKAGES; do
+            dir="packages/$p"
+            name=$(node -p "require('./$dir/package.json').name")
+            version=$(node -p "require('./$dir/package.json').version")
+            if npm view "$name@$version" version >/dev/null 2>&1; then
+              echo "skip $name@$version (already on npm)"
+              continue
+            fi
+            echo "publish $name@$version"
+            if [ "$DRY_RUN" = "true" ]; then
+              (cd "$dir" && npm publish --access public --dry-run)
+            else
+              (cd "$dir" && npm publish --access public)
+            fi
+          done
