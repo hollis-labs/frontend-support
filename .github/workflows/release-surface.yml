@@ -73,7 +73,8 @@ jobs:
     permissions:
       contents: read
     env:
-      PACKAGES: chat cards genui page ui
+      # Dependency order: page depends on chat, cards, genui and theme.
+      PACKAGES: chat cards genui theme page ui
     steps:
       - name: the ref is a release tag
         env:
