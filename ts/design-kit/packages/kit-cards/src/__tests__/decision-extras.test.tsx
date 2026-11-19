@@ -144,6 +144,27 @@ describe('held decisions (CW-20261115-0031)', () => {
     ])
   })
 
+  it.each(['low', 'medium', 'high'] as const)('requires a note for Deny clicks and N shortcuts at %s risk', async (risk) => {
+    const onRespond = vi.fn()
+    render(<ApprovalCard title="t" risk={risk} mediumRiskConfirm={false} confirmPhrase="CONFIRM" shortcuts note={{ required: true }} onRespond={onRespond} />)
+    const deny = screen.getByRole('button', { name: 'Deny' }) as HTMLButtonElement
+    expect(deny.disabled).toBe(true)
+    await click(deny)
+    await act(async () => { fireEvent.keyDown(deny, { key: 'n' }) })
+    expect(onRespond).not.toHaveBeenCalled()
+    fireEvent.change(screen.getByRole('textbox', { name: /Note/ }), { target: { value: ' reason ' } })
+    expect(deny.disabled).toBe(false)
+    await act(async () => { fireEvent.keyDown(deny, { key: 'n' }) })
+    expect(onRespond).toHaveBeenCalledWith({ status: 'submitted', decisions: [{ itemId: 'deny', action: 'deny', note: 'reason' }] })
+  })
+
+  it('allows Dismiss without a required note', async () => {
+    const onRespond = vi.fn()
+    render(<ApprovalCard title="t" risk="low" note={{ required: true }} onRespond={onRespond} />)
+    await click(screen.getByRole('button', { name: 'Dismiss' }))
+    expect(onRespond).toHaveBeenCalledWith({ status: 'canceled' })
+  })
+
   it('ChoiceCard: number keys pick, undoMs holds the answer', async () => {
     const options = [{ id: 'a', label: 'Alpha' }, { id: 'b', label: 'Beta' }]
     const onValueChange = vi.fn()

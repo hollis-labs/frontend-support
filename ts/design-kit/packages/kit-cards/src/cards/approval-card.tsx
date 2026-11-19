@@ -172,7 +172,7 @@ export function ApprovalCard({
   const hold = useHeldDecision<ConfirmationAction>(undoMs, submit)
 
   function choose(action: ConfirmationAction) {
-    if (a.disabled || hold.held) return
+    if (a.disabled || hold.held || noteMissing || (action.primary && !phraseOk)) return
     // `medium` collects an explicit second confirmation for any non-dismissive action.
     if (effectiveRisk === 'medium' && mediumRiskConfirm && pending?.id !== action.id) {
       setPending(action)
@@ -186,14 +186,12 @@ export function ApprovalCard({
     await a.run(() => onRespond({ status: 'canceled' }))
   }
 
-  const approvalBlocked = !phraseOk || noteMissing
-
   const onKeyDown = cardKeyHandler(shortcuts && a.live && !unrecognizedElevation, {
     onKey(key) {
       if (hold.held || pending) return
       const target = key === 'y' ? actions.find((x) => x.primary) : key === 'n' ? actions.find((x) => !x.primary) : undefined
       if (!target || a.disabled) return
-      if (target.primary && approvalBlocked) return
+      if (noteMissing || (target.primary && !phraseOk)) return
       choose(target)
     },
     onUndo: () => hold.undo(),
@@ -318,12 +316,9 @@ export function ApprovalCard({
                   type="button"
                   size="sm"
                   variant={pending.tone === 'danger' ? 'destructive' : 'default'}
-                  disabled={a.disabled || approvalBlocked}
+                  disabled={a.disabled || noteMissing || (pending.primary === true && !phraseOk)}
                   className="max-sm:min-h-11"
-                  onClick={() => {
-                    setPending(null)
-                    hold.start(pending)
-                  }}
+                  onClick={() => choose(pending)}
                 >
                   Confirm {pending.label}
                 </Button>
@@ -338,7 +333,7 @@ export function ApprovalCard({
                       type="button"
                       size="sm"
                       variant={action.tone === 'danger' ? 'destructive' : action.primary ? 'default' : 'outline'}
-                      disabled={a.disabled || (isApprove && approvalBlocked)}
+                      disabled={a.disabled || noteMissing || (isApprove && !phraseOk)}
                       className="max-sm:min-h-11"
                       onClick={() => choose(action)}
                     >
