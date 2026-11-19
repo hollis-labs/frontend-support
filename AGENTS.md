@@ -27,10 +27,16 @@ scripts/import-repo [--target DIR] <source> [<name>]
 - Clean break: no shims, redirects, aliases or stubs. The original repository is deleted by the owner after the import.
 - This repository is public. Nothing secret, no token, internal host name, internal address or personal path may enter a file,
   a commit message or CI config. Allowlist entries (`RULE-ID PATH-GLOB REASON`) are owner-reviewed and never quote a value.
-- Packages are versioned independently. Publishing to npm is the owner's step; this repository does not publish on its own.
+- Packages are versioned independently. Publishing runs only in the release workflows, dispatched by someone in the
+  `RELEASE_ACTORS` repository variable (the owner, and the `hollis-release-manager` GitHub App acting for the release
+  manager agent under the owner's standing permission). Each workflow's gate job enforces it; the `npm-release`
+  environment holds the token and has no approval step.
+- One exception to "code arrives through import-repo": Surface's packages (`@hollis-labs/surface-*`) stay in the public
+  `hollis-labs/surface` repository, which versions them as one line. `release-surface.yml` publishes them from a Surface tag
+  so the npm token stays here; nothing of Surface is copied into this repository.
 - No Go modules here.
 
 ## Do Not
 
 - Add a `CLAUDE.md`; `AGENTS.md` is the single instruction file.
-- Tag or publish on your own.
+- Tag or publish on your own, unless you are the release manager acting under its standing permission.

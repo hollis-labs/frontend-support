@@ -14,13 +14,26 @@
  */
 
 export { ChatInput } from './components/chat-input'
-export type { ChatInputMenuItem, ChatInputProps, ChatInputToggle } from './components/chat-input'
+export type { ChatComposerEditorProps, ChatInputMenuItem, ChatInputProps, ChatInputToggle } from './components/chat-input'
 
 export { ChatComposer } from './components/chat-composer'
 export type { ChatComposerProps } from './components/chat-composer'
+export { ChatSessionComposer, ChatSessionPresence } from './components/chat-session'
+export type { ChatSessionComposerProps } from './components/chat-session'
 
 export { ChatStream } from './components/chat-stream'
-export type { ChatMessageActionItem, ChatStreamProps } from './components/chat-stream'
+export type { ChatMessageActionItem, ChatStreamProps, ChatStreamRenderers } from './components/chat-stream'
+export { VirtualChatStream } from './components/virtual-chat-stream'
+export type { VirtualChatStreamProps } from './components/virtual-chat-stream'
+export { ChatSessionList } from './components/chat-session-list'
+export type { ChatSession, ChatSessionListProps } from './components/chat-session-list'
+export { BusyChatQueue } from './components/busy-chat-queue'
+export type { BusyChatQueueProps } from './components/busy-chat-queue'
+
+export { ChatContextChips, ChatSharedItemsStrip, ChatDrawerToggles, ChatSlotPicker } from './components/chat-extensions'
+export type { ChatContextChip, ChatSharedItem, ChatDrawerToggle, ChatSlotOption } from './components/chat-extensions'
+export { ChatNotice, ChatStepsFold } from './components/stream-extensions'
+export type { ChatNoticeProps, ChatStepItem, ChatStepsFoldProps } from './components/stream-extensions'
 
 export { ResizableChatPanel } from './components/resizable-chat-panel'
 export type { ResizableChatPanelProps } from './components/resizable-chat-panel'
@@ -52,9 +65,19 @@ export {
   ProgressCard,
   TableCard,
   TimelineCard,
+  ToolCard,
+  ToolResultContent,
+  toToolResultView,
 } from '@hollis-labs/kit-cards'
 export type {
   ArtifactCardProps,
+  ToolCardProps,
+  ToolContentPart,
+  ToolOutcome,
+  ToolResultContentProps,
+  ToolResultView,
+  ResultenvEnvelope,
+  ResultenvOutcome,
   DocumentCardProps,
   PromptCardProps,
   CardBoundaryProps,
@@ -96,6 +119,12 @@ export type {
 export { useStallDetector } from './lib/use-stall-detector'
 
 export { useChatHistory } from './lib/use-chat-history'
+export { useBusyChatQueue } from './lib/use-busy-chat-queue'
+export type { QueuedChatMessage, UseBusyChatQueueOptions } from './lib/use-busy-chat-queue'
+export { createChatSessionBinding, useChatSessionBinding } from './lib/chat-session'
+export type { ChatSessionAdapter, ChatSessionAttachment, ChatSessionBinding, ChatSessionCheckpoint, ChatSessionCursor, ChatSessionEvent, ChatSessionLease, ChatSessionPresence as ChatSessionPresenceMember, ChatSessionRole, ChatSessionSnapshot } from './lib/chat-session'
+export { createChatStreamBinding, useChatStreamBinding } from './lib/chatstream-binding'
+export type { ChatStreamBinding, ChatStreamBindingCheckpoint, ChatStreamBindingOptions, ChatStreamBindingSnapshot } from './lib/chatstream-binding'
 export type {
   ChatHistoryCursor,
   ChatHistoryPage,

@@ -1,12 +1,28 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ConfirmationCard } from '@hollis-labs/kit-cards'
+import type { ResultenvEnvelope } from '@hollis-labs/kit-cards'
+import sharedFixtures from '../../../kit-cards/fixtures/shared-resultenv/fixtures.json'
 import { ConfirmationAccepted, ConfirmationRejected, ConfirmationRequest, ConfirmationTitle } from '../components/confirmation'
 import { Tool, ToolContent, ToolHeader, ToolInput, ToolOutput, type ToolState } from '../components/tool'
 import { Queue, QueueItem, QueueItemAction, QueueItemActions, QueueItemContent, QueueItemDescription, QueueItemFile, QueueItemImage, QueueItemIndicator, QueueList, QueueSection, QueueSectionContent, QueueSectionLabel, QueueSectionTrigger } from '../components/queue'
 
 afterEach(cleanup)
 describe('tool presentation', () => {
+  it('uses the recorded outcome in the header and the shared result body', () => {
+    const result = { outcome: 'unknown' as const, stderr: 'connection lost' }
+    render(<Tool defaultOpen><ToolHeader toolName="transfer" state="completed" result={result} /><ToolContent><ToolOutput result={result} /></ToolContent></Tool>)
+    expect(screen.getByRole('button', { name: /transfer/ }).textContent).toContain('Outcome unknown')
+    expect(screen.getByRole('status').textContent).toContain('Result not recorded; an effect is possible.')
+    expect(screen.queryByText('Succeeded')).toBeNull()
+  })
+  it('accepts the shared envelope directly in the Tool display piece', () => {
+    const envelope = sharedFixtures.find(item => item.name === 'unknown_after_possible_effect')!.envelope as ResultenvEnvelope
+    render(<Tool defaultOpen><ToolHeader toolName="write" state="completed" envelope={envelope} /><ToolContent><ToolOutput envelope={envelope} /></ToolContent></Tool>)
+    expect(screen.getByRole('button', { name: /write/ }).textContent).toContain('Outcome unknown')
+    fireEvent.click(screen.getByRole('button', { name: 'Show result details' }))
+    expect(screen.getByRole('region', { name: 'Error detail' }).textContent).toContain('effect may have completed')
+  })
   it.each<[ToolState, string]>([['pending','Pending'],['running','Running'],['awaiting-confirmation','Awaiting confirmation'],['confirmed','Confirmed'],['completed','Completed'],['denied','Denied'],['error','Error']])('presents host-mapped %s without SDK wire vocabulary', (state, label) => {
     render(<Tool><ToolHeader toolName="file-search" state={state} /></Tool>)
     expect(screen.getByRole('button').textContent).toContain('file-search')

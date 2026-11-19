@@ -63,6 +63,8 @@ export type { CardBoundaryProps } from './card-boundary'
 
 export { ApprovalCard } from './approval-card'
 export type { ApprovalCardProps, ApprovalEffect, ApprovalRisk } from './approval-card'
+export { GateApprovalCard } from './gate-approval-card'
+export type { GateApprovalCardProps, GateApprovalOption, GateApprovalState } from './gate-approval-card'
 
 export { ChoiceCard } from './choice-card'
 export type { ChoiceCardProps, ChoiceOption } from './choice-card'
@@ -72,6 +74,13 @@ export type { ReviewCardProps } from './review-card'
 
 export { ErrorCard, StatusBanner } from './error-card'
 export type { ErrorCardProps, StatusBannerProps } from './error-card'
+
+export { ToolCard, ToolResultContent } from './tool-card'
+export type { ToolCardProps, ToolContentPart, ToolOutcome, ToolResultContentProps, ToolResultView } from './tool-card'
+export { GateToolCard } from './gate-tool-card'
+export type { GateToolCardProps, GateToolEvidence } from './gate-tool-card'
+export { toToolResultView } from './tool-result-adapter'
+export type { ResultenvEnvelope, ResultenvOutcome } from './resultenv.generated'
 
 export { GroupCard, StepperCard } from './group-card'
 export type { GroupCardProps, StepperCardProps } from './group-card'

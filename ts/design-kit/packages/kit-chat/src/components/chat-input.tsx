@@ -48,6 +48,17 @@ export interface ChatInputToggle {
   readonly disabled?: boolean
 }
 
+/** The small controlled surface a host rich editor implements. It emits plain text. */
+export interface ChatComposerEditorProps {
+  readonly value: string
+  readonly onValueChange: (value: string) => void
+  readonly onSubmit: () => void
+  readonly placeholder: string
+  readonly disabled: boolean
+  readonly busy: boolean
+  readonly 'aria-label': string
+}
+
 export interface ChatInputProps<TItem extends SuggestionItem = SuggestionItem> {
   /** Controlled. This component holds no draft of its own. */
   readonly value: string
@@ -116,6 +127,8 @@ export interface ChatInputProps<TItem extends SuggestionItem = SuggestionItem> {
   readonly toolbarEnd?: ReactNode
   readonly className?: string
   readonly textareaRef?: Ref<HTMLTextAreaElement>
+  /** Replace only the text editor. The host editor owns its own mention UI and key bindings. */
+  readonly renderEditor?: (props: ChatComposerEditorProps) => ReactNode
   readonly 'aria-label'?: string
 }
 
@@ -165,6 +178,7 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
   toolbarEnd,
   className,
   textareaRef,
+  renderEditor,
   'aria-label': ariaLabel = 'Message',
 }: ChatInputProps<TItem>) {
   const innerRef = useRef<HTMLTextAreaElement | null>(null)
@@ -365,7 +379,19 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
 
       {above ? <div data-slot="chat-input-above" className="min-w-0">{above}</div> : null}
 
-      <Textarea
+      {renderEditor ? <div data-slot="chat-input-editor">{renderEditor({
+        value,
+        onValueChange: (next) => {
+          setHistoryIndex(null)
+          setActive(null)
+          onValueChange(next)
+        },
+        onSubmit: submit,
+        placeholder,
+        disabled,
+        busy,
+        'aria-label': ariaLabel,
+      })}</div> : <Textarea
         ref={innerRef}
         value={value}
         placeholder={placeholder}
@@ -384,7 +410,7 @@ export function ChatInput<TItem extends SuggestionItem = SuggestionItem>({
           refresh(el.value, el.selectionStart ?? el.value.length)
         }}
         onBlur={() => setActive(null)}
-      />
+      />}
 
       {error ? (
         <div role="alert" data-slot="chat-input-error" className="flex min-w-0 items-center gap-2 text-control text-danger">
