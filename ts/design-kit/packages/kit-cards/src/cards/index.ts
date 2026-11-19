@@ -86,4 +86,4 @@ export { GroupCard, StepperCard } from './group-card'
 export type { GroupCardProps, StepperCardProps } from './group-card'
 
 export { FormCard } from './form-card'
-export type { FormCardProps } from './form-card'
+export type { FormCardProps, SecretFieldOptions, StoreSecretOptions } from './form-card'

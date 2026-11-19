@@ -1,8 +1,10 @@
 import { useId, useState, type ReactNode } from 'react'
 import { OctagonAlert, ShieldAlert, ShieldCheck } from 'lucide-react'
-import { Button, Input, type Accent, type IconComponent } from '@hollis-labs/design-components'
+import { Button, Checkbox, Input, Textarea, type Accent, type IconComponent } from '@hollis-labs/design-components'
 import { AnswerableNotices, ResolvedFooter } from '../answerable'
 import { useAnswerable, type AnswerableStateProps } from '../answerable-state'
+import { cardKeyHandler, useHeldDecision } from '../decision-extras'
+import { FallbackLink, HeldBar, RecommendedTag } from '../decision-parts'
 import { fieldDescribedBy } from '../field-ids'
 import { ActionBar, Field } from '../layout'
 import type { CardResponder } from '../response'
@@ -73,6 +75,24 @@ export interface ApprovalCardProps extends AnswerableStateProps {
   /** `high` risk: the exact phrase the person must type before approving. */
   readonly confirmPhrase?: string
   readonly onRespond: CardResponder
+  /**
+   * Hold the decision for this many ms with an Undo button before `onRespond` runs.
+   * Unset or 0 sends at once. Unmounting during the hold cancels it.
+   */
+  readonly undoMs?: number
+  /** Keys while focus is in the card: Y approves, N denies, Cmd/Ctrl+Z undoes a held decision. */
+  readonly shortcuts?: boolean
+  /** The id of the action to mark "Recommended". */
+  readonly recommended?: string
+  /** A note sent with the decision (`decisions[0].note`). `required` blocks every action but Dismiss until it is filled. */
+  readonly note?: boolean | { readonly required?: boolean; readonly label?: ReactNode }
+  /** "Always in this chat": a checkbox that adds `data.remember: true` so the host can record a standing rule. */
+  readonly rememberChoice?: boolean | { readonly label?: ReactNode }
+  /** Where to decide when the card cannot be decided inline. Shows a link beside the actions. */
+  readonly fallbackHref?: string
+  readonly fallbackLabel?: ReactNode
+  /** `medium` risk asks for a second confirmation by default. `false` makes it one click (plus `undoMs`). */
+  readonly mediumRiskConfirm?: boolean
   readonly className?: string
 }
 
@@ -95,6 +115,14 @@ export function ApprovalCard({
   actions = DEFAULT_ACTIONS,
   confirmPhrase,
   onRespond,
+  undoMs,
+  shortcuts = false,
+  recommended,
+  note,
+  rememberChoice,
+  fallbackHref,
+  fallbackLabel,
+  mediumRiskConfirm = true,
   priorStatus,
   busy: hostBusy,
   stale,
@@ -115,41 +143,62 @@ export function ApprovalCard({
   const phraseId = useId()
   const [typed, setTyped] = useState('')
   const [pending, setPending] = useState<ConfirmationAction | null>(null)
+  const noteId = useId()
+  const [noteText, setNoteText] = useState('')
+  const [remember, setRemember] = useState(false)
+  const noteRequired = typeof note === 'object' && note.required === true
+  const noteLabel = typeof note === 'object' && note.label != null ? note.label : 'Note'
+  const rememberLabel = typeof rememberChoice === 'object' && rememberChoice.label != null ? rememberChoice.label : 'Always in this chat'
+  const noteMissing = noteRequired && noteText.trim() === ''
 
   const needsPhrase = effectiveRisk === 'high' && confirmPhrase != null
   const phraseOk = !needsPhrase || typed === confirmPhrase
   const countdown = remainingMs != null && remainingMs > 0 && remainingMs <= 60_000 ? Math.ceil(remainingMs / 1000) : null
 
   async function submit(action: ConfirmationAction) {
+    const trimmed = noteText.trim()
+    const data = { ...(digest ? { digest } : {}), ...(remember ? { remember: true } : {}) }
     await a.run(() =>
       onRespond({
         status: 'submitted',
-        decisions: [{ itemId: id ?? action.id, action: action.id }],
-        ...(digest ? { data: { digest } } : {}),
+        decisions: [{ itemId: id ?? action.id, action: action.id, ...(trimmed ? { note: trimmed } : {}) }],
+        ...(Object.keys(data).length > 0 ? { data } : {}),
       }),
     )
     setPending(null)
     setTyped('')
   }
 
+  const hold = useHeldDecision<ConfirmationAction>(undoMs, submit)
+
   function choose(action: ConfirmationAction) {
-    if (a.disabled) return
+    if (a.disabled || hold.held || noteMissing || (action.primary && !phraseOk)) return
     // `medium` collects an explicit second confirmation for any non-dismissive action.
-    if (effectiveRisk === 'medium' && pending?.id !== action.id) {
+    if (effectiveRisk === 'medium' && mediumRiskConfirm && pending?.id !== action.id) {
       setPending(action)
       return
     }
-    void submit(action)
+    setPending(null)
+    hold.start(action)
   }
 
   async function decline() {
     await a.run(() => onRespond({ status: 'canceled' }))
   }
 
-  const approvalBlocked = !phraseOk
+  const onKeyDown = cardKeyHandler(shortcuts && a.live && !unrecognizedElevation, {
+    onKey(key) {
+      if (hold.held || pending) return
+      const target = key === 'y' ? actions.find((x) => x.primary) : key === 'n' ? actions.find((x) => !x.primary) : undefined
+      if (!target || a.disabled) return
+      if (noteMissing || (target.primary && !phraseOk)) return
+      choose(target)
+    },
+    onUndo: () => hold.undo(),
+  })
 
   return (
-    <Envelope accent={a.live ? r.accent : undefined} muted={!a.live} data-risk={effectiveRisk} className={className}>
+    <Envelope accent={a.live ? r.accent : undefined} muted={!a.live} data-risk={effectiveRisk} className={className} onKeyDown={shortcuts ? onKeyDown : undefined}>
       <EnvelopeHeader
         icon={Icon}
         tone={r.accent}
@@ -228,6 +277,23 @@ export function ApprovalCard({
               />
             </Field>
           ) : null}
+          {a.live && !unrecognizedElevation && note ? (
+            <Field id={noteId} label={noteLabel} required={noteRequired}>
+              <Textarea
+                id={noteId}
+                value={noteText}
+                disabled={a.disabled || hold.held != null}
+                onChange={(event) => setNoteText(event.target.value)}
+                className="text-control"
+              />
+            </Field>
+          ) : null}
+          {a.live && !unrecognizedElevation && rememberChoice ? (
+            <label className="flex min-h-11 items-center gap-3 text-control text-fg-secondary sm:min-h-8">
+              <Checkbox checked={remember} disabled={a.disabled || hold.held != null} onCheckedChange={(next) => setRemember(next === true)} />
+              {rememberLabel}
+            </label>
+          ) : null}
         </div>
       </EnvelopeBody>
 
@@ -237,7 +303,10 @@ export function ApprovalCard({
             <span role="status" className="text-caption text-fg-muted">Submitting…</span>
           ) : null}
           <ActionBar>
-            {pending ? (
+            {fallbackHref && !hold.held ? <FallbackLink href={fallbackHref}>{fallbackLabel}</FallbackLink> : null}
+            {hold.held ? (
+              <HeldBar label={hold.held.label} secondsLeft={hold.secondsLeft} onUndo={hold.undo} disabled={a.busy} />
+            ) : pending ? (
               <>
                 <span className="mr-auto text-control text-fg-secondary">Confirm: {pending.label}?</span>
                 <Button type="button" variant="ghost" size="sm" disabled={a.disabled} className="max-sm:min-h-11" onClick={() => setPending(null)}>
@@ -247,9 +316,9 @@ export function ApprovalCard({
                   type="button"
                   size="sm"
                   variant={pending.tone === 'danger' ? 'destructive' : 'default'}
-                  disabled={a.disabled || approvalBlocked}
+                  disabled={a.disabled || noteMissing || (pending.primary === true && !phraseOk)}
                   className="max-sm:min-h-11"
-                  onClick={() => void submit(pending)}
+                  onClick={() => choose(pending)}
                 >
                   Confirm {pending.label}
                 </Button>
@@ -264,11 +333,12 @@ export function ApprovalCard({
                       type="button"
                       size="sm"
                       variant={action.tone === 'danger' ? 'destructive' : action.primary ? 'default' : 'outline'}
-                      disabled={a.disabled || (isApprove && approvalBlocked)}
+                      disabled={a.disabled || noteMissing || (isApprove && !phraseOk)}
                       className="max-sm:min-h-11"
                       onClick={() => choose(action)}
                     >
                       {action.label}
+                      {recommended === action.id ? <RecommendedTag /> : null}
                     </Button>
                   )
                 })}
